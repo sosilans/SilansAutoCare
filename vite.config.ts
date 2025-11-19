@@ -4,6 +4,10 @@
   import path from 'path';
 
   export default defineConfig({
+    // Use repo name as base on GitHub Actions for Pages
+    base: process.env.GITHUB_ACTIONS && process.env.GITHUB_REPOSITORY
+      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
+      : '/',
     plugins: [react()],
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
