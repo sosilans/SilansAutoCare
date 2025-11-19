@@ -1,0 +1,20 @@
+{
+  "name": "silans-autocare",
+  "version": "1.0.0",
+  "description": "Auto care management application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Development server not configured yet'",
+    "build": "echo 'Build process not configured yet'",
+    "start": "echo 'Production server not configured yet'",
+    "test": "echo 'Tests not configured yet'"
+  },
+  "keywords": [
+    "autocare",
+    "management"
+  ],
+  "author": "SilansAutoCare",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}
