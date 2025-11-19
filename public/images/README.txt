@@ -1,0 +1,1 @@
+Place your logo image here as "silans-logo.png" (recommended size ~256-512px with transparent background).
