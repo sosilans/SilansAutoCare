@@ -9,28 +9,28 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+
       - name: Install dependencies
         run: |
           if [ -f package.json ]; then
             npm ci
           fi
-          
+
       - name: Build application
         run: |
           if [ -f package.json ] && grep -q "\"build\"" package.json; then
             npm run build
           fi
-          
+
       - name: Deploy to Cloudways via SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.CLOUDWAYS_SSH_KEY }}
@@ -43,7 +43,7 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-          
+
           # Create deployment archive
           tar -czf deployment.tar.gz \
             --exclude='node_modules' \
@@ -51,30 +51,31 @@ jobs:
             --exclude='.github' \
             --exclude='*.log' \
             .
-          
+
           # Upload to Cloudways
-          scp -i ~/.ssh/deploy_key deployment.tar.gz $SSH_USER@$SSH_HOST:$DEPLOY_PATH/
-          
+          scp -i ~/.ssh/deploy_key \
+            deployment.tar.gz $SSH_USER@$SSH_HOST:$DEPLOY_PATH/
+
           # Extract and setup on server
           ssh -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST << 'ENDSSH'
             cd $DEPLOY_PATH
             tar -xzf deployment.tar.gz
             rm deployment.tar.gz
-            
+
             # Install dependencies on server if needed
             if [ -f package.json ]; then
               npm ci --production
             fi
-            
+
             # Restart application if needed
             if [ -f restart.sh ]; then
               bash restart.sh
             fi
           ENDSSH
-          
+
           # Cleanup
           rm ~/.ssh/deploy_key
-          
+
       - name: Deployment notification
         if: success()
         run: echo "Deployment to Cloudways completed successfully"
