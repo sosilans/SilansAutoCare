@@ -98,8 +98,8 @@ export function AboutMe() {
           >
             <div className="relative rounded-3xl overflow-hidden cartoon-shadow vhs-border vhs-noise">
               <ImageWithFallback
-                src="https://images.unsplash.com/photo-1594849981292-89dbaf5aee53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBkZXRhaWxpbmclMjB3b3Jrc3BhY2V8ZW58MXx8fHwxNzYzNTE1Nzc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                alt="Professional detailing workspace"
+                src="/assets/Misha.jpg"
+                alt="Misha - Professional Auto Detailing Specialist"
                 className="w-full h-auto"
               />
             </div>
