@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { MapPin, Phone, Mail, Send, Clock, Instagram } from 'lucide-react';
+import { MapPin, Phone, Mail, Facebook, Clock, Instagram } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -13,7 +13,27 @@ export function Contact() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const formEl = e.target as HTMLFormElement;
+    const formData = new FormData(formEl);
+    const name = String(formData.get('name') || '').trim();
+    const email = String(formData.get('email') || '').trim();
+    const message = String(formData.get('message') || '').trim();
+    
+    if (!name || !email || !message) {
+      alert('❌ Please fill in all fields.');
+      return;
+    }
+    
+    // Basic email validation
+    if (!/.+@.+\..+/.test(email)) {
+      alert('❌ Please enter a valid email address.');
+      return;
+    }
+    
+    // Here you would normally send to backend/API
+    console.log('Contact form submitted:', { name, email, message });
     alert(t('contact.submitSuccess'));
+    formEl.reset();
   };
 
   const contactInfo = [
@@ -142,10 +162,10 @@ export function Contact() {
               <h4 className={theme === 'dark' ? 'text-purple-100 mb-4' : 'text-gray-900 mb-4'}>{t('contact.quickMessage')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <motion.a
-                  href="sms:9168027782"
+                  href="https://www.facebook.com/silansautocare?mibextid=wwXIfr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 gradient-animated"
+                  className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 gradient-animated"
                   animate={{
                     y: [0, -12, 0],
                     x: [0, 4, 0],
@@ -158,11 +178,11 @@ export function Contact() {
                     delay: 0.4,
                   }}
                 >
-                  <Send className="w-5 h-5" />
-                  Telegram
+                  <Facebook className="w-5 h-5" />
+                  Facebook
                 </motion.a>
                 <motion.a
-                  href="https://instagram.com/silansautocare"
+                  href="https://www.instagram.com/silansautocare?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-pink-400 via-purple-400 to-orange-400 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 gradient-animated"

@@ -39,18 +39,18 @@ export function AuthModal() {
 
         <div className="flex gap-2 mb-4">
           <button
-            className={`flex-1 py-2 rounded-2xl border-2 transition ${authMode === 'login'
-              ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50' : 'bg-purple-50 border-purple-400')
-              : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40' : 'border-purple-200 hover:border-purple-300')
+            className={`flex-1 py-2 rounded-2xl border-2 transition font-medium ${authMode === 'login'
+              ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50 text-purple-100' : 'bg-purple-50 border-purple-400 text-purple-900')
+              : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40 text-purple-300' : 'border-purple-200 hover:border-purple-300 text-gray-700')
             }`}
             onClick={() => { setError(null); openAuthModal('login'); }}
           >
             Login
           </button>
           <button
-            className={`flex-1 py-2 rounded-2xl border-2 transition ${authMode === 'register'
-              ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50' : 'bg-purple-50 border-purple-400')
-              : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40' : 'border-purple-200 hover:border-purple-300')
+            className={`flex-1 py-2 rounded-2xl border-2 transition font-medium ${authMode === 'register'
+              ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50 text-purple-100' : 'bg-purple-50 border-purple-400 text-purple-900')
+              : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40 text-purple-300' : 'border-purple-200 hover:border-purple-300 text-gray-700')
             }`}
             onClick={() => { setError(null); openAuthModal('register'); }}
           >

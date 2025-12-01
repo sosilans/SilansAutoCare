@@ -80,9 +80,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const adminName = envAdminName && envAdminName.length ? envAdminName : fallbackName;
     const adminEmail = envAdminEmail && envAdminEmail.length ? envAdminEmail : fallbackEmail;
 
-    const isAdminLogin = name.trim() === adminName && email.trim().toLowerCase() === adminEmail.toLowerCase();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const emailLower = trimmedEmail.toLowerCase();
 
-    setUser({ name: name.trim(), email: email.trim(), role: isAdminLogin ? 'admin' : 'user' });
+    const isAdminLogin = trimmedName === adminName && emailLower === adminEmail.toLowerCase();
+
+    if (isAdminLogin) {
+      setUser({ name: trimmedName, email: trimmedEmail, role: 'admin' });
+      closeAuthModal();
+      return { ok: true };
+    }
+
+    // Check if user exists in registered users
+    const existingUser = users.find(u => (u.email || '').toLowerCase() === emailLower);
+    
+    if (!existingUser) {
+      return { ok: false, message: 'User not found. Please register first.' };
+    }
+
+    // Verify name matches (case-insensitive)
+    if (existingUser.name.toLowerCase() !== trimmedName.toLowerCase()) {
+      return { ok: false, message: 'Invalid credentials. Please check your name and email.' };
+    }
+
+    setUser({ name: existingUser.name, email: existingUser.email, role: existingUser.role });
     closeAuthModal();
     return { ok: true };
   }

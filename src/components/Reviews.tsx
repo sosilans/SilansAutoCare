@@ -110,7 +110,8 @@ export function Reviews() {
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !user) {
+      alert('❌ Please login first to submit a review.');
       openAuthModal('login');
       return;
     }
@@ -126,7 +127,13 @@ export function Reviews() {
     const formEl = e.target as HTMLFormElement;
     const formData = new FormData(formEl);
     const message = String(formData.get('message') || '').trim();
-    submitReview(user!.name, user!.email || '', message);
+    
+    if (!message) {
+      alert('❌ Please enter your review message.');
+      return;
+    }
+    
+    submitReview(user.name, user.email || '', message);
     alert('✅ Thank you! Your review is sent for moderation.');
     setIsFormOpen(false);
     localStorage.setItem('lastReviewTimestamp', Date.now().toString());

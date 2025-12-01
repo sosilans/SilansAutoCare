@@ -98,7 +98,8 @@ export function FAQ() {
 
   const handleSubmitQuestion = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !user) {
+      alert('❌ Please login first to submit a question.');
       openAuthModal('login');
       return;
     }
@@ -106,7 +107,13 @@ export function FAQ() {
     const formEl = e.target as HTMLFormElement;
     const formData = new FormData(formEl);
     const question = String(formData.get('question') || '').trim();
-    submitQuestion(user!.name, user!.email || '', question);
+    
+    if (!question) {
+      alert('❌ Please enter your question.');
+      return;
+    }
+    
+    submitQuestion(user.name, user.email || '', question);
     alert('✅ ' + t('faq.form.submit') + ' (sent for moderation)');
     setIsFormOpen(false);
   };

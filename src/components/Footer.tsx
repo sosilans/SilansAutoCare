@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Instagram, Mail, Heart } from 'lucide-react';
+import { Instagram, Facebook, Heart } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 
 export function Footer() {
@@ -69,7 +69,7 @@ export function Footer() {
             <h4 className={`mb-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>Follow Us!</h4>
             <div className="flex gap-3 mb-4">
               <a
-                href="https://instagram.com/silansautocare"
+                href="https://www.instagram.com/silansautocare?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`p-3 rounded-xl bg-gradient-to-br from-pink-400 via-purple-400 to-orange-400 text-white hover:scale-110 transition-transform duration-300 cartoon-shadow-sm gradient-animated ${
@@ -80,7 +80,7 @@ export function Footer() {
                 <Instagram className="w-6 h-6" />
               </a>
               <a
-                href="#contact"
+                href="https://www.facebook.com/silansautocare?mibextid=wwXIfr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`p-3 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 text-white hover:scale-110 transition-transform duration-300 cartoon-shadow-sm gradient-animated ${
@@ -88,7 +88,7 @@ export function Footer() {
                 }`}
                 aria-label="Facebook"
               >
-                <Mail className="w-6 h-6" />
+                <Facebook className="w-6 h-6" />
               </a>
             </div>
           </motion.div>
