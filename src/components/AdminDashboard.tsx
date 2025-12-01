@@ -1,826 +1,740 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useDataStore } from './DataStoreContext';
 import { useAuth } from './AuthContext';
 import { useOnlineStatus } from './OnlineStatusContext';
 import { 
-  TrendingUp, 
-  Users, 
-  MessageSquare, 
-  HelpCircle, 
-  Star, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Edit,
-  Trash2,
-  Plus,
-  RefreshCw,
-  Activity,
-  Eye,
-  EyeOff,
-  Settings,
-  BarChart3,
-  AlertCircle,
-  Download,
-  Upload,
-  Home
+  TrendingUp, Users, MessageSquare, HelpCircle, Star, Clock, 
+  CheckCircle, XCircle, Eye, EyeOff, BarChart3, 
+  Mail, Phone, Calendar, ArrowUp, ArrowDown, Activity,
+  Package, Image as ImageIcon, Settings as SettingsIcon,
+  Download, Home, PieChart, LineChart
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
-
-async function compressImageFile(file: File, maxDimension = 1000, quality = 0.82) {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid file result'));
-    reader.readAsDataURL(file);
-  });
-
-  return await new Promise<string>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let { width, height } = img;
-      const scale = Math.min(1, maxDimension / Math.max(width, height));
-      width *= scale;
-      height *= scale;
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas API unavailable'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => reject(new Error('Invalid image data'));
-    img.src = dataUrl;
-  });
-}
 
 export function AdminDashboard() {
   const { theme } = useTheme();
   const { isAdmin, user, users, removeUser } = useAuth();
   const { 
-    pendingReviews, 
-    approvedReviews, 
-    approveReview, 
-    rejectReview,
-    pendingFAQs,
-    approvedFAQs,
-    approveFAQ,
-    rejectFAQ,
-    contactSubmissions,
-    updateContactStatus,
-    deleteContact,
+    pendingReviews, approvedReviews, approveReview, rejectReview,
+    pendingFAQs, approvedFAQs, approveFAQ, rejectFAQ,
+    contactSubmissions, updateContactStatus, deleteContact,
     stats
   } = useDataStore();
   const { isOnline, setIsOnline } = useOnlineStatus();
 
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
-  const [editingAbout, setEditingAbout] = useState(false);
-  const [aboutForm, setAboutForm] = useState({
-    name: '',
-    tagline: '',
-    description1: '',
-    description2: '',
-    image: '',
-    statsCars: 500,
-    statsReviewsLabel: '5-Star Reviews',
-    statsHappyLabel: '100% Happy Customers',
-  });
+  const [selectedTab, setSelectedTab] = useState('analytics');
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Initial load
-  useEffect(() => {
-    if (isAdmin) {
-      refreshAll();
-    }
-  }, [isAdmin]);
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    if (!autoRefresh || !isAdmin) return;
-    const interval = setInterval(() => {
-      refreshAll();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, isAdmin]);
-
-  // Update about form when data loads
-  useEffect(() => {
-    if (about) {
-      setAboutForm({
-        name: about.name || '',
-        tagline: about.tagline || '',
-        description1: about.description1 || '',
-        description2: about.description2 || '',
-        image: about.image || '',
-        statsCars: about.statsCars || 500,
-        statsReviewsLabel: about.statsReviewsLabel || '5-Star Reviews',
-        statsHappyLabel: about.statsHappyLabel || '100% Happy Customers',
-      });
-    }
-  }, [about]);
-
-  const refreshAll = async () => {
-    await Promise.all([
-      loadReviews(),
-      loadFAQs(),
-      loadUsers(),
-      loadStats(),
-      loadAbout(),
-      loadAudit(50),
-    ]);
-    setLastRefresh(Date.now());
-  };
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-red-500">Access Denied. Admin only.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleApproveReview = async (id: string) => {
-    try {
-      await updateReview(id, { approved: true });
-      showNotification('success', 'Review approved');
-      await refreshAll();
-    } catch (error) {
-      showNotification('error', 'Failed to approve review');
-    }
+  // Calculate analytics
+  const analytics = useMemo(() => {
+    const last7Days = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const last30Days = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    const recentReviews = [...pendingReviews, ...approvedReviews].filter(r => r.createdAt > last7Days).length;
+    const recentFAQs = [...pendingFAQs, ...approvedFAQs].filter(f => f.createdAt > last7Days).length;
+    const recentContacts = contactSubmissions.filter(c => c.createdAt > last7Days).length;
+
+    return {
+      totalReviews: stats.reviews.total,
+      totalFAQs: stats.faqs.total,
+      totalContacts: stats.contacts.total,
+      totalUsers: users.length,
+      recentReviews,
+      recentFAQs,
+      recentContacts,
+      pendingReviews: stats.reviews.pending,
+      pendingFAQs: stats.faqs.pending,
+      newContacts: stats.contacts.new,
+      approvalRate: stats.reviews.total > 0 ? Math.round((stats.reviews.approved / stats.reviews.total) * 100) : 0,
+    };
+  }, [stats, users, pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
+
+  const handleApproveReview = (id: string) => {
+    approveReview(id);
+    showNotification('success', 'Review approved!');
   };
 
-  const handleDeleteReview = async (id: string) => {
-    if (!confirm('Delete this review?')) return;
-    try {
-      await deleteReview(id);
-      showNotification('success', 'Review deleted');
-      await refreshAll();
-    } catch (error) {
-      showNotification('error', 'Failed to delete review');
-    }
+  const handleRejectReview = (id: string) => {
+    rejectReview(id);
+    showNotification('success', 'Review rejected');
   };
 
-  const handleAnswerFAQ = async (id: string) => {
-    const answer = faqAnswers[id];
-    if (!answer?.trim()) return;
-    try {
-      await updateFAQ(id, { answer: answer.trim() });
-      showNotification('success', 'FAQ answered');
-      setFaqAnswers(prev => ({ ...prev, [id]: '' }));
-      await refreshAll();
-    } catch (error) {
-      showNotification('error', 'Failed to answer FAQ');
+  const handleAnswerFAQ = (id: string) => {
+    const answer = faqAnswers[id]?.trim();
+    if (!answer) {
+      showNotification('error', 'Please enter an answer');
+      return;
     }
+    approveFAQ(id, answer);
+    setFaqAnswers(prev => ({ ...prev, [id]: '' }));
+    showNotification('success', 'FAQ answered!');
   };
 
-  const handleDeleteFAQ = async (id: string) => {
-    if (!confirm('Delete this FAQ?')) return;
-    try {
-      await deleteFAQ(id);
-      showNotification('success', 'FAQ deleted');
-      await refreshAll();
-    } catch (error) {
-      showNotification('error', 'Failed to delete FAQ');
-    }
-  };
-
-  const handleDeleteUser = async (email: string) => {
-    if (!confirm(`Delete user ${email}?`)) return;
-    try {
-      const userToDelete = users.find(u => u.email === email);
-      if (userToDelete) {
-        await deleteUser(userToDelete.id);
-        showNotification('success', 'User deleted');
-        await refreshAll();
-      }
-    } catch (error) {
-      showNotification('error', 'Failed to delete user');
-    }
-  };
-
-  const handleToggleStatus = () => {
-    try {
-      setIsOnline(!isOnline);
-      showNotification('success', `Site ${!isOnline ? 'enabled' : 'disabled'}`);
-    } catch (error) {
-      showNotification('error', 'Failed to update status');
-    }
-  };
-
-  const handleUpdateAbout = async () => {
-    try {
-      await updateAbout(aboutForm);
-      showNotification('success', 'About section updated');
-      setEditingAbout(false);
-      await refreshAll();
-    } catch (error) {
-      showNotification('error', 'Failed to update About section');
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const compressed = await compressImageFile(file, 1000, 0.82);
-      setAboutForm(prev => ({ ...prev, image: compressed }));
-      showNotification('success', 'Image uploaded and compressed');
-    } catch (error) {
-      showNotification('error', 'Failed to compress image');
-    }
+  const handleRejectFAQ = (id: string) => {
+    rejectFAQ(id);
+    showNotification('success', 'FAQ rejected');
   };
 
   const handleExportData = () => {
     const data = {
-      reviews,
-      faqs,
-      users,
-      stats,
-      about,
+      reviews: { pending: pendingReviews, approved: approvedReviews },
+      faqs: { pending: pendingFAQs, approved: approvedFAQs },
+      contacts: contactSubmissions,
+      users: users,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `silans-backup-${Date.now()}.json`;
+    a.download = `silans-data-export-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showNotification('success', 'Data exported');
+    showNotification('success', 'Data exported successfully!');
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>Access denied. Admin privileges required.</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  const pendingReviews = reviews.filter(r => !r.approved);
-  const unansweredFAQs = faqs.filter(f => !f.answer);
-
   return (
-    <div className={`min-h-screen p-4 md:p-8 transition-colors duration-500 ${
-      theme === 'dark'
-        ? 'bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900'
-        : 'bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50'
-    }`}>
-      {/* Notification */}
-      {notification && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className="fixed top-4 right-4 z-50"
-        >
-          <Alert className={notification.type === 'success' ? 'border-green-500' : 'border-red-500'}>
-            <AlertDescription>{notification.message}</AlertDescription>
-          </Alert>
-        </motion.div>
-      )}
-
+    <div className={`min-h-screen p-4 md:p-8 ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>
+            <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
               Admin Dashboard
             </h1>
-            <p className={theme === 'dark' ? 'text-purple-300/70' : 'text-purple-700/70'}>
-              Welcome back, {user?.name} 👋
+            <p className={theme === 'dark' ? 'text-purple-300/70' : 'text-gray-600'}>
+              Welcome back, {user?.name}!
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => window.location.href = '/'}
-              className={theme === 'dark' ? 'border-purple-500/30' : 'border-purple-300'}
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Home
-            </Button>
-            <Button
               variant="outline"
-              size="sm"
-              onClick={handleExportData}
-              className={theme === 'dark' ? 'border-purple-500/30' : 'border-purple-300'}
+              className="flex items-center gap-2"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export
+              <Home className="w-4 h-4" />
+              Back to Site
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={refreshAll}
-              className={theme === 'dark' ? 'border-purple-500/30' : 'border-purple-300'}
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                Total Reviews
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>
-                {stats?.totalReviews || 0}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {stats?.approvedReviews || 0} approved, {stats?.pendingReviews || 0} pending
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                Avg Rating
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>
-                {stats?.averageRating?.toFixed(1) || '0.0'}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">Out of 5.0</p>
-            </CardContent>
-          </Card>
-
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-500" />
-                Total Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>
-                {stats?.totalUsers || 0}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">Registered users</p>
-            </CardContent>
-          </Card>
-
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-orange-500" />
-                FAQs
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${theme === 'dark' ? 'text-purple-200' : 'text-purple-900'}`}>
-                {stats?.totalFaqs || 0}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{unansweredFAQs.length} unanswered</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Status Controls */}
-        <Card className={`mb-8 ${theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Site Controls
-            </CardTitle>
-            <CardDescription>Manage site availability and auto-refresh</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-4">
-            <Button
-              onClick={handleToggleStatus}
+              onClick={() => setIsOnline(!isOnline)}
               variant={isOnline ? 'default' : 'destructive'}
               className="flex items-center gap-2"
             >
               {isOnline ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               {isOnline ? 'Site Online' : 'Site Offline'}
             </Button>
-            <Button
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              variant={autoRefresh ? 'default' : 'outline'}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
-              Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
-            </Button>
-            <div className="text-sm text-muted-foreground flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Last update: {new Date(lastRefresh).toLocaleTimeString()}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Notification */}
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mb-4"
+          >
+            <Alert className={notification.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+              <AlertDescription className={notification.type === 'success' ? 'text-green-800' : 'text-red-800'}>
+                {notification.message}
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+              <Star className="w-4 h-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalReviews}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {analytics.pendingReviews > 0 && `${analytics.pendingReviews} pending`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">FAQs</CardTitle>
+              <HelpCircle className="w-4 h-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalFAQs}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {analytics.pendingFAQs > 0 && `${analytics.pendingFAQs} unanswered`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Contact Requests</CardTitle>
+              <Mail className="w-4 h-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalContacts}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {analytics.newContacts > 0 && `${analytics.newContacts} new`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Registered Users</CardTitle>
+              <Users className="w-4 h-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total accounts
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="reviews" className="space-y-4">
-          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-5 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-6 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
+            <TabsTrigger value="analytics">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="reviews" className="relative">
               Reviews
-              {pendingReviews.length > 0 && (
+              {analytics.pendingReviews > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
-                  {pendingReviews.length}
+                  {analytics.pendingReviews}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="faqs" className="relative">
               FAQs
-              {unansweredFAQs.length > 0 && (
+              {analytics.pendingFAQs > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
-                  {unansweredFAQs.length}
+                  {analytics.pendingFAQs}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className="relative">
+              Contacts
+              {analytics.newContacts > 0 && (
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+                  {analytics.newContacts}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="audit">Audit Log</TabsTrigger>
+            <TabsTrigger value="settings">
+              <SettingsIcon className="w-4 h-4 mr-2" />
+              Settings
+            </TabsTrigger>
           </TabsList>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Activity Chart */}
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activity (Last 7 Days)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <span className="text-sm">New Reviews</span>
+                      </div>
+                      <span className="text-2xl font-bold">{analytics.recentReviews}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span className="text-sm">New Questions</span>
+                      </div>
+                      <span className="text-2xl font-bold">{analytics.recentFAQs}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                        <span className="text-sm">Contact Requests</span>
+                      </div>
+                      <span className="text-2xl font-bold">{analytics.recentContacts}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Status Distribution */}
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Status Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Approval Rate</span>
+                        <span className="font-bold">{analytics.approvalRate}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{ width: `${analytics.approvalRate}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
+                        <div className="text-xs text-muted-foreground">Approved</div>
+                        <div className="text-xl font-bold text-green-500">{stats.reviews.approved}</div>
+                      </div>
+                      <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
+                        <div className="text-xs text-muted-foreground">Pending</div>
+                        <div className="text-xl font-bold text-yellow-500">{stats.reviews.pending}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Status */}
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    Contact Requests Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                      <span className="text-sm">New</span>
+                      <Badge variant="default">{stats.contacts.new}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                      <span className="text-sm">In Progress</span>
+                      <Badge variant="secondary">{stats.contacts.contacted}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                      <span className="text-sm">Resolved</span>
+                      <Badge className="bg-green-500">{stats.contacts.resolved}</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button onClick={handleExportData} variant="outline" className="w-full justify-start">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export All Data
+                  </Button>
+                  <Button 
+                    onClick={() => setSelectedTab('contacts')}
+                    variant="outline" 
+                    className="w-full justify-start"
+                    disabled={analytics.newContacts === 0}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    View New Contacts ({analytics.newContacts})
+                  </Button>
+                  <Button 
+                    onClick={() => setSelectedTab('reviews')}
+                    variant="outline" 
+                    className="w-full justify-start"
+                    disabled={analytics.pendingReviews === 0}
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Review Pending ({analytics.pendingReviews})
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Reviews Tab */}
           <TabsContent value="reviews" className="space-y-4">
             {pendingReviews.length > 0 && (
               <Card className={theme === 'dark' ? 'bg-slate-800/50 border-yellow-500/50' : 'bg-yellow-50 border-yellow-200'}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    Pending Reviews ({pendingReviews.length})
-                  </CardTitle>
+                  <CardTitle>Pending Reviews ({pendingReviews.length})</CardTitle>
+                  <CardDescription>Review and approve customer feedback</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {pendingReviews.map(review => (
-                    <div
-                      key={review.id}
-                      className={`p-4 rounded-lg border ${
-                        theme === 'dark' ? 'bg-slate-900/50 border-purple-500/30' : 'bg-white border-purple-200'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="font-semibold">{review.name}</div>
-                          <div className="text-sm text-muted-foreground">{review.email}</div>
+                <CardContent>
+                  <div className="space-y-4">
+                    {pendingReviews.map(review => (
+                      <div key={review.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold">{review.name}</p>
+                            <p className="text-xs text-muted-foreground">{review.email}</p>
+                          </div>
+                          <Badge variant="secondary">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                        <p className={`mb-3 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-700'}`}>
+                          {review.message}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleApproveReview(review.id)} size="sm" className="bg-green-500">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button onClick={() => handleRejectReview(review.id)} size="sm" variant="destructive">
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
                         </div>
                       </div>
-                      <p className="text-sm mb-3">{review.text}</p>
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleApproveReview(review.id)}>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteReview(review.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-              <CardHeader>
-                <CardTitle>All Reviews ({reviews.length})</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-                {reviews.map(review => (
-                  <div
-                    key={review.id}
-                    className={`p-3 rounded-lg border ${
-                      theme === 'dark' ? 'bg-slate-900/30 border-purple-500/20' : 'bg-slate-50 border-purple-100'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{review.name}</span>
-                          {review.approved ? (
-                            <Badge variant="default" className="text-xs">Approved</Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">Pending</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm mb-2">{review.text}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3 h-3 ${
-                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
+            {approvedReviews.length > 0 && (
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle>Approved Reviews ({approvedReviews.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {approvedReviews.slice(0, 10).map(review => (
+                      <div key={review.id} className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-sm">{review.name}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{review.message}</p>
                           </div>
-                          <span>•</span>
-                          <span>{new Date(review.createdAt).toLocaleDateString()}</span>
+                          <Badge className="bg-green-500">
+                            <CheckCircle className="w-3 h-3" />
+                          </Badge>
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => handleDeleteReview(review.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
+
+            {pendingReviews.length === 0 && approvedReviews.length === 0 && (
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardContent className="py-8 text-center">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                  <p className="text-muted-foreground">No reviews yet</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* FAQs Tab */}
           <TabsContent value="faqs" className="space-y-4">
-            {unansweredFAQs.length > 0 && (
-              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-yellow-500/50' : 'bg-yellow-50 border-yellow-200'}>
+            {pendingFAQs.length > 0 && (
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-blue-500/50' : 'bg-blue-50 border-blue-200'}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
-                    Unanswered Questions ({unansweredFAQs.length})
-                  </CardTitle>
+                  <CardTitle>Unanswered Questions ({pendingFAQs.length})</CardTitle>
+                  <CardDescription>Provide answers to customer questions</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {unansweredFAQs.map(faq => (
-                    <div
-                      key={faq.id}
-                      className={`p-4 rounded-lg border ${
-                        theme === 'dark' ? 'bg-slate-900/50 border-purple-500/30' : 'bg-white border-purple-200'
-                      }`}
-                    >
-                      <div className="font-semibold mb-3">{faq.question}</div>
-                      <Textarea
-                        placeholder="Type your answer..."
-                        value={faqAnswers[faq.id] || ''}
-                        onChange={(e) => setFaqAnswers(prev => ({ ...prev, [faq.id]: e.target.value }))}
-                        className="mb-2"
-                      />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleAnswerFAQ(faq.id)}>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Submit Answer
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDeleteFAQ(faq.id)}>
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </Button>
+                <CardContent>
+                  <div className="space-y-4">
+                    {pendingFAQs.map(faq => (
+                      <div key={faq.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold">{faq.name}</p>
+                            <p className="text-xs text-muted-foreground">{faq.email}</p>
+                          </div>
+                          <Badge variant="secondary">
+                            {new Date(faq.createdAt).toLocaleDateString()}
+                          </Badge>
+                        </div>
+                        <p className={`mb-3 font-medium ${theme === 'dark' ? 'text-blue-200' : 'text-blue-700'}`}>
+                          Q: {faq.question}
+                        </p>
+                        <Textarea
+                          placeholder="Write your answer here..."
+                          value={faqAnswers[faq.id] || ''}
+                          onChange={(e) => setFaqAnswers(prev => ({ ...prev, [faq.id]: e.target.value }))}
+                          className="mb-3"
+                          rows={3}
+                        />
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => handleAnswerFAQ(faq.id)} 
+                            size="sm" 
+                            className="bg-blue-500"
+                            disabled={!faqAnswers[faq.id]?.trim()}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Answer & Publish
+                          </Button>
+                          <Button onClick={() => handleRejectFAQ(faq.id)} size="sm" variant="destructive">
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-              <CardHeader>
-                <CardTitle>All FAQs ({faqs.length})</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-                {faqs.map(faq => (
-                  <div
-                    key={faq.id}
-                    className={`p-3 rounded-lg border ${
-                      theme === 'dark' ? 'bg-slate-900/30 border-purple-500/20' : 'bg-slate-50 border-purple-100'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="font-medium mb-2">{faq.question}</div>
-                        {faq.answer && (
-                          <p className="text-sm text-muted-foreground">{faq.answer}</p>
-                        )}
+            {approvedFAQs.length > 0 && (
+              <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+                <CardHeader>
+                  <CardTitle>Published FAQs ({approvedFAQs.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {approvedFAQs.slice(0, 10).map(faq => (
+                      <div key={faq.id} className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="font-medium text-sm">{faq.question}</p>
+                          <Badge className="bg-blue-500">
+                            <CheckCircle className="w-3 h-3" />
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{faq.answer}</p>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => handleDeleteFAQ(faq.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
+          {/* Contacts Tab */}
+          <TabsContent value="contacts" className="space-y-4">
+            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
               <CardHeader>
-                <CardTitle>Registered Users ({users.length})</CardTitle>
-                <CardDescription>Manage user accounts and permissions</CardDescription>
+                <CardTitle>Contact Requests ({contactSubmissions.length})</CardTitle>
+                <CardDescription>Manage customer inquiries</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                  {users.map(user => (
-                    <div
-                      key={user.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
-                        theme === 'dark' ? 'bg-slate-900/30 border-purple-500/20' : 'bg-slate-50 border-purple-100'
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Joined: {new Date(user.createdAt).toLocaleDateString()}
+                {contactSubmissions.length > 0 ? (
+                  <div className="space-y-4">
+                    {contactSubmissions.map(contact => (
+                      <div 
+                        key={contact.id} 
+                        className={`p-4 rounded-lg border ${
+                          theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'
+                        } ${contact.status === 'new' ? 'border-l-4 border-l-blue-500' : ''}`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-semibold">{contact.name}</p>
+                              <Badge variant={contact.status === 'new' ? 'default' : contact.status === 'contacted' ? 'secondary' : 'outline'}>
+                                {contact.status}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Mail className="w-3 h-3" />
+                                {contact.email}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(contact.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className={`mb-3 text-sm ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-700'}`}>
+                          {contact.message}
+                        </p>
+                        <div className="flex gap-2">
+                          {contact.status === 'new' && (
+                            <Button 
+                              onClick={() => {
+                                updateContactStatus(contact.id, 'contacted');
+                                showNotification('success', 'Marked as contacted');
+                              }}
+                              size="sm"
+                              variant="outline"
+                            >
+                              Mark as Contacted
+                            </Button>
+                          )}
+                          {contact.status === 'contacted' && (
+                            <Button 
+                              onClick={() => {
+                                updateContactStatus(contact.id, 'resolved');
+                                showNotification('success', 'Marked as resolved');
+                              }}
+                              size="sm"
+                              className="bg-green-500"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Mark as Resolved
+                            </Button>
+                          )}
+                          <Button 
+                            onClick={() => {
+                              if (confirm('Delete this contact request?')) {
+                                deleteContact(contact.id);
+                                showNotification('success', 'Contact deleted');
+                              }
+                            }}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
-                        </Badge>
-                        {user.role !== 'admin' && (
-                          <Button size="sm" variant="ghost" onClick={() => handleDeleteUser(user.email)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* About Tab */}
-          <TabsContent value="about">
-            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>About Section Settings</span>
-                  {!editingAbout && (
-                    <Button size="sm" onClick={() => setEditingAbout(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {editingAbout ? (
-                  <>
-                    <div>
-                      <Label>Name</Label>
-                      <Input
-                        value={aboutForm.name}
-                        onChange={(e) => setAboutForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div>
-                      <Label>Tagline</Label>
-                      <Input
-                        value={aboutForm.tagline}
-                        onChange={(e) => setAboutForm(prev => ({ ...prev, tagline: e.target.value }))}
-                        placeholder="Your tagline"
-                      />
-                    </div>
-                    <div>
-                      <Label>Description (Paragraph 1)</Label>
-                      <Textarea
-                        value={aboutForm.description1}
-                        onChange={(e) => setAboutForm(prev => ({ ...prev, description1: e.target.value }))}
-                        placeholder="First paragraph"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <Label>Description (Paragraph 2)</Label>
-                      <Textarea
-                        value={aboutForm.description2}
-                        onChange={(e) => setAboutForm(prev => ({ ...prev, description2: e.target.value }))}
-                        placeholder="Second paragraph"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <Label>Profile Image</Label>
-                      <Input type="file" accept="image/*" onChange={handleImageUpload} />
-                      {aboutForm.image && (
-                        <img src={aboutForm.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg" />
-                      )}
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <Label>Cars Detailed</Label>
-                        <Input
-                          type="number"
-                          value={aboutForm.statsCars}
-                          onChange={(e) => setAboutForm(prev => ({ ...prev, statsCars: parseInt(e.target.value) || 0 }))}
-                        />
-                      </div>
-                      <div>
-                        <Label>Reviews Label</Label>
-                        <Input
-                          value={aboutForm.statsReviewsLabel}
-                          onChange={(e) => setAboutForm(prev => ({ ...prev, statsReviewsLabel: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label>Happy Label</Label>
-                        <Input
-                          value={aboutForm.statsHappyLabel}
-                          onChange={(e) => setAboutForm(prev => ({ ...prev, statsHappyLabel: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={handleUpdateAbout}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </Button>
-                      <Button variant="outline" onClick={() => setEditingAbout(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="space-y-4">
-                    {about?.image && (
-                      <img src={about.image} alt={about.name} className="w-48 h-48 object-cover rounded-lg" />
-                    )}
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">Name</div>
-                      <div>{about?.name || 'Not set'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">Tagline</div>
-                      <div>{about?.tagline || 'Not set'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground">Description</div>
-                      <div>{about?.description1 || 'Not set'}</div>
-                      <div className="mt-2">{about?.description2 || ''}</div>
-                    </div>
+                  <div className="py-8 text-center">
+                    <Mail className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-muted-foreground">No contact requests yet</p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Audit Log Tab */}
-          <TabsContent value="audit">
-            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : 'bg-white border-purple-200'}>
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-4">
+            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Audit Log
-                </CardTitle>
-                <CardDescription>Recent activity and changes</CardDescription>
+                <CardTitle>Registered Users ({users.length})</CardTitle>
+                <CardDescription>Manage user accounts</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                  {auditEntries.map((entry, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3 rounded-lg border text-sm ${
-                        theme === 'dark' ? 'bg-slate-900/30 border-purple-500/20' : 'bg-slate-50 border-purple-100'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium mb-1">{entry.type}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(entry.ts).toLocaleString()} • IP: {entry.ip}
-                          </div>
-                          {Object.keys(entry.details).length > 0 && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {JSON.stringify(entry.details)}
-                            </div>
+                {users.length > 0 ? (
+                  <div className="space-y-2">
+                    {users.map(usr => (
+                      <div 
+                        key={usr.email} 
+                        className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}
+                      >
+                        <div>
+                          <p className="font-medium">{usr.name}</p>
+                          <p className="text-xs text-muted-foreground">{usr.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={usr.role === 'admin' ? 'default' : 'secondary'}>
+                            {usr.role}
+                          </Badge>
+                          {usr.role !== 'admin' && usr.email !== user?.email && (
+                            <Button
+                              onClick={() => {
+                                if (confirm(`Delete user ${usr.name}?`)) {
+                                  removeUser(usr.email || '');
+                                  showNotification('success', 'User deleted');
+                                }
+                              }}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
                           )}
                         </div>
-                        {entry.admin && (
-                          <Badge variant="default" className="text-xs">Admin</Badge>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center">
+                    <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-muted-foreground">No users yet</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-4">
+            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+              <CardHeader>
+                <CardTitle>Site Settings</CardTitle>
+                <CardDescription>Configure your website</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <p className="font-medium">Site Status</p>
+                    <p className="text-sm text-muted-foreground">Control if customers can see the site</p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setIsOnline(!isOnline);
+                      showNotification('success', `Site is now ${!isOnline ? 'online' : 'offline'}`);
+                    }}
+                    variant={isOnline ? 'default' : 'destructive'}
+                  >
+                    {isOnline ? 'Online' : 'Offline'}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <p className="font-medium">Export Data</p>
+                    <p className="text-sm text-muted-foreground">Download all data as JSON</p>
+                  </div>
+                  <Button onClick={handleExportData} variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+
+                <div className="p-4 rounded-lg border">
+                  <p className="font-medium mb-2">System Information</p>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>Admin: {user?.name} ({user?.email})</p>
+                    <p>Total Storage: ~{Math.round((JSON.stringify({
+                      reviews: { pending: pendingReviews, approved: approvedReviews },
+                      faqs: { pending: pendingFAQs, approved: approvedFAQs },
+                      contacts: contactSubmissions,
+                    }).length / 1024))} KB</p>
+                    <p>Last Activity: {new Date().toLocaleString()}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
