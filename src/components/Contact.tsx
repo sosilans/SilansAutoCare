@@ -239,12 +239,13 @@ export function Contact() {
                 </label>
                 <Input
                   id="name"
+                  name="name"
                   type="text"
                   placeholder={t('contact.form.namePlaceholder')}
                   required
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
-                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/40'
+                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 />
@@ -256,12 +257,13 @@ export function Contact() {
                 </label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder={t('contact.form.emailPlaceholder')}
                   required
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
-                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/40'
+                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 />
@@ -273,11 +275,12 @@ export function Contact() {
                 </label>
                 <Input
                   id="phone"
+                  name="phone"
                   type="tel"
                   placeholder={t('contact.form.phonePlaceholder')}
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
-                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/40'
+                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 />
@@ -289,12 +292,13 @@ export function Contact() {
                 </label>
                 <Textarea
                   id="message"
+                  name="message"
                   placeholder={t('contact.form.messagePlaceholder')}
                   rows={5}
                   required
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
-                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/40'
+                      ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 />
