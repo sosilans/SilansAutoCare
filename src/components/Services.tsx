@@ -1,10 +1,13 @@
-import { motion } from 'motion/react';
-import { Droplet, Shield, Sparkles, Wind, Car, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Droplet, Shield, Sparkles, Wind, Car, Zap, ChevronDown } from 'lucide-react';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
+import { useState } from 'react';
 
 export function Services() {
   const { theme } = useTheme();
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  
   const services = [
     {
       icon: <Droplet className="w-10 h-10" />,
@@ -16,6 +19,18 @@ export function Services() {
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-cyan-900/20',
       borderColorDark: 'border-cyan-500/30',
+      details: {
+        duration: '1-1.5 hours',
+        includes: [
+          'Pre-wash foam treatment',
+          'Hand wash with pH-neutral soap',
+          'Wheel & tire cleaning',
+          'Microfiber drying',
+          'Exterior glass cleaning',
+          'Tire shine application'
+        ],
+        ideal: 'Regular maintenance and keeping your car looking fresh'
+      }
     },
     {
       icon: <Sparkles className="w-10 h-10" />,
@@ -27,6 +42,18 @@ export function Services() {
       bgColorLight: 'bg-purple-50',
       bgColorDark: 'bg-purple-900/20',
       borderColorDark: 'border-purple-500/30',
+      details: {
+        duration: '4-6 hours',
+        includes: [
+          'Multi-stage paint polishing',
+          'Swirl mark removal',
+          'Light scratch removal',
+          'Paint depth measurement',
+          'Professional buffing',
+          'Final polish application'
+        ],
+        ideal: 'Restoring faded paint and removing imperfections'
+      }
     },
     {
       icon: <Shield className="w-10 h-10" />,
@@ -38,6 +65,18 @@ export function Services() {
       bgColorLight: 'bg-pink-50',
       bgColorDark: 'bg-pink-900/20',
       borderColorDark: 'border-pink-500/30',
+      details: {
+        duration: '8-10 hours',
+        includes: [
+          '9H hardness ceramic coating',
+          'Paint correction prep',
+          'Surface decontamination',
+          'Multi-layer application',
+          '5-year protection guarantee',
+          'Hydrophobic water beading'
+        ],
+        ideal: 'Maximum protection and long-term paint preservation'
+      }
     },
     {
       icon: <Wind className="w-10 h-10" />,
@@ -49,6 +88,18 @@ export function Services() {
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-teal-900/20',
       borderColorDark: 'border-teal-500/30',
+      details: {
+        duration: '2-3 hours',
+        includes: [
+          'Steam cleaning of all surfaces',
+          'Leather conditioning',
+          'Carpet & upholstery shampooing',
+          'Dashboard & console cleaning',
+          'Air vent detailing',
+          'Interior glass polishing'
+        ],
+        ideal: 'Deep cleaning and refreshing your car\'s interior'
+      }
     },
     {
       icon: <Car className="w-10 h-10" />,
@@ -60,6 +111,18 @@ export function Services() {
       bgColorLight: 'bg-blue-50',
       bgColorDark: 'bg-blue-900/20',
       borderColorDark: 'border-blue-500/30',
+      details: {
+        duration: '1-2 hours',
+        includes: [
+          'Safe degreasing process',
+          'Engine component protection',
+          'Pressure washing',
+          'Plastic & rubber restoration',
+          'Engine bay dressing',
+          'Final inspection'
+        ],
+        ideal: 'Maintaining engine components and improving resale value'
+      }
     },
     {
       icon: <Zap className="w-10 h-10" />,
@@ -71,6 +134,18 @@ export function Services() {
       bgColorLight: 'bg-purple-50',
       bgColorDark: 'bg-purple-900/20',
       borderColorDark: 'border-pink-500/30',
+      details: {
+        duration: 'Full day (6-8 hours)',
+        includes: [
+          'All Premium Wash services',
+          'Complete Interior Detailing',
+          'Engine Bay Cleaning',
+          'Paint Correction (1-stage)',
+          'Wax protection',
+          'Complimentary air freshener'
+        ],
+        ideal: 'Complete car transformation and maximum value'
+      }
     },
   ];
 
@@ -148,7 +223,9 @@ export function Services() {
               className="group relative"
             >
               <BubbleEffect intensity="low" variant="light">
-                <div className={`h-full p-8 rounded-3xl border-2 cartoon-shadow hover:scale-105 transition-all duration-300 ${
+                <div 
+                  onClick={() => setExpandedCard(expandedCard === index ? null : index)}
+                  className={`h-full p-8 rounded-3xl border-2 cartoon-shadow hover:scale-105 transition-all duration-300 cursor-pointer ${
                   theme === 'dark' 
                     ? `${service.bgColorDark} ${service.borderColorDark} vhs-noise vhs-scanlines` 
                     : `${service.bgColorLight} border-white vhs-noise`
@@ -173,6 +250,56 @@ export function Services() {
                   <div className={`inline-block px-6 py-3 rounded-full bg-gradient-to-r ${service.color} text-white cartoon-shadow-sm vhs-glow gradient-animated`}>
                     <span className="text-lg">Starting at {service.price}</span>
                   </div>
+
+                  {/* Expand indicator */}
+                  <div className="flex items-center justify-center mt-4">
+                    <motion.div
+                      animate={{ rotate: expandedCard === index ? 180 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ChevronDown className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-300' : 'text-gray-500'}`} />
+                    </motion.div>
+                  </div>
+
+                  {/* Expanded Details */}
+                  <AnimatePresence>
+                    {expandedCard === index && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-6 pt-6 border-t-2 border-opacity-20"
+                        style={{ borderColor: 'currentColor' }}
+                      >
+                        <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
+                          <div>
+                            <h4 className="font-semibold mb-2 flex items-center gap-2">
+                              ⏱️ Duration: <span className="font-normal">{service.details.duration}</span>
+                            </h4>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-semibold mb-2">✅ What's Included:</h4>
+                            <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
+                              {service.details.includes.map((item, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="text-green-500 mt-1">•</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
+                            <p className="text-sm">
+                              <span className="font-semibold">💡 Ideal for:</span> {service.details.ideal}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </BubbleEffect>
             </motion.div>

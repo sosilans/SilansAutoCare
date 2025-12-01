@@ -40,7 +40,7 @@ const translations: Record<Language, Record<string, string>> = {
     'about.text2': 'With years of experience and a genuine love for what we do, we bring professional mobile detailing right to your doorstep. From ceramic coatings to paint correction, we use only premium products and techniques.',
     'about.text3': 'Our mission? To make your car look and feel brand new, every single time. Because your ride deserves nothing but the best!',
     'about.stats.cars': 'Cars',
-    'about.stats.reviews': '5-Star Reviews',
+    'about.stats.reviews': '4.93-Star Reviews',
     'about.stats.happy': 'Happy',
     'about.quality': 'Quality',
     'about.quality.desc': 'Premium products & expert care',

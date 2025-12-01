@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useDataStore } from './DataStoreContext';
 import { useAuth } from './AuthContext';
+import { useOnlineStatus } from './OnlineStatusContext';
 import { 
   TrendingUp, 
   Users, 
@@ -68,29 +69,22 @@ async function compressImageFile(file: File, maxDimension = 1000, quality = 0.82
 
 export function AdminDashboard() {
   const { theme } = useTheme();
-  const { isAdmin, user } = useAuth();
-  const {
-    reviews,
-    loadReviews,
-    updateReview,
-    deleteReview,
-    faqs,
-    loadFAQs,
-    updateFAQ,
-    deleteFAQ,
-    users,
-    loadUsers,
-    deleteUser,
-    stats,
-    loadStats,
-    siteAvailable,
-    updateStatus,
-    auditEntries,
-    loadAudit,
-    about,
-    loadAbout,
-    updateAbout,
+  const { isAdmin, user, users, removeUser } = useAuth();
+  const { 
+    pendingReviews, 
+    approvedReviews, 
+    approveReview, 
+    rejectReview,
+    pendingFAQs,
+    approvedFAQs,
+    approveFAQ,
+    rejectFAQ,
+    contactSubmissions,
+    updateContactStatus,
+    deleteContact,
+    stats
   } = useDataStore();
+  const { isOnline, setIsOnline } = useOnlineStatus();
 
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
@@ -216,11 +210,10 @@ export function AdminDashboard() {
     }
   };
 
-  const handleToggleStatus = async () => {
+  const handleToggleStatus = () => {
     try {
-      await updateStatus(!siteAvailable);
-      showNotification('success', `Site ${!siteAvailable ? 'enabled' : 'disabled'}`);
-      await refreshAll();
+      setIsOnline(!isOnline);
+      showNotification('success', `Site ${!isOnline ? 'enabled' : 'disabled'}`);
     } catch (error) {
       showNotification('error', 'Failed to update status');
     }
@@ -421,11 +414,11 @@ export function AdminDashboard() {
           <CardContent className="flex flex-wrap gap-4">
             <Button
               onClick={handleToggleStatus}
-              variant={siteAvailable ? 'default' : 'destructive'}
+              variant={isOnline ? 'default' : 'destructive'}
               className="flex items-center gap-2"
             >
-              {siteAvailable ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              {siteAvailable ? 'Site Online' : 'Site Offline'}
+              {isOnline ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {isOnline ? 'Site Online' : 'Site Offline'}
             </Button>
             <Button
               onClick={() => setAutoRefresh(!autoRefresh)}

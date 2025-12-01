@@ -60,7 +60,7 @@ export function AuthModal() {
 
         {error && (
           <div className={`mb-3 p-3 rounded-xl border-2 ${
-            theme === 'dark' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-red-50 border-red-200 text-red-700'
+            theme === 'dark' ? 'bg-red-900/40 border-red-500/60 text-red-100' : 'bg-red-50 border-red-200 text-red-700'
           }`}>
             {error}
           </div>

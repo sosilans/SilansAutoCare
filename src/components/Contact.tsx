@@ -6,10 +6,12 @@ import { Textarea } from './ui/textarea';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
+import { useDataStore } from './DataStoreContext';
 
 export function Contact() {
   const { theme } = useTheme();
   const { t } = useLanguage();
+  const { submitContact } = useDataStore();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +32,8 @@ export function Contact() {
       return;
     }
     
-    // Here you would normally send to backend/API
-    console.log('Contact form submitted:', { name, email, message });
+    // Save to contact submissions
+    submitContact(name, email, message);
     alert(t('contact.submitSuccess'));
     formEl.reset();
   };

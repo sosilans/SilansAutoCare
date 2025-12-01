@@ -21,6 +21,15 @@ export interface FAQSubmission {
   status: ModerationStatus;
 }
 
+export interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: number;
+  status: 'new' | 'contacted' | 'resolved';
+}
+
 interface DataStoreContextValue {
   // Reviews
   pendingReviews: ReviewSubmission[];
@@ -34,10 +43,16 @@ interface DataStoreContextValue {
   submitQuestion: (name: string, email: string, question: string) => void;
   approveFAQ: (id: string, answer?: string) => void;
   rejectFAQ: (id: string) => void;
+  // Contacts
+  contactSubmissions: ContactSubmission[];
+  submitContact: (name: string, email: string, message: string) => void;
+  updateContactStatus: (id: string, status: ContactSubmission['status']) => void;
+  deleteContact: (id: string) => void;
   // Stats
   stats: {
     reviews: { pending: number; approved: number; total: number };
     faqs: { pending: number; approved: number; total: number };
+    contacts: { new: number; contacted: number; resolved: number; total: number };
   };
 }
 
@@ -47,12 +62,14 @@ const LS_REVIEWS_PENDING = 'cd_pending_reviews';
 const LS_REVIEWS_APPROVED = 'cd_approved_reviews';
 const LS_FAQS_PENDING = 'cd_pending_faqs';
 const LS_FAQS_APPROVED = 'cd_approved_faqs';
+const LS_CONTACTS = 'cd_contact_submissions';
 
 export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   const [pendingReviews, setPendingReviews] = useState<ReviewSubmission[]>([]);
   const [approvedReviews, setApprovedReviews] = useState<ReviewSubmission[]>([]);
   const [pendingFAQs, setPendingFAQs] = useState<FAQSubmission[]>([]);
   const [approvedFAQs, setApprovedFAQs] = useState<FAQSubmission[]>([]);
+  const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
 
   useEffect(() => {
     try {
@@ -60,10 +77,12 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
       const ar = localStorage.getItem(LS_REVIEWS_APPROVED);
       const pf = localStorage.getItem(LS_FAQS_PENDING);
       const af = localStorage.getItem(LS_FAQS_APPROVED);
+      const cs = localStorage.getItem(LS_CONTACTS);
       if (pr) setPendingReviews(JSON.parse(pr));
       if (ar) setApprovedReviews(JSON.parse(ar));
       if (pf) setPendingFAQs(JSON.parse(pf));
       if (af) setApprovedFAQs(JSON.parse(af));
+      if (cs) setContactSubmissions(JSON.parse(cs));
     } catch {}
   }, []);
 
@@ -71,6 +90,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { try { localStorage.setItem(LS_REVIEWS_APPROVED, JSON.stringify(approvedReviews)); } catch {} }, [approvedReviews]);
   useEffect(() => { try { localStorage.setItem(LS_FAQS_PENDING, JSON.stringify(pendingFAQs)); } catch {} }, [pendingFAQs]);
   useEffect(() => { try { localStorage.setItem(LS_FAQS_APPROVED, JSON.stringify(approvedFAQs)); } catch {} }, [approvedFAQs]);
+  useEffect(() => { try { localStorage.setItem(LS_CONTACTS, JSON.stringify(contactSubmissions)); } catch {} }, [contactSubmissions]);
 
   function submitReview(name: string, email: string, message: string) {
     const item: ReviewSubmission = {
@@ -118,16 +138,48 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     setPendingFAQs(prev => prev.filter(i => i.id !== id));
   }
 
-  const stats = useMemo(() => ({
-    reviews: { pending: pendingReviews.length, approved: approvedReviews.length, total: pendingReviews.length + approvedReviews.length },
-    faqs: { pending: pendingFAQs.length, approved: approvedFAQs.length, total: pendingFAQs.length + approvedFAQs.length },
-  }), [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs]);
+  function submitContact(name: string, email: string, message: string) {
+    const item: ContactSubmission = {
+      id: crypto.randomUUID(),
+      name, email, message,
+      createdAt: Date.now(),
+      status: 'new',
+    };
+    setContactSubmissions(prev => [item, ...prev]);
+  }
+
+  function updateContactStatus(id: string, status: ContactSubmission['status']) {
+    setContactSubmissions(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+  }
+
+  function deleteContact(id: string) {
+    setContactSubmissions(prev => prev.filter(i => i.id !== id));
+  }
+
+  const stats = useMemo(() => {
+    const contactsByStatus = contactSubmissions.reduce((acc, c) => {
+      acc[c.status] = (acc[c.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return {
+      reviews: { pending: pendingReviews.length, approved: approvedReviews.length, total: pendingReviews.length + approvedReviews.length },
+      faqs: { pending: pendingFAQs.length, approved: approvedFAQs.length, total: pendingFAQs.length + approvedFAQs.length },
+      contacts: { 
+        new: contactsByStatus.new || 0, 
+        contacted: contactsByStatus.contacted || 0, 
+        resolved: contactsByStatus.resolved || 0, 
+        total: contactSubmissions.length 
+      },
+    };
+  }, [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
 
   const value: DataStoreContextValue = useMemo(() => ({
     pendingReviews, approvedReviews, submitReview, approveReview, rejectReview,
     pendingFAQs, approvedFAQs, submitQuestion, approveFAQ, rejectFAQ,
+    contactSubmissions, submitContact, updateContactStatus, deleteContact,
     stats,
-  }), [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, stats]);
+  }), [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions, stats]);
 
   return (
     <DataStoreContext.Provider value={value}>{children}</DataStoreContext.Provider>
