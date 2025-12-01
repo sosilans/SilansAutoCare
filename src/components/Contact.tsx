@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Facebook, Clock, Instagram } from 'lucide-react';
 import { Button } from './ui/button';
@@ -13,12 +14,13 @@ export function Contact() {
   const { t } = useLanguage();
   const { submitContact } = useDataStore();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formEl = e.target as HTMLFormElement;
     const formData = new FormData(formEl);
     const name = String(formData.get('name') || '').trim();
     const email = String(formData.get('email') || '').trim();
+    const phone = String(formData.get('phone') || '').trim();
     const message = String(formData.get('message') || '').trim();
     
     if (!name || !email || !message) {
@@ -34,7 +36,33 @@ export function Contact() {
     
     // Save to contact submissions
     submitContact(name, email, message);
-    alert(t('contact.submitSuccess'));
+    
+    // Send to Telegram
+    try {
+      const response = await fetch('/.netlify/functions/send-telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          message,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send to Telegram:', await response.text());
+        alert('⚠️ Message saved but Telegram notification failed');
+      } else {
+        alert(t('contact.submitSuccess'));
+      }
+    } catch (error) {
+      console.error('Error sending to Telegram:', error);
+      alert('⚠️ Message saved but Telegram notification failed');
+    }
+    
     formEl.reset();
   };
 
