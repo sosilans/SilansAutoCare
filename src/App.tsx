@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { AboutMe } from './components/AboutMe';
@@ -9,6 +10,7 @@ import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { FloatingBubbles } from './components/FloatingBubbles';
 import { AdminPanel } from './components/AdminPanel';
+import { AdminDashboard } from './components/AdminDashboard';
 import { AuthProvider } from './components/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { ThemeProvider, useTheme } from './components/ThemeContext';
@@ -18,6 +20,28 @@ import { DataStoreProvider } from './components/DataStoreContext';
 
 function AppContent() {
   const { theme } = useTheme();
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Show AdminDashboard on /admin route
+  if (currentPath === '/admin') {
+    return (
+      <div 
+        className={`min-h-screen overflow-x-hidden relative transition-colors duration-500 ${
+          theme === 'light'
+            ? 'bg-gradient-to-b from-slate-50 via-blue-50/30 to-indigo-50/50 text-gray-900'
+            : 'bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950 text-white'
+        }`}
+      >
+        <AdminDashboard />
+      </div>
+    );
+  }
   
   return (
     <div 
