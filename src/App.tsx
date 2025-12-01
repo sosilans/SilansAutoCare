@@ -20,16 +20,16 @@ import { DataStoreProvider } from './components/DataStoreContext';
 
 function AppContent() {
   const { theme } = useTheme();
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
 
   useEffect(() => {
-    const handlePopState = () => setCurrentPath(window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const handleHashChange = () => setCurrentHash(window.location.hash);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Show AdminDashboard on /admin route
-  if (currentPath === '/admin') {
+  // Show AdminDashboard on #admin route
+  if (currentHash === '#admin') {
     return (
       <div 
         className={`min-h-screen overflow-x-hidden relative transition-colors duration-500 ${

@@ -9,7 +9,7 @@ export function AdminPanel() {
   if (!isAdmin) return null;
 
   const handleOpenAdmin = () => {
-    window.open('/admin', '_blank', 'noopener,noreferrer');
+    window.location.hash = 'admin';
   };
 
   return (
