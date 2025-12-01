@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useDataStore } from './DataStoreContext';
@@ -32,13 +32,39 @@ export function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState('analytics');
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Wait for auth to load
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+              <p className={theme === 'dark' ? 'text-purple-200' : 'text-gray-700'}>Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card>
+      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-red-500/30' : ''}>
           <CardContent className="pt-6">
             <p className="text-red-500">Access Denied. Admin only.</p>
+            <Button onClick={() => window.location.href = '/'} className="mt-4" variant="outline">
+              <Home className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
           </CardContent>
         </Card>
       </div>
