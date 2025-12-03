@@ -8,11 +8,37 @@ import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useDataStore } from './DataStoreContext';
+import { TELEGRAM_PROXY_URL as CONFIG_PROXY_URL, RECAPTCHA_SITE_KEY } from '../config';
 
 export function Contact() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { submitContact } = useDataStore();
+  // Optional: set this to your Google Apps Script Web App URL to use proxy
+  const TELEGRAM_PROXY_URL = CONFIG_PROXY_URL || (typeof window !== 'undefined' && (window as any).__TELEGRAM_PROXY_URL) || '';
+
+  async function getRecaptchaToken(): Promise<string | undefined> {
+    if (!RECAPTCHA_SITE_KEY) return undefined;
+    // ensure script
+    if (typeof window !== 'undefined' && !(window as any).grecaptcha) {
+      await new Promise<void>((resolve) => {
+        const s = document.createElement('script');
+        s.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+        s.async = true;
+        s.onload = () => resolve();
+        document.head.appendChild(s);
+      });
+    }
+    return new Promise<string | undefined>((resolve) => {
+      const gr = (window as any).grecaptcha;
+      if (!gr) return resolve(undefined);
+      gr.ready(() => {
+        gr.execute(RECAPTCHA_SITE_KEY, { action: 'contact' })
+          .then((token: string) => resolve(token))
+          .catch(() => resolve(undefined));
+      });
+    });
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +48,7 @@ export function Contact() {
     const email = String(formData.get('email') || '').trim();
     const phone = String(formData.get('phone') || '').trim();
     const message = String(formData.get('message') || '').trim();
+    const website = String(formData.get('website') || '').trim(); // honeypot
     
     if (!name || !email || !message) {
       alert('❌ Please fill in all fields.');
@@ -37,9 +64,11 @@ export function Contact() {
     // Save to contact submissions
     submitContact(name, email, message);
     
-    // Send to Telegram
+    // Send to Telegram via proxy if configured, fallback to Netlify function
     try {
-      const response = await fetch('/.netlify/functions/send-telegram', {
+      const endpoint = TELEGRAM_PROXY_URL || '/.netlify/functions/send-telegram';
+      const recaptchaToken = await getRecaptchaToken();
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,12 +78,18 @@ export function Contact() {
           email,
           phone,
           message,
+          website, // honeypot
+          recaptchaToken,
         }),
       });
+      const respText = await response.text();
+      let respJson: any = {};
+      try { respJson = JSON.parse(respText); } catch { respJson = { raw: respText }; }
 
-      if (!response.ok) {
-        console.error('Failed to send to Telegram:', await response.text());
-        alert('⚠️ Message saved but Telegram notification failed');
+      if (!response.ok || respJson.error) {
+        console.error('Failed to send to Telegram:', respJson);
+        const errMsg = respJson && respJson.error ? respJson.error : 'Unknown error';
+        alert(`⚠️ Message saved but Telegram notification failed: ${errMsg}`);
       } else {
         alert(t('contact.submitSuccess'));
       }
@@ -340,6 +375,15 @@ export function Contact() {
                   {t('contact.form.send')} 🚀
                 </Button>
               </BubbleEffect>
+              {/* Honeypot field (must be inside the form) */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                style={{ display: 'none' }}
+              />
             </motion.form>
           </motion.div>
         </div>
