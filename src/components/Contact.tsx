@@ -64,9 +64,9 @@ export function Contact() {
     // Save to contact submissions
     submitContact(name, email, message);
     
-    // Send to Telegram via proxy if configured, fallback to Netlify function
+    // Send via Netlify proxy (avoids CORS issues with GAS)
     try {
-      const endpoint = TELEGRAM_PROXY_URL || '/.netlify/functions/send-telegram';
+      const endpoint = '/.netlify/functions/contact-proxy';
       const recaptchaToken = await getRecaptchaToken();
       const response = await fetch(endpoint, {
         method: 'POST',
