@@ -87,15 +87,15 @@ export function Contact() {
       try { respJson = JSON.parse(respText); } catch { respJson = { raw: respText }; }
 
       if (!response.ok || respJson.error) {
-        console.error('Failed to send to Telegram:', respJson);
+        console.error('Submission error:', respJson);
         const errMsg = respJson && respJson.error ? respJson.error : 'Unknown error';
-        alert(`⚠️ Message saved but Telegram notification failed: ${errMsg}`);
+        alert(`⚠️ Submission failed: ${errMsg}`);
       } else {
         alert(t('contact.submitSuccess'));
       }
     } catch (error) {
-      console.error('Error sending to Telegram:', error);
-      alert('⚠️ Message saved but Telegram notification failed');
+      console.error('Submission request failed:', error);
+      alert('⚠️ Submission failed');
     }
     
     formEl.reset();
