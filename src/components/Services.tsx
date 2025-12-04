@@ -188,8 +188,11 @@ export function Services() {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 relative">
-          {services.map((service, index) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 relative pb-96">
+          {services.map((service, index) => {
+            const cardRow = Math.floor(index / 3);
+            const isFirstRow = cardRow === 0;
+            return (
             <motion.div
               key={service.title}
               initial={{ opacity: 0, y: 30 }}
@@ -262,52 +265,71 @@ export function Services() {
                   </div>
                 </div>
               </BubbleEffect>
-
-              {/* Expanded Details - Overlay Popup */}
-              <AnimatePresence>
-                {expandedCard === index && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className={`absolute top-full left-0 right-0 mt-2 p-6 rounded-3xl border-2 shadow-2xl z-20 max-w-sm ${
-                      theme === 'dark' 
-                        ? `${service.bgColorDark} ${service.borderColorDark} vhs-noise vhs-scanlines` 
-                        : `${service.bgColorLight} border-white vhs-noise`
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
-                      <div>
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                          ⏱️ Duration: <span className="font-normal">{service.details.duration}</span>
-                        </h4>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2">✅ What's Included:</h4>
-                        <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
-                          {service.details.includes.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-green-500 mt-1">•</span>
-                              <span className="text-sm">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
-                        <p className="text-sm">
-                          <span className="font-semibold">💡 Ideal for:</span> {service.details.ideal}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
-          ))}
+            );
+          })}
+        </div>
+
+        {/* Expanded Details Popup - Outside Grid */}
+        <AnimatePresence>
+          {expandedCard !== null && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-20"
+            >
+              <motion.div
+                className={`p-6 rounded-3xl border-2 shadow-2xl w-96 pointer-events-auto ${
+                  theme === 'dark' 
+                    ? `${services[expandedCard].bgColorDark} ${services[expandedCard].borderColorDark} vhs-noise vhs-scanlines` 
+                    : `${services[expandedCard].bgColorLight} border-white vhs-noise`
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
+                  <h3 className="text-xl font-bold mb-4">{services[expandedCard].title}</h3>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      ⏱️ Duration: <span className="font-normal">{services[expandedCard].details.duration}</span>
+                    </h4>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-2">✅ What's Included:</h4>
+                    <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
+                      {services[expandedCard].details.includes.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-green-500 mt-1">•</span>
+                          <span className="text-sm">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
+                    <p className="text-sm">
+                      <span className="font-semibold">💡 Ideal for:</span> {services[expandedCard].details.ideal}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setExpandedCard(null)}
+                    className={`w-full mt-4 px-4 py-2 rounded-lg transition-colors ${
+                      theme === 'dark'
+                        ? 'bg-purple-700/50 hover:bg-purple-600/50 text-purple-100'
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                    }`}
+                  >
+                    Close
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         </div>
 
         {/* CTA */}
