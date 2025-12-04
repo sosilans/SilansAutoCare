@@ -330,7 +330,6 @@ export function Services() {
             </motion.div>
           )}
         </AnimatePresence>
-        </div>
 
         {/* CTA */}
         <motion.div
