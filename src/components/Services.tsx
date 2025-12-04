@@ -188,7 +188,7 @@ export function Services() {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 relative">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
@@ -260,48 +260,52 @@ export function Services() {
                       <ChevronDown className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-300' : 'text-gray-500'}`} />
                     </motion.div>
                   </div>
-
-                  {/* Expanded Details */}
-                  <AnimatePresence>
-                    {expandedCard === index && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-6 pt-6 border-t-2 border-opacity-20"
-                        style={{ borderColor: 'currentColor' }}
-                      >
-                        <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
-                          <div>
-                            <h4 className="font-semibold mb-2 flex items-center gap-2">
-                              ⏱️ Duration: <span className="font-normal">{service.details.duration}</span>
-                            </h4>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">✅ What's Included:</h4>
-                            <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
-                              {service.details.includes.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-green-500 mt-1">•</span>
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
-                            <p className="text-sm">
-                              <span className="font-semibold">💡 Ideal for:</span> {service.details.ideal}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               </BubbleEffect>
+
+              {/* Expanded Details - Overlay Popup */}
+              <AnimatePresence>
+                {expandedCard === index && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={`absolute top-full left-0 right-0 mt-2 p-6 rounded-3xl border-2 shadow-2xl z-20 max-w-sm ${
+                      theme === 'dark' 
+                        ? `${service.bgColorDark} ${service.borderColorDark} vhs-noise vhs-scanlines` 
+                        : `${service.bgColorLight} border-white vhs-noise`
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
+                      <div>
+                        <h4 className="font-semibold mb-2 flex items-center gap-2">
+                          ⏱️ Duration: <span className="font-normal">{service.details.duration}</span>
+                        </h4>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">✅ What's Included:</h4>
+                        <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
+                          {service.details.includes.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-green-500 mt-1">•</span>
+                              <span className="text-sm">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
+                        <p className="text-sm">
+                          <span className="font-semibold">💡 Ideal for:</span> {service.details.ideal}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </div>
