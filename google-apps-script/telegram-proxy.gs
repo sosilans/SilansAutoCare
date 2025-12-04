@@ -1,15 +1,20 @@
 /**
- * Google Apps Script Web App для сохранения контактов с сайта в Google Таблицу.
+ * Google Apps Script Web App для сохранения контактов с сайта в Google Таблицу + Telegram.
  * Deploy as Web App (Execute as: Me; Who has access: Anyone).
  * 
  * Script Properties:
  * - SPREADSHEET_ID (обязательно) - ID Google Таблицы для сохранения контактов
+ * - TELEGRAM_BOT_TOKEN (опционально) - токен Telegram бота
+ * - TELEGRAM_CHAT_ID (опционально) - ID чата для уведомлений
+ * - RECAPTCHA_SECRET (опционально) - секретный ключ reCAPTCHA v3
  */
 
 function doPost(e) {
   try {
     var props = PropertiesService.getScriptProperties();
     var SPREADSHEET_ID = props.getProperty('SPREADSHEET_ID');
+    var TELEGRAM_BOT_TOKEN = props.getProperty('TELEGRAM_BOT_TOKEN');
+    var TELEGRAM_CHAT_ID = props.getProperty('TELEGRAM_CHAT_ID');
     var RECAPTCHA_SECRET = props.getProperty('RECAPTCHA_SECRET');
 
     // Проверка наличия ID таблицы
@@ -141,11 +146,44 @@ function doPost(e) {
       // Добавляем данные клиента
       sheet.appendRow([timestamp, name, email, phone, message]);
       
+      // Отправка в Telegram (опционально)
+      var telegramSent = false;
+      if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+        try {
+          var telegramMessage = '🚗 *Новая заявка с сайта!*\n\n' +
+                                '👤 *Имя:* ' + name + '\n' +
+                                '📧 *Email:* ' + email + '\n' +
+                                (phone ? '📞 *Телефон:* ' + phone + '\n' : '') +
+                                '💬 *Сообщение:* ' + message + '\n\n' +
+                                '🕐 *Время:* ' + timestamp;
+          
+          var telegramUrl = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+          var telegramPayload = {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: telegramMessage,
+            parse_mode: 'Markdown'
+          };
+          
+          var telegramResponse = UrlFetchApp.fetch(telegramUrl, {
+            method: 'post',
+            contentType: 'application/json',
+            payload: JSON.stringify(telegramPayload),
+            muteHttpExceptions: true
+          });
+          
+          var telegramResult = safeJson(telegramResponse.getContentText());
+          telegramSent = telegramResult.ok === true;
+        } catch (tgErr) {
+          // Игнорируем ошибки Telegram, главное что в Sheets сохранили
+        }
+      }
+      
       // Успешный ответ
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
-        message: 'Контакт успешно сохранён в Google Таблицу',
+        message: 'Контакт успешно сохранён' + (telegramSent ? ' и отправлен в Telegram' : ''),
         timestamp: timestamp,
+        telegramSent: telegramSent,
         input: debug ? { name: name, email: email, phone: phone, message: message } : undefined,
       })).setMimeType(ContentService.MimeType.JSON);
       
@@ -175,11 +213,14 @@ function safeJson(text) {
 function doGet(e) {
   var props = PropertiesService.getScriptProperties();
   var SPREADSHEET_ID_SET = !!props.getProperty('SPREADSHEET_ID');
+  var TELEGRAM_BOT_TOKEN_SET = !!props.getProperty('TELEGRAM_BOT_TOKEN');
+  var TELEGRAM_CHAT_ID_SET = !!props.getProperty('TELEGRAM_CHAT_ID');
   
   return ContentService.createTextOutput(JSON.stringify({
     ok: true,
     configured: SPREADSHEET_ID_SET,
     spreadsheetIdPresent: SPREADSHEET_ID_SET,
+    telegramConfigured: TELEGRAM_BOT_TOKEN_SET && TELEGRAM_CHAT_ID_SET,
     note: 'POST с полями: name, email, message, phone (опционально), debug=1 (опционально)',
   })).setMimeType(ContentService.MimeType.JSON);
 }
