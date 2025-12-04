@@ -273,61 +273,93 @@ export function Services() {
         {/* Expanded Details Popup - Outside Grid */}
         <AnimatePresence>
           {expandedCard !== null && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 pointer-events-none flex items-start justify-center pt-20"
-            >
+            <>
+              {/* Semi-transparent dark backdrop */}
               <motion.div
-                className={`p-6 rounded-3xl border-2 shadow-2xl w-96 pointer-events-auto ${
-                  theme === 'dark' 
-                    ? `${services[expandedCard].bgColorDark} ${services[expandedCard].borderColorDark} vhs-noise vhs-scanlines` 
-                    : `${services[expandedCard].bgColorLight} border-white vhs-noise`
-                }`}
-                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+                onClick={() => setExpandedCard(null)}
+              />
+              
+              {/* Popup Card */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 25 }}
+                className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center"
               >
-                <div className={`space-y-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-800'}`}>
-                  <h3 className="text-xl font-bold mb-4">{services[expandedCard].title}</h3>
-                  
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      ⏱️ Duration: <span className="font-normal">{services[expandedCard].details.duration}</span>
-                    </h4>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold mb-2">✅ What's Included:</h4>
-                    <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
-                      {services[expandedCard].details.includes.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-green-500 mt-1">•</span>
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-purple-800/30' : 'bg-white/60'}`}>
-                    <p className="text-sm">
-                      <span className="font-semibold">💡 Ideal for:</span> {services[expandedCard].details.ideal}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => setExpandedCard(null)}
-                    className={`w-full mt-4 px-4 py-2 rounded-lg transition-colors ${
-                      theme === 'dark'
-                        ? 'bg-purple-700/50 hover:bg-purple-600/50 text-purple-100'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                <BubbleEffect intensity="high" variant="bright">
+                  <motion.div
+                    className={`p-8 rounded-3xl border-2 shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto ${
+                      theme === 'dark' 
+                        ? `${services[expandedCard].bgColorDark} ${services[expandedCard].borderColorDark} vhs-noise vhs-scanlines` 
+                        : `${services[expandedCard].bgColorLight} border-white vhs-noise`
                     }`}
+                    animate={{
+                      y: [0, -8, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    Close
-                  </button>
-                </div>
+                    {/* Header */}
+                    <div className="flex-shrink-0 mb-4">
+                      <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
+                        {services[expandedCard].title}
+                      </h3>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto pr-4 space-y-4">
+                      <div>
+                        <h4 className={`font-semibold mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-purple-200' : 'text-gray-800'}`}>
+                          ⏱️ Duration: <span className={`font-normal ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>{services[expandedCard].details.duration}</span>
+                        </h4>
+                      </div>
+                      
+                      <div>
+                        <h4 className={`font-semibold mb-2 ${theme === 'dark' ? 'text-purple-200' : 'text-gray-800'}`}>✅ What's Included:</h4>
+                        <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
+                          {services[expandedCard].details.includes.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-green-400 mt-1 flex-shrink-0">•</span>
+                              <span className="text-sm">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-purple-800/40 border border-purple-700/40' : 'bg-white/70 border border-gray-200'}`}>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-purple-200' : 'text-gray-700'}`}>
+                          <span className="font-semibold block mb-1">💡 Ideal for:</span> {services[expandedCard].details.ideal}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer Buttons */}
+                    <div className="flex-shrink-0 mt-6 pt-4 border-t border-opacity-20" style={{ borderColor: 'currentColor' }}>
+                      <button
+                        onClick={() => setExpandedCard(null)}
+                        className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                          theme === 'dark'
+                            ? 'bg-gradient-to-r from-purple-700 to-pink-600 hover:shadow-lg hover:shadow-purple-500/50 text-white'
+                            : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg text-white'
+                        }`}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </motion.div>
+                </BubbleEffect>
               </motion.div>
-            </motion.div>
+            </>
           )}
         </AnimatePresence>
 
