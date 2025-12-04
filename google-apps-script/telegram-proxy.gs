@@ -148,6 +148,7 @@ function doPost(e) {
       
       // Отправка в Telegram (опционально)
       var telegramSent = false;
+      var telegramError = null;
       if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
         try {
           var telegramMessage = '🚗 *Новая заявка с сайта!*\n\n' +
@@ -173,8 +174,11 @@ function doPost(e) {
           
           var telegramResult = safeJson(telegramResponse.getContentText());
           telegramSent = telegramResult.ok === true;
+          if (!telegramSent) {
+            telegramError = telegramResult.description || 'Unknown Telegram error';
+          }
         } catch (tgErr) {
-          // Игнорируем ошибки Telegram, главное что в Sheets сохранили
+          telegramError = tgErr.message || String(tgErr);
         }
       }
       
@@ -184,6 +188,7 @@ function doPost(e) {
         message: 'Контакт успешно сохранён' + (telegramSent ? ' и отправлен в Telegram' : ''),
         timestamp: timestamp,
         telegramSent: telegramSent,
+        telegramError: debug ? telegramError : undefined,
         input: debug ? { name: name, email: email, phone: phone, message: message } : undefined,
       })).setMimeType(ContentService.MimeType.JSON);
       
