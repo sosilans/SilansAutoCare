@@ -19,7 +19,7 @@ export function AboutMe() {
       alt: "Misha - Professional Auto Detailing Specialist"
     },
     {
-      src: "/assets/misha_1.jpg",
+      src: "./assets/misha_1.jpg",
       alt: "Misha at work - Detailing in action"
     }
   ];
@@ -73,7 +73,7 @@ export function AboutMe() {
   const principles = [
     {
       icon: <Sparkles className="w-8 h-8" />,
-      title: '💎 Quality',
+      title: 'Quality',
       description: 'Only premium products & techniques',
       color: 'from-blue-400 to-cyan-400',
       bgColorLight: 'bg-blue-100',
@@ -82,7 +82,7 @@ export function AboutMe() {
     },
     {
       icon: <Award className="w-8 h-8" />,
-      title: '⚡ Precision',
+      title: 'Precision',
       description: 'Every detail counts — literally',
       color: 'from-purple-400 to-pink-400',
       bgColorLight: 'bg-purple-100',
@@ -91,7 +91,7 @@ export function AboutMe() {
     },
     {
       icon: <Heart className="w-8 h-8" />,
-      title: '❤️ Passion',
+      title: 'Passion',
       description: 'This isn\'t work, it\'s art',
       color: 'from-pink-400 to-rose-400',
       bgColorLight: 'bg-pink-100',
@@ -100,7 +100,7 @@ export function AboutMe() {
     },
     {
       icon: <Smile className="w-8 h-8" />,
-      title: '😎 Happy Clients',
+      title: 'Happy Clients',
       description: 'Your car, my pride',
       color: 'from-green-400 to-emerald-400',
       bgColorLight: 'bg-green-100',
@@ -258,33 +258,33 @@ export function AboutMe() {
                 </motion.div>
               </AnimatePresence>
               
-              {/* Sparkle decorations */}
+              {/* Rock emoji decorations - smooth continuous glow */}
               <motion.div
                 animate={{
-                  opacity: [0, 1, 0.6],
-                  scale: [0.9, 1.15, 0.95],
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [0.95, 1.1, 0.95],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 4,
                   repeat: Infinity,
-                  repeatDelay: 1,
+                  ease: "easeInOut",
                 }}
-                className="absolute top-10 right-10 pointer-events-none text-4xl drop-shadow-[0_0_10px_rgba(255,193,7,0.4)]"
+                className="absolute top-10 right-10 pointer-events-none text-4xl drop-shadow-[0_0_12px_rgba(255,193,7,0.5)]"
               >
                 🤘
               </motion.div>
               <motion.div
                 animate={{
-                  opacity: [0, 1, 0.6],
-                  scale: [0.9, 1.15, 0.95],
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [0.95, 1.1, 0.95],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 4,
                   repeat: Infinity,
-                  repeatDelay: 1,
-                  delay: 0.5,
+                  ease: "easeInOut",
+                  delay: 1,
                 }}
-                className="absolute bottom-20 left-10 pointer-events-none text-3xl drop-shadow-[0_0_10px_rgba(0,245,255,0.4)]"
+                className="absolute bottom-20 left-10 pointer-events-none text-3xl drop-shadow-[0_0_12px_rgba(0,245,255,0.5)]"
               >
                 🤘
               </motion.div>
