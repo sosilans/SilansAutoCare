@@ -198,30 +198,15 @@ export function Services() {
               initial={{ opacity: 0, y: 30 }}
               animate={{
                 opacity: 1,
-                y: [0, -12, 0],
-                x: [0, index % 2 === 0 ? 4 : -4, 0],
-                rotate: [0, index % 2 === 0 ? 0.4 : -0.4, 0],
+                y: expandedCard === index ? [0, -12, 0] : 0,
               }}
               transition={{
                 opacity: { duration: 0.6, delay: index * 0.1 },
-                y: {
-                  duration: 7 + index * 0.7,
+                y: expandedCard === index ? {
+                  duration: 5,
                   repeat: Infinity,
                   ease: "easeInOut",
-                  delay: index * 0.2,
-                },
-                x: {
-                  duration: 7 + index * 0.7,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: index * 0.2,
-                },
-                rotate: {
-                  duration: 7 + index * 0.7,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: index * 0.2,
-                },
+                } : { duration: 0.3 },
               }}
               className="group relative"
             >

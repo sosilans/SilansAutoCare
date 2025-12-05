@@ -1,5 +1,16 @@
 /* Tailwind and fonts are included via src/index.css to satisfy PostCSS import order. */
 
+/* Respect user's motion preferences for performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @theme {
   /* Cartoon Colors - Bright & Fun with VHS vibes */
   --color-primary-blue: #3B82F6;

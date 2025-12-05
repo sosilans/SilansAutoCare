@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Award, Heart, Sparkles, Smile, Star } from 'lucide-react';
+import { Award, Heart, Sparkles, Smile } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
@@ -42,7 +42,7 @@ export function AboutMe() {
       '#0ea5e9', '#0284c7', '#0369a1', // blue
     ];
     
-    const newParticles = Array.from({ length: 12 }, (_, i) => ({
+    const newParticles = Array.from({ length: 6 }, (_, i) => ({
       id: Date.now() + i,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -52,7 +52,7 @@ export function AboutMe() {
     
     setParticles(newParticles);
     
-    const newFloatingBubbles = Array.from({ length: 8 }, (_, i) => ({
+    const newFloatingBubbles = Array.from({ length: 4 }, (_, i) => ({
       id: Date.now() + 1000 + i,
       x: 10 + Math.random() * 80,
       startY: 70 + Math.random() * 25,
@@ -205,9 +205,9 @@ export function AboutMe() {
                     style={{ backgroundColor: particle.color, opacity: 0.6 }}
                   />
                 ) : (
-                  <Star 
-                    className="w-6 h-6" 
-                    style={{ color: particle.color, fill: particle.color, opacity: 0.6 }}
+                  <div 
+                    className="w-6 h-6 rounded-full"
+                    style={{ backgroundColor: particle.color, opacity: 0.6 }}
                   />
                 )}
               </motion.div>

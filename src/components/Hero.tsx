@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Sparkles, Star, Droplets, User } from 'lucide-react';
+import { Sparkles, Star, Droplets } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
 import { BubbleEffect } from './BubbleEffect';
@@ -62,8 +62,8 @@ export function Hero() {
       '#14b8a6', '#2dd4bf' // бирюзовые
     ];
     
-    // Разлетающиеся частицы
-    const newParticles = Array.from({ length: 15 }, (_, i) => ({
+    // Разлетающиеся частицы (reduced for performance)
+    const newParticles = Array.from({ length: 8 }, (_, i) => ({
       id: Date.now() + i,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -74,7 +74,7 @@ export function Hero() {
     setParticles(newParticles);
     
     // Всплывающие пузырьки
-    const newFloatingBubbles = Array.from({ length: 8 }, (_, i) => ({
+    const newFloatingBubbles = Array.from({ length: 5 }, (_, i) => ({
       id: Date.now() + 1000 + i,
       x: 50 + Math.random() * 45, // от 50% до 95% ширины (правая сторона, где фото)
       startY: 70 + Math.random() * 25, // начальная позиция от 70% до 95% (снизу фотографии)
