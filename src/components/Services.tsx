@@ -12,7 +12,7 @@ export function Services() {
     {
       icon: <Droplet className="w-10 h-10" />,
       emoji: '💧',
-      title: 'Basic Wash',
+      title: '💧 Basic Wash',
       description: 'Gentle exterior hand wash, foam bath, microfiber dry',
       price: '$120',
       color: 'from-cyan-400 via-blue-400 to-purple-400',
@@ -35,7 +35,7 @@ export function Services() {
     {
       icon: <Wind className="w-10 h-10" />,
       emoji: '🌪️',
-      title: 'Interior Deep Clean',
+      title: '🌪️ Interior Deep Clean',
       description: 'Thorough vacuuming, seat shampoo, dash & vents detail',
       price: '$150',
       color: 'from-cyan-400 via-teal-400 to-green-400',
@@ -58,7 +58,7 @@ export function Services() {
     {
       icon: <Car className="w-10 h-10" />,
       emoji: '🚗',
-      title: 'Engine Bay Clean',
+      title: '🚗 Engine Bay Clean',
       description: 'Safe degreasing, dressing and shine for engine components',
       price: '$40+',
       color: 'from-blue-400 via-cyan-400 to-teal-400',
@@ -81,7 +81,7 @@ export function Services() {
     {
       icon: <Sparkles className="w-10 h-10" />,
       emoji: '✨',
-      title: 'Exterior Detail',
+      title: '✨ Exterior Detail',
       description: 'Professional full exterior cleaning — tires, trim, windows, and shine restoration.',
       price: '$250+',
       color: 'from-purple-400 via-pink-400 to-purple-500',
@@ -104,7 +104,7 @@ export function Services() {
     {
       icon: <Zap className="w-10 h-10" />,
       emoji: '⚡',
-      title: 'Full Detail Package',
+      title: '⚡ Full Detail Package',
       description: 'Complete interior + exterior detailing with protection',
       price: '$400+',
       color: 'from-purple-400 via-pink-400 to-cyan-400',
@@ -127,7 +127,7 @@ export function Services() {
     {
       icon: <Shield className="w-10 h-10" />,
       emoji: '🛡️',
-      title: 'Maintenance Plan',
+      title: '🛡️ Maintenance Plan',
       description: 'Recurring monthly or quarterly washes with loyalty discounts',
       price: 'Custom',
       color: 'from-pink-400 via-rose-400 to-orange-400',
@@ -225,8 +225,8 @@ export function Services() {
                     {service.icon}
                   </div>
 
-                  {/* Emoji */}
-                  <div className="text-5xl mb-4 bounce-gentle">{service.emoji}</div>
+                  {/* Emoji - smaller */}
+                  <div className="text-3xl mb-2">{service.emoji}</div>
 
                   {/* Title */}
                   <h3 className={`mb-3 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>{service.title}</h3>

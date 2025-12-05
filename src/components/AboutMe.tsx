@@ -73,7 +73,7 @@ export function AboutMe() {
   const principles = [
     {
       icon: <Sparkles className="w-8 h-8" />,
-      title: 'Quality',
+      title: '💎 Quality',
       description: 'Only premium products & techniques',
       color: 'from-blue-400 to-cyan-400',
       bgColorLight: 'bg-blue-100',
@@ -82,7 +82,7 @@ export function AboutMe() {
     },
     {
       icon: <Award className="w-8 h-8" />,
-      title: 'Precision',
+      title: '⚡ Precision',
       description: 'Every detail counts — literally',
       color: 'from-purple-400 to-pink-400',
       bgColorLight: 'bg-purple-100',
@@ -91,7 +91,7 @@ export function AboutMe() {
     },
     {
       icon: <Heart className="w-8 h-8" />,
-      title: 'Passion',
+      title: '❤️ Passion',
       description: 'This isn\'t work, it\'s art',
       color: 'from-pink-400 to-rose-400',
       bgColorLight: 'bg-pink-100',
@@ -100,7 +100,7 @@ export function AboutMe() {
     },
     {
       icon: <Smile className="w-8 h-8" />,
-      title: 'Happy Clients',
+      title: '😎 Happy Clients',
       description: 'Your car, my pride',
       color: 'from-green-400 to-emerald-400',
       bgColorLight: 'bg-green-100',
