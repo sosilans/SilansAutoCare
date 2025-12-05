@@ -64,6 +64,30 @@
 3. Открой DevTools (F12) → Console → попробуй отправить форму → смотри ошибки
 4. Проверь, что написал боту хотя бы раз (нажал Start)
 
+## Альтернатива: внешний прокси (Google Apps Script)
+
+Если нет доступа к **Environment variables** на Netlify, можно использовать внешний прокси, где секреты хранятся в скрипте.
+
+1. Открой https://script.google.com и создай новый проект Apps Script.
+2. Вставь код из `google-apps-script/telegram-proxy.gs`.
+3. В меню: Project Settings → Script properties → добавь:
+  - `TELEGRAM_BOT_TOKEN` = твоё значение
+  - `TELEGRAM_CHAT_ID` = твой chat id
+4. Deploy → New deployment → Select type: Web app →
+  - Execute as: Me
+  - Who has access: Anyone
+  Скопируй URL (оканчивается на `/exec`).
+5. Настрой сайт использовать прокси:
+  - Самый быстрый вариант: в `index.html` перед `<script type="module" src="/src/main.tsx"></script>` добавь:
+    ```html
+    <script>
+     window.__TELEGRAM_PROXY_URL = 'https://script.google.com/macros/s/XXXX/exec';
+    </script>
+    ```
+  - Форма `Contact.tsx` автоматически отправит запрос на этот URL, а если не задан, будет fallback на `/.netlify/functions/send-telegram`.
+
+Проверка: отправь форму на сайте или выполни POST на URL прокси с JSON `{name,email,phone,message}`.
+
 ## Полезные ссылки
 
 - [Telegram Bot API Documentation](https://core.telegram.org/bots/api)

@@ -12,139 +12,139 @@ export function Services() {
     {
       icon: <Droplet className="w-10 h-10" />,
       emoji: '💧',
-      title: 'Premium Wash',
-      description: 'Hand wash with gentle care, foam treatment & microfiber drying',
-      price: '$80',
+      title: 'Basic Wash',
+      description: 'Gentle exterior hand wash, foam bath, microfiber dry',
+      price: '$120',
       color: 'from-cyan-400 via-blue-400 to-purple-400',
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-cyan-900/20',
       borderColorDark: 'border-cyan-500/30',
       details: {
-        duration: '1-1.5 hours',
+        duration: '⏱ ~1 hour',
         includes: [
           'Pre-wash foam treatment',
-          'Hand wash with pH-neutral soap',
+          'Gentle hand wash',
           'Wheel & tire cleaning',
           'Microfiber drying',
           'Exterior glass cleaning',
           'Tire shine application'
         ],
-        ideal: 'Regular maintenance and keeping your car looking fresh'
-      }
-    },
-    {
-      icon: <Sparkles className="w-10 h-10" />,
-      emoji: '✨',
-      title: 'Paint Correction',
-      description: 'Remove scratches & swirls for that showroom shine',
-      price: '$350',
-      color: 'from-purple-400 via-pink-400 to-purple-500',
-      bgColorLight: 'bg-purple-50',
-      bgColorDark: 'bg-purple-900/20',
-      borderColorDark: 'border-purple-500/30',
-      details: {
-        duration: '4-6 hours',
-        includes: [
-          'Multi-stage paint polishing',
-          'Swirl mark removal',
-          'Light scratch removal',
-          'Paint depth measurement',
-          'Professional buffing',
-          'Final polish application'
-        ],
-        ideal: 'Restoring faded paint and removing imperfections'
-      }
-    },
-    {
-      icon: <Shield className="w-10 h-10" />,
-      emoji: '🛡️',
-      title: 'Ceramic Coating',
-      description: 'Long-lasting protection with amazing water-repellent finish',
-      price: '$800',
-      color: 'from-pink-400 via-rose-400 to-orange-400',
-      bgColorLight: 'bg-pink-50',
-      bgColorDark: 'bg-pink-900/20',
-      borderColorDark: 'border-pink-500/30',
-      details: {
-        duration: '8-10 hours',
-        includes: [
-          '9H hardness ceramic coating',
-          'Paint correction prep',
-          'Surface decontamination',
-          'Multi-layer application',
-          '5-year protection guarantee',
-          'Hydrophobic water beading'
-        ],
-        ideal: 'Maximum protection and long-term paint preservation'
+        ideal: 'Regular customers get maintenance discounts every 3 months'
       }
     },
     {
       icon: <Wind className="w-10 h-10" />,
       emoji: '🌪️',
-      title: 'Interior Detailing',
-      description: 'Deep clean seats, carpets & dashboard. Fresh like new!',
-      price: '$200',
+      title: 'Interior Deep Clean',
+      description: 'Thorough vacuuming, seat shampoo, dash & vents detail',
+      price: '$150',
       color: 'from-cyan-400 via-teal-400 to-green-400',
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-teal-900/20',
       borderColorDark: 'border-teal-500/30',
       details: {
-        duration: '2-3 hours',
+        duration: '⏱ 1.5–2 hours',
         includes: [
-          'Steam cleaning of all surfaces',
-          'Leather conditioning',
-          'Carpet & upholstery shampooing',
-          'Dashboard & console cleaning',
-          'Air vent detailing',
+          'Complete vacuuming',
+          'Seat shampoo & conditioning',
+          'Dashboard detailing',
+          'Vent cleaning',
+          'Door panel cleaning',
           'Interior glass polishing'
         ],
-        ideal: 'Deep cleaning and refreshing your car\'s interior'
+        ideal: 'Ideal for seasonal refresh or sale prep'
       }
     },
     {
       icon: <Car className="w-10 h-10" />,
       emoji: '🚗',
       title: 'Engine Bay Clean',
-      description: 'Safe degreasing & detailing of your engine compartment',
-      price: '$120',
+      description: 'Safe degreasing, dressing and shine for engine components',
+      price: '$40+',
       color: 'from-blue-400 via-cyan-400 to-teal-400',
       bgColorLight: 'bg-blue-50',
       bgColorDark: 'bg-blue-900/20',
       borderColorDark: 'border-blue-500/30',
       details: {
-        duration: '1-2 hours',
+        duration: '⏱ ~45 min',
         includes: [
           'Safe degreasing process',
           'Engine component protection',
           'Pressure washing',
-          'Plastic & rubber restoration',
-          'Engine bay dressing',
-          'Final inspection'
+          'Plastic & rubber dressing',
+          'Final shine application',
+          'Inspection'
         ],
-        ideal: 'Maintaining engine components and improving resale value'
+        ideal: 'Best combined with Basic Wash'
+      }
+    },
+    {
+      icon: <Sparkles className="w-10 h-10" />,
+      emoji: '✨',
+      title: 'Exterior Detail',
+      description: 'Professional full exterior cleaning — tires, trim, windows, and shine restoration.',
+      price: '$250+',
+      color: 'from-purple-400 via-pink-400 to-purple-500',
+      bgColorLight: 'bg-purple-50',
+      bgColorDark: 'bg-purple-900/20',
+      borderColorDark: 'border-purple-500/30',
+      details: {
+        duration: '⏱ 2–3 hours',
+        includes: [
+          'Hand wash with foam bath',
+          'Tire shine & rim cleaning',
+          'Light clay bar treatment',
+          'Wax or spray sealant finish',
+          'Ideal for cars needing a deeper refresh',
+          'Estimated time: 2–3 hours'
+        ],
+        ideal: 'Perfect for restoring paint brilliance'
       }
     },
     {
       icon: <Zap className="w-10 h-10" />,
       emoji: '⚡',
-      title: 'Full Package',
-      description: 'Complete transformation! Everything your car needs',
-      price: '$600',
+      title: 'Full Detail Package',
+      description: 'Complete interior + exterior detailing with protection',
+      price: '$400+',
       color: 'from-purple-400 via-pink-400 to-cyan-400',
       bgColorLight: 'bg-purple-50',
       bgColorDark: 'bg-purple-900/20',
       borderColorDark: 'border-pink-500/30',
       details: {
-        duration: 'Full day (6-8 hours)',
+        duration: '⏱ 3–5 hours',
         includes: [
-          'All Premium Wash services',
-          'Complete Interior Detailing',
-          'Engine Bay Cleaning',
-          'Paint Correction (1-stage)',
-          'Wax protection',
-          'Complimentary air freshener'
+          'Complete exterior detail',
+          'Full interior deep clean',
+          'Engine bay cleaning',
+          'Paint protection',
+          'All surfaces treated',
+          'Premium finish'
         ],
-        ideal: 'Complete car transformation and maximum value'
+        ideal: 'All-in-one transformation'
+      }
+    },
+    {
+      icon: <Shield className="w-10 h-10" />,
+      emoji: '🛡️',
+      title: 'Maintenance Plan',
+      description: 'Recurring monthly or quarterly washes with loyalty discounts',
+      price: 'Custom',
+      color: 'from-pink-400 via-rose-400 to-orange-400',
+      bgColorLight: 'bg-pink-50',
+      bgColorDark: 'bg-pink-900/20',
+      borderColorDark: 'border-pink-500/30',
+      details: {
+        duration: '⏱ Flexible',
+        includes: [
+          'Monthly or quarterly service',
+          'Loyalty discounts',
+          'Priority scheduling',
+          'Consistent care',
+          'Custom package options',
+          'Year-round protection'
+        ],
+        ideal: 'Stay spotless all year round'
       }
     },
   ];

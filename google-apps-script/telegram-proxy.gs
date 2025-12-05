@@ -229,3 +229,29 @@ function doGet(e) {
     note: 'POST с полями: name, email, message, phone (опционально), debug=1 (опционально)',
   })).setMimeType(ContentService.MimeType.JSON);
 }
+
+// Тестовая функция для получения разрешений (запусти её один раз)
+function testTelegramPermissions() {
+  var props = PropertiesService.getScriptProperties();
+  var TELEGRAM_BOT_TOKEN = props.getProperty('TELEGRAM_BOT_TOKEN');
+  var TELEGRAM_CHAT_ID = props.getProperty('TELEGRAM_CHAT_ID');
+  
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    Logger.log('Telegram credentials not configured');
+    return;
+  }
+  
+  var telegramUrl = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+  var payload = {
+    chat_id: TELEGRAM_CHAT_ID,
+    text: '✅ Telegram integration test successful!'
+  };
+  
+  var response = UrlFetchApp.fetch(telegramUrl, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload)
+  });
+  
+  Logger.log(response.getContentText());
+}

@@ -14,7 +14,6 @@ export function Contact() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { submitContact } = useDataStore();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   // Optional: set this to your Google Apps Script Web App URL to use proxy
   const TELEGRAM_PROXY_URL = CONFIG_PROXY_URL || (typeof window !== 'undefined' && (window as any).__TELEGRAM_PROXY_URL) || '';
 
@@ -43,12 +42,6 @@ export function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevent double submission
-    if (isSubmitting) {
-      return;
-    }
-    
     const formEl = e.target as HTMLFormElement;
     const formData = new FormData(formEl);
     const name = String(formData.get('name') || '').trim();
@@ -67,9 +60,6 @@ export function Contact() {
       alert('❌ Please enter a valid email address.');
       return;
     }
-    
-    // Set submitting state
-    setIsSubmitting(true);
     
     // Save to contact submissions
     submitContact(name, email, message);
@@ -102,14 +92,13 @@ export function Contact() {
         alert(`⚠️ Submission failed: ${errMsg}`);
       } else {
         alert(t('contact.submitSuccess'));
-        formEl.reset();
       }
     } catch (error) {
       console.error('Submission request failed:', error);
       alert('⚠️ Submission failed');
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    formEl.reset();
   };
 
   const contactInfo = [
@@ -381,10 +370,9 @@ export function Contact() {
               <BubbleEffect intensity="high" variant="bright">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-6 vhs-gradient text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full py-6 vhs-gradient text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg"
                 >
-                  {isSubmitting ? '⏳ Отправка...' : `${t('contact.form.send')} 🚀`}
+                  {t('contact.form.send')} 🚀
                 </Button>
               </BubbleEffect>
               {/* Honeypot field (must be inside the form) */}
