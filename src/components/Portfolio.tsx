@@ -22,8 +22,8 @@ export function Portfolio() {
       emoji: '✨',
     },
     {
-      before: '/assets/cleaningsamples/3.jpg',
-      after: '/assets/cleaningsamples/3_1.jpg',
+      before: '/assets/cleaningsamples/2.jpg',
+      after: '/assets/cleaningsamples/2_1.jpg',
       title: 'Full Detail Package',
       emoji: '🚗',
     },
