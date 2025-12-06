@@ -15,7 +15,7 @@ export function AboutMe() {
   
   const carouselImages = [
     {
-      src: "/assets/Misha.jpg",
+      src: "/assets/misha.jpg",
       alt: "Misha - Professional Auto Detailing Specialist"
     },
     {
