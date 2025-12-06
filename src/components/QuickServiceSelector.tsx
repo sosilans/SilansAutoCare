@@ -65,7 +65,7 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
           >
             <div className="p-4 space-y-3">
               {SERVICES.map((service) => (
-                <label key={service} className="flex items-center gap-3 cursor-pointer group">
+                <label key={service} className="flex items-center gap-3 cursor-pointer group w-full">
                   <input
                     type="checkbox"
                     checked={selectedServices.includes(service)}
@@ -88,7 +88,7 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
                     )}
                   </div>
                   <span
-                    className={`text-sm transition-colors ${
+                    className={`text-sm transition-colors min-w-0 ${
                       theme === 'dark'
                         ? 'text-purple-200 group-hover:text-purple-100'
                         : 'text-gray-700 group-hover:text-gray-900'
