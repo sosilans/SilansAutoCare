@@ -28,8 +28,8 @@ export function Portfolio() {
       emoji: '🚗',
     },
     {
-      before: '/assets/cleaningsamples/4.jpg',
-      after: '/assets/cleaningsamples/4_1.jpg',
+      before: '/assets/cleaningsamples/3.jpg',
+      after: '/assets/cleaningsamples/3_1.jpg',
       title: 'Exterior Deep Clean & Polish',
       emoji: '🛡️',
     },
