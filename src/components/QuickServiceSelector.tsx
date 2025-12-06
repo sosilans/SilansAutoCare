@@ -33,13 +33,13 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-6 py-4 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between ${
+        className={`w-full px-6 py-3 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between gradient-animated ${
           theme === 'dark'
             ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 border-purple-400/50 vhs-glow-dark'
-            : 'bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 border-purple-300/50 vhs-glow-light'
+            : 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 border-purple-400/50 vhs-glow-light'
         }`}
       >
-        <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-white'}`}>
+        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-white'}`}>
           Choose Your Services
         </span>
         <motion.div

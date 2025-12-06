@@ -30,10 +30,10 @@ export function HelpfulTips({ onTipClick }: HelpfulTipsProps) {
             onClick={() => onTipClick(tip)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 ${
+            className={`px-3 py-2 rounded-full text-xs font-medium transition-all duration-300 gradient-animated ${
               theme === 'dark'
                 ? 'bg-gradient-to-r from-pink-500/40 to-purple-500/40 text-pink-200 hover:from-pink-500/60 hover:to-purple-500/60 border border-pink-500/20'
-                : 'bg-gradient-to-r from-pink-200 to-purple-200 text-purple-800 hover:from-pink-300 hover:to-purple-300 border border-pink-300'
+                : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 border border-pink-600'
             }`}
           >
             {tip}

@@ -252,7 +252,7 @@ export function Contact() {
                   href="https://www.facebook.com/silansautocare?mibextid=wwXIfr"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 gradient-animated"
+                  className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 gradient-animated"
                   animate={{
                     y: [0, -12, 0],
                     x: [0, 4, 0],
@@ -403,7 +403,7 @@ export function Contact() {
               <BubbleEffect intensity="high" variant="bright">
                 <Button
                   type="submit"
-                  className="w-full py-6 vhs-gradient text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg"
+                  className="w-full py-6 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white rounded-2xl cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg gradient-animated"
                 >
                   {t('contact.form.send')} 🚀
                 </Button>
