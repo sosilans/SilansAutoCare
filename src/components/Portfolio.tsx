@@ -94,15 +94,15 @@ export function Portfolio() {
   return (
     <section id="portfolio" className="relative py-20 sm:py-32 overflow-hidden">
       {/* Background Decorations */}
-      <div className={`absolute top-10 left-10 w-64 h-64 rounded-full blur-3xl opacity-30 ${
+      <div className={`absolute top-10 left-10 w-64 h-64 rounded-full blur-3xl ${
         theme === 'dark'
-          ? 'bg-gradient-to-br from-pink-500 to-purple-500'
-          : 'bg-gradient-to-br from-pink-200 to-orange-200'
+          ? 'bg-purple-500/10'
+          : 'bg-gradient-to-br from-pink-200 to-orange-200 opacity-30'
       }`}></div>
-      <div className={`absolute bottom-10 right-10 w-64 h-64 rounded-full blur-3xl opacity-30 ${
+      <div className={`absolute bottom-10 right-10 w-64 h-64 rounded-full blur-3xl ${
         theme === 'dark'
-          ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
-          : 'bg-gradient-to-br from-cyan-200 to-blue-200'
+          ? 'bg-cyan-500/10'
+          : 'bg-gradient-to-br from-cyan-200 to-blue-200 opacity-30'
       }`}></div>
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">

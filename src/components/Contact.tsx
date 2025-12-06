@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Facebook, Clock, Instagram } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { BubbleEffect } from './BubbleEffect';
+import { QuickServiceSelector } from './QuickServiceSelector';
+import { HelpfulTips } from './HelpfulTips';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useDataStore } from './DataStoreContext';
@@ -14,8 +16,24 @@ export function Contact() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { submitContact } = useDataStore();
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [message, setMessage] = useState('');
   // Optional: set this to your Google Apps Script Web App URL to use proxy
   const TELEGRAM_PROXY_URL = CONFIG_PROXY_URL || (typeof window !== 'undefined' && (window as any).__TELEGRAM_PROXY_URL) || '';
+
+  const generatePlaceholder = () => {
+    if (selectedServices.length === 0) {
+      return t('contact.form.messagePlaceholder');
+    }
+    return `Selected: ${selectedServices.join(', ')}.\nTell us more about your vehicle (condition, size, any concerns)...`;
+  };
+
+  const handleTipClick = (tip: string) => {
+    setMessage((prev) => {
+      const updated = prev ? `${prev}\n${tip}` : tip;
+      return updated;
+    });
+  };
 
   async function getRecaptchaToken(): Promise<string | undefined> {
     if (!RECAPTCHA_SITE_KEY) return undefined;
@@ -47,10 +65,10 @@ export function Contact() {
     const name = String(formData.get('name') || '').trim();
     const email = String(formData.get('email') || '').trim();
     const phone = String(formData.get('phone') || '').trim();
-    const message = String(formData.get('message') || '').trim();
+    const messageValue = message.trim();
     const website = String(formData.get('website') || '').trim(); // honeypot
     
-    if (!name || !email || !message) {
+    if (!name || !email || !messageValue) {
       alert('❌ Please fill in all fields.');
       return;
     }
@@ -62,7 +80,7 @@ export function Contact() {
     }
     
     // Save to contact submissions
-    submitContact(name, email, message);
+    submitContact(name, email, messageValue);
     
     // Send via Netlify proxy (avoids CORS issues with GAS)
     try {
@@ -77,7 +95,7 @@ export function Contact() {
           name,
           email,
           phone,
-          message,
+          message: messageValue,
           website, // honeypot
           recaptchaToken,
         }),
@@ -92,6 +110,8 @@ export function Contact() {
         alert(`⚠️ Submission failed: ${errMsg}`);
       } else {
         alert(t('contact.submitSuccess'));
+        setMessage('');
+        setSelectedServices([]);
       }
     } catch (error) {
       console.error('Submission request failed:', error);
@@ -135,15 +155,15 @@ export function Contact() {
   return (
     <section id="contact" className="relative py-20 sm:py-32 overflow-hidden">
       {/* Background Decorations */}
-      <div className={`absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl opacity-30 ${
+      <div className={`absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl ${
         theme === 'dark'
-          ? 'bg-gradient-to-br from-purple-500 to-pink-500'
-          : 'bg-gradient-to-br from-blue-200 to-purple-200'
+          ? 'bg-purple-500/10'
+          : 'bg-gradient-to-br from-blue-200 to-purple-200 opacity-30'
       }`}></div>
-      <div className={`absolute bottom-10 left-10 w-64 h-64 rounded-full blur-3xl opacity-30 ${
+      <div className={`absolute bottom-10 left-10 w-64 h-64 rounded-full blur-3xl ${
         theme === 'dark'
-          ? 'bg-gradient-to-br from-cyan-500 to-blue-500'
-          : 'bg-gradient-to-br from-purple-200 to-pink-200'
+          ? 'bg-cyan-500/10'
+          : 'bg-gradient-to-br from-purple-200 to-pink-200 opacity-30'
       }`}></div>
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
@@ -349,6 +369,15 @@ export function Contact() {
                 />
               </div>
 
+              {/* Quick Service Selector */}
+              <QuickServiceSelector 
+                selectedServices={selectedServices}
+                onServicesChange={setSelectedServices}
+              />
+
+              {/* Helpful Tips */}
+              <HelpfulTips onTipClick={handleTipClick} />
+
               <div>
                 <label htmlFor="message" className={`block mb-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
                   {t('contact.form.message')}
@@ -356,9 +385,11 @@ export function Contact() {
                 <Textarea
                   id="message"
                   name="message"
-                  placeholder={t('contact.form.messagePlaceholder')}
+                  placeholder={generatePlaceholder()}
                   rows={5}
                   required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
                       ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
