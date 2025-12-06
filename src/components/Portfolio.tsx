@@ -16,64 +16,22 @@ export function Portfolio() {
 
   const portfolioItems = [
     {
-      before: 'https://images.unsplash.com/photo-1594798546489-0a5cd52bb4c8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBiZWZvcmUlMjBhZnRlciUyMGNsZWFufGVufDF8fHx8MTc2MzUxNDY4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Exterior Transformation',
+      before: '/assets/cleaningsamples/1.jpg',
+      after: '/assets/cleaningsamples/1_1.jpg',
+      title: 'Professional Interior Cleaning',
       emoji: '✨',
     },
     {
-      before: 'https://images.unsplash.com/photo-1594849981292-89dbaf5aee53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBkZXRhaWxpbmclMjB3b3Jrc3BhY2V8ZW58MXx8fHwxNzYzNTE1Nzc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Deep Clean Magic',
-      emoji: '🌟',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1594798546489-0a5cd52bb4c8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBiZWZvcmUlMjBhZnRlciUyMGNsZWFufGVufDF8fHx8MTc2MzUxNDY4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+      before: '/assets/cleaningsamples/3.jpg',
+      after: '/assets/cleaningsamples/3_1.jpg',
       title: 'Full Detail Package',
       emoji: '🚗',
     },
     {
-      before: 'https://images.unsplash.com/photo-1594849981292-89dbaf5aee53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBkZXRhaWxpbmclMjB3b3Jrc3BhY2V8ZW58MXx8fHwxNzYzNTE1Nzc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Paint Protection',
+      before: '/assets/cleaningsamples/4.jpg',
+      after: '/assets/cleaningsamples/4_1.jpg',
+      title: 'Exterior Deep Clean & Polish',
       emoji: '🛡️',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1639599629730-5710b6e18363?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaXJ0eSUyMGNhciUyMGludGVyaW9yfGVufDF8fHx8MTc2MzUxNzE3NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1682858110563-3f609263d418?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMGNhciUyMGludGVyaW9yfGVufDF8fHx8MTc2MzQ5NTk0N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Interior Detailing',
-      emoji: '💎',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1665585637851-19f1e1dc0e81?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBoZWFkbGlnaHRzJTIwcmVzdG9yYXRpb258ZW58MXx8fHwxNzYzNTE3MTc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1761312834150-4beefff097a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBjYXIlMjB3YXNofGVufDF8fHx8MTc2MzQ4ODc3NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Headlight Restoration',
-      emoji: '💡',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1594798546489-0a5cd52bb4c8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBiZWZvcmUlMjBhZnRlciUyMGNsZWFufGVufDF8fHx8MTc2MzUxNDY4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1761934658331-2e00b20dc6c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjB3YXhpbmclMjBwb2xpc2h8ZW58MXx8fHwxNzYzNTE3MTc3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Premium Wax & Polish',
-      emoji: '🌈',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1708805283087-cb22474fb88e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbmdpbmUlMjBiYXklMjBjbGVhbmluZ3xlbnwxfHx8fDE3NjM1MTcxNzd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Engine Bay Detail',
-      emoji: '⚙️',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1594849981292-89dbaf5aee53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjBkZXRhaWxpbmclMjB3b3Jrc3BhY2V8ZW58MXx8fHwxNzYzNTE1Nzc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Ceramic Coating',
-      emoji: '🔮',
-    },
-    {
-      before: 'https://images.unsplash.com/photo-1639599629730-5710b6e18363?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaXJ0eSUyMGNhciUyMGludGVyaW9yfGVufDF8fHx8MTc2MzUxNzE3NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      after: 'https://images.unsplash.com/photo-1682858110563-3f609263d418?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMGNhciUyMGludGVyaW9yfGVufDF8fHx8MTc2MzQ5NTk0N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-      title: 'Leather Conditioning',
-      emoji: '🎯',
     },
   ];
 
