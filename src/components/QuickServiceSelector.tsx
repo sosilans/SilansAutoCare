@@ -70,7 +70,8 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
                     type="checkbox"
                     checked={selectedServices.includes(service)}
                     onChange={() => handleToggleService(service)}
-                    className="sr-only"
+                    className="absolute opacity-0 pointer-events-none"
+                    tabIndex={-1}
                   />
                   <div className={`w-5 h-5 rounded border-2 transition-all duration-200 flex items-center justify-center flex-shrink-0 ${
                     selectedServices.includes(service)
