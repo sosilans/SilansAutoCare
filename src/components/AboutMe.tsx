@@ -19,7 +19,7 @@ export function AboutMe() {
       alt: "Misha - Professional Auto Detailing Specialist"
     },
     {
-      src: "./assets/misha_1.jpg",
+      src: "/assets/misha_1.jpg",
       alt: "Misha at work - Detailing in action"
     }
   ];
