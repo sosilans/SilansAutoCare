@@ -18,7 +18,7 @@ export function Portfolio() {
     {
       before: '/assets/cleaningsamples/1.jpg',
       after: '/assets/cleaningsamples/1_1.jpg',
-      title: 'Professional Interior Cleaning',
+      title: 'Deep Interior Cleaning',
       emoji: '✨',
     },
     {
@@ -30,8 +30,116 @@ export function Portfolio() {
     {
       before: '/assets/cleaningsamples/3.jpg',
       after: '/assets/cleaningsamples/3_1.jpg',
-      title: 'Exterior Deep Clean & Polish',
+      title: 'Exterior Deep Clean',
       emoji: '🛡️',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_1.png',
+      after: '/assets/cleaningsamples/Screenshot_2.png',
+      title: 'Interior Restoration',
+      emoji: '🧼',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_3.png',
+      after: '/assets/cleaningsamples/Screenshot_4.png',
+      title: 'Seat Deep Clean',
+      emoji: '💺',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_5.png',
+      after: '/assets/cleaningsamples/Screenshot_6.png',
+      title: 'Dashboard Detail',
+      emoji: '🎛️',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_7.png',
+      after: '/assets/cleaningsamples/Screenshot_8.png',
+      title: 'Floor Mat Cleaning',
+      emoji: '🧽',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_9.png',
+      after: '/assets/cleaningsamples/Screenshot_10.png',
+      title: 'Console Detailing',
+      emoji: '🎮',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_11.png',
+      after: '/assets/cleaningsamples/Screenshot_12.png',
+      title: 'Door Panel Clean',
+      emoji: '🚪',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_13.png',
+      after: '/assets/cleaningsamples/Screenshot_14.png',
+      title: 'Carpet Shampooing',
+      emoji: '🧴',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_15.png',
+      after: '/assets/cleaningsamples/Screenshot_16.png',
+      title: 'Leather Treatment',
+      emoji: '🪑',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_17.png',
+      after: '/assets/cleaningsamples/Screenshot_18.png',
+      title: 'Trunk Cleaning',
+      emoji: '📦',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_19.png',
+      after: '/assets/cleaningsamples/Screenshot_20.png',
+      title: 'Headliner Detail',
+      emoji: '☁️',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_21.png',
+      after: '/assets/cleaningsamples/Screenshot_22.png',
+      title: 'Stain Removal',
+      emoji: '🎯',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_23.png',
+      after: '/assets/cleaningsamples/Screenshot_24.png',
+      title: 'Pet Hair Removal',
+      emoji: '🐾',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_25.png',
+      after: '/assets/cleaningsamples/Screenshot_26.png',
+      title: 'Smoke Odor Treatment',
+      emoji: '🚭',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_27.png',
+      after: '/assets/cleaningsamples/Screenshot_28.png',
+      title: 'Upholstery Revival',
+      emoji: '🛋️',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_29.png',
+      after: '/assets/cleaningsamples/Screenshot_30.png',
+      title: 'Cup Holder Detail',
+      emoji: '☕',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_31.png',
+      after: '/assets/cleaningsamples/Screenshot_32.png',
+      title: 'Vent Cleaning',
+      emoji: '💨',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_33.png',
+      after: '/assets/cleaningsamples/Screenshot_34.png',
+      title: 'Window Polish',
+      emoji: '🪟',
+    },
+    {
+      before: '/assets/cleaningsamples/Screenshot_35.png',
+      after: '/assets/cleaningsamples/Screenshot_36.png',
+      title: 'Complete Transformation',
+      emoji: '⭐',
     },
   ];
 
