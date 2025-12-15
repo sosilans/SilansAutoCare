@@ -16,16 +16,16 @@ export function Portfolio() {
 
   const portfolioItems = [
     {
-      before: '/assets/cleaningsamples/1.jpg',
-      after: '/assets/cleaningsamples/1_1.jpg',
-      title: 'Deep Interior Cleaning',
-      emoji: '✨',
-    },
-    {
       before: '/assets/cleaningsamples/2.jpg',
       after: '/assets/cleaningsamples/2_1.jpg',
       title: 'Full Detail Package',
       emoji: '🚗',
+    },
+    {
+      before: '/assets/cleaningsamples/1.jpg',
+      after: '/assets/cleaningsamples/1_1.jpg',
+      title: 'Deep Interior Cleaning',
+      emoji: '✨',
     },
     {
       before: '/assets/cleaningsamples/3.jpg',
