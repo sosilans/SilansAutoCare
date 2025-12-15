@@ -13,6 +13,7 @@ export function Portfolio() {
   const [showAll, setShowAll] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ before: string; after: string; title: string; emoji: string } | null>(null);
   const sectionTitleRef = useRef<HTMLDivElement>(null);
+  const galleryTopRef = useRef<HTMLDivElement>(null);
 
   const portfolioItems = [
     {
@@ -149,10 +150,9 @@ export function Portfolio() {
 
   const handleShowLess = () => {
     setShowAll(false);
-    // Scroll to the section title
-    setTimeout(() => {
-      sectionTitleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    requestAnimationFrame(() => {
+      galleryTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const displayedItems = showAll ? portfolioItems : portfolioItems.slice(0, 4);
@@ -197,6 +197,7 @@ export function Portfolio() {
           </p>
         </motion.div>
 
+        <div ref={galleryTopRef} />
         <div className="grid sm:grid-cols-2 gap-8">
           {displayedItems.map((item, index) => (
             <motion.div
@@ -277,7 +278,7 @@ export function Portfolio() {
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowLess}
             >
-              <span>Show Less</span>
+              <span>Hide</span>
               <ChevronUp className="w-5 h-5" />
             </button>
           </div>
