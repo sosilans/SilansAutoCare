@@ -35,8 +35,8 @@ export function Portfolio() {
       emoji: '🛡️',
     },
     {
-      before: '/assets/cleaningsamples/Screenshot_1.png',
-      after: '/assets/cleaningsamples/Screenshot_2.png',
+      before: '/assets/cleaningsamples/Screenshot_2.png',
+      after: '/assets/cleaningsamples/Screenshot_1.png',
       title: 'Interior Restoration',
       emoji: '🧼',
     },
