@@ -21,13 +21,17 @@ export function Hero() {
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, type: 'bubble' | 'star', color: string}>>([]);
   const [floatingBubbles, setFloatingBubbles] = useState<Array<{id: number, x: number, startY: number, color: string, size: number}>>([]);
   
-  // Video carousel - 10 videos cycling
-  const videoCarousel = Array.from({ length: 10 }, (_, i) => ({
-    videoSrc: `/assets/vids/${i}.mp4`,
-    posterSrc: '/assets/cleaningsamples/1_1.jpg',
-    alt: `Car detailing video ${i + 1}`,
-    scale: 1
-  }));
+  // Video carousel - 10 videos in random order
+  const [videoCarousel] = useState(() => {
+    const videos = Array.from({ length: 10 }, (_, i) => ({
+      videoSrc: `/assets/vids/${i}.mp4`,
+      posterSrc: '/assets/cleaningsamples/1_1.jpg',
+      alt: `Car detailing video ${i + 1}`,
+      scale: 1
+    }));
+    // Shuffle array randomly
+    return videos.sort(() => Math.random() - 0.5);
+  });
 
   const carouselImages = [
     {
@@ -342,13 +346,7 @@ export function Hero() {
               className="relative rounded-3xl overflow-hidden cartoon-shadow vhs-border vhs-noise cursor-pointer group aspect-[3/4]"
               onClick={handleCarouselClick}
             >
-              <motion.div
-                key={currentSlide}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="absolute inset-0 rounded-3xl overflow-hidden"
-              >
+              <div className="absolute inset-0 rounded-3xl overflow-hidden">
                 {shouldLoadVideo && !useImageFallback ? (
                   <video
                     key={videoCarousel[currentSlide].videoSrc}
@@ -356,8 +354,7 @@ export function Hero() {
                     muted
                     loop
                     playsInline
-                    preload="metadata"
-                    poster={videoCarousel[currentSlide].posterSrc}
+                    preload="auto"
                     onError={() => setUseImageFallback(true)}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
                     style={{ 
@@ -379,7 +376,7 @@ export function Hero() {
                     }}
                   />
                 )}
-              </motion.div>
+              </div>
               {/* Sound status badge (kept muted for autoplay) */}
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/40 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
                 <span className="inline-block w-2 h-2 rounded-full bg-white/70" />
