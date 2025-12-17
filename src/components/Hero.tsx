@@ -21,16 +21,13 @@ export function Hero() {
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, type: 'bubble' | 'star', color: string}>>([]);
   const [floatingBubbles, setFloatingBubbles] = useState<Array<{id: number, x: number, startY: number, color: string, size: number}>>([]);
   
-  // Random video selection on mount
-  const [randomVideoIndex] = useState(() => Math.floor(Math.random() * 10));
-  
-  // Media config: swap hero photo for video while keeping card UI intact
-  const heroMedia = {
-    videoSrc: `/assets/vids/${randomVideoIndex}.mp4`,
-    videoSrcWebm: undefined,
+  // Video carousel - 10 videos cycling
+  const videoCarousel = Array.from({ length: 10 }, (_, i) => ({
+    videoSrc: `/assets/vids/${i}.mp4`,
     posterSrc: '/assets/cleaningsamples/1_1.jpg',
-    fallbackImage: '/assets/cleaningsamples/1_1.jpg'
-  };
+    alt: `Car detailing video ${i + 1}`,
+    scale: 1
+  }));
 
   const carouselImages = [
     {
@@ -58,11 +55,11 @@ export function Hero() {
   // Auto-scroll carousel
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+      setCurrentSlide((prev) => (prev + 1) % videoCarousel.length);
     }, 3500); // Change slide every 3.5 seconds
 
     return () => clearInterval(interval);
-  }, [carouselImages.length]);
+  }, [videoCarousel.length]);
 
   // Generate particles on slide change
   useEffect(() => {
@@ -352,34 +349,32 @@ export function Hero() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 rounded-3xl overflow-hidden"
               >
-                {heroMedia.videoSrc && shouldLoadVideo && !useImageFallback ? (
+                {shouldLoadVideo && !useImageFallback ? (
                   <video
+                    key={videoCarousel[currentSlide].videoSrc}
                     autoPlay
                     muted
                     loop
                     playsInline
                     preload="metadata"
-                    poster={heroMedia.posterSrc || carouselImages[currentSlide].src}
+                    poster={videoCarousel[currentSlide].posterSrc}
                     onError={() => setUseImageFallback(true)}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
                     style={{ 
-                      transform: `scale(${carouselImages[currentSlide].scale})`,
+                      transform: `scale(${videoCarousel[currentSlide].scale})`,
                       transformOrigin: 'center'
                     }}
                   >
-                    {heroMedia.videoSrcWebm && (
-                      <source src={heroMedia.videoSrcWebm} type="video/webm" />
-                    )}
-                    <source src={heroMedia.videoSrc} type="video/mp4" />
+                    <source src={videoCarousel[currentSlide].videoSrc} type="video/mp4" />
                   </video>
                 ) : (
                   <ImageWithFallback
-                    src={heroMedia.posterSrc || carouselImages[currentSlide].src}
-                    fallback={heroMedia.fallbackImage}
-                    alt={carouselImages[currentSlide].alt}
+                    src={videoCarousel[currentSlide].posterSrc}
+                    fallback={carouselImages[0].src}
+                    alt={videoCarousel[currentSlide].alt}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
                     style={{ 
-                      transform: `scale(${carouselImages[currentSlide].scale})`,
+                      transform: `scale(${videoCarousel[currentSlide].scale})`,
                       transformOrigin: 'center'
                     }}
                   />
@@ -446,7 +441,7 @@ export function Hero() {
               
               {/* Carousel indicators */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-none">
-                {carouselImages.map((_, index) => (
+                {videoCarousel.map((_, index) => (
                   <div
                     key={index}
                     className={`h-2 rounded-full transition-all duration-300 ${
