@@ -346,7 +346,13 @@ export function Hero() {
               className="relative rounded-3xl overflow-hidden cartoon-shadow vhs-border vhs-noise cursor-pointer group aspect-[3/4]"
               onClick={handleCarouselClick}
             >
-              <div className="absolute inset-0 rounded-3xl overflow-hidden">
+              <motion.div 
+                className="absolute inset-0 rounded-3xl overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                key={currentSlide}
+              >
                 {shouldLoadVideo && !useImageFallback ? (
                   <video
                     key={videoCarousel[currentSlide].videoSrc}
@@ -376,7 +382,7 @@ export function Hero() {
                     }}
                   />
                 )}
-              </div>
+              </motion.div>
               {/* Sound status badge (kept muted for autoplay) */}
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/40 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
                 <span className="inline-block w-2 h-2 rounded-full bg-white/70" />
