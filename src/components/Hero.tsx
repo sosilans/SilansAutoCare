@@ -21,9 +21,12 @@ export function Hero() {
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, type: 'bubble' | 'star', color: string}>>([]);
   const [floatingBubbles, setFloatingBubbles] = useState<Array<{id: number, x: number, startY: number, color: string, size: number}>>([]);
   
+  // Random video selection on mount
+  const [randomVideoIndex] = useState(() => Math.floor(Math.random() * 10));
+  
   // Media config: swap hero photo for video while keeping card UI intact
   const heroMedia = {
-    videoSrc: undefined,
+    videoSrc: `/assets/vids/${randomVideoIndex}.mp4`,
     videoSrcWebm: undefined,
     posterSrc: '/assets/cleaningsamples/1_1.jpg',
     fallbackImage: '/assets/cleaningsamples/1_1.jpg'
