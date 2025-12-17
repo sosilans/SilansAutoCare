@@ -23,10 +23,10 @@ export function Hero() {
   
   // Media config: swap hero photo for video while keeping card UI intact
   const heroMedia = {
-    videoSrc: '/assets/vids/hero.mp4',
-    videoSrcWebm: '/assets/vids/hero.webm',
+    videoSrc: '/assets/vids/hero.mov',
+    videoSrcWebm: undefined,
     posterSrc: '/assets/cleaningsamples/1_1.jpg',
-    fallbackImage: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
+    fallbackImage: '/assets/cleaningsamples/1_1.jpg'
   };
 
   const carouselImages = [
