@@ -23,7 +23,7 @@ export function Hero() {
   
   // Media config: swap hero photo for video while keeping card UI intact
   const heroMedia = {
-    videoSrc: '/assets/vids/hero.mov',
+    videoSrc: undefined,
     videoSrcWebm: undefined,
     posterSrc: '/assets/cleaningsamples/1_1.jpg',
     fallbackImage: '/assets/cleaningsamples/1_1.jpg'
