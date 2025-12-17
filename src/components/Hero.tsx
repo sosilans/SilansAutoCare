@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Sparkles, Star, Droplets } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
@@ -13,11 +13,22 @@ export function Hero() {
   const { t } = useLanguage();
   const { isOnline } = useOnlineStatus();
   const { user, openAuthModal } = useAuth();
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [useImageFallback, setUseImageFallback] = useState(false);
   // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0);
   const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, type: 'bubble' | 'star', color: string}>>([]);
   const [floatingBubbles, setFloatingBubbles] = useState<Array<{id: number, x: number, startY: number, color: string, size: number}>>([]);
   
+  // Media config: swap hero photo for video while keeping card UI intact
+  const heroMedia = {
+    videoSrc: '/assets/vids/hero.mp4',
+    videoSrcWebm: '/assets/vids/hero.webm',
+    posterSrc: '/assets/cleaningsamples/1_1.jpg',
+    fallbackImage: 'https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080'
+  };
+
   const carouselImages = [
     {
       src: "https://images.unsplash.com/photo-1586852393158-2d13e3dc6b6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMHNoaW55JTIwY2FyJTIwYmx1ZSUyMHNreXxlbnwxfHx8fDE3NjM1MTU3NzV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
@@ -101,9 +112,28 @@ export function Hero() {
     }
   };
 
+  // Lazy-load video once hero enters viewport
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShouldLoadVideo(true);
+            observer.disconnect();
+          }
+        });
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(heroRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       id="hero"
+      ref={heroRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
     >
       {/* Animated Background */}
@@ -247,7 +277,7 @@ export function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Hero Image */}
+          {/* Hero Media (Video with fallback image) */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ 
@@ -319,16 +349,44 @@ export function Hero() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 rounded-3xl overflow-hidden"
               >
-                <ImageWithFallback
-                  src={carouselImages[currentSlide].src}
-                  alt={carouselImages[currentSlide].alt}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
-                  style={{ 
-                    transform: `scale(${carouselImages[currentSlide].scale})`,
-                    transformOrigin: 'center'
-                  }}
-                />
+                {heroMedia.videoSrc && shouldLoadVideo && !useImageFallback ? (
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    poster={heroMedia.posterSrc || carouselImages[currentSlide].src}
+                    onError={() => setUseImageFallback(true)}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
+                    style={{ 
+                      transform: `scale(${carouselImages[currentSlide].scale})`,
+                      transformOrigin: 'center'
+                    }}
+                  >
+                    {heroMedia.videoSrcWebm && (
+                      <source src={heroMedia.videoSrcWebm} type="video/webm" />
+                    )}
+                    <source src={heroMedia.videoSrc} type="video/mp4" />
+                  </video>
+                ) : (
+                  <ImageWithFallback
+                    src={heroMedia.posterSrc || carouselImages[currentSlide].src}
+                    fallback={heroMedia.fallbackImage}
+                    alt={carouselImages[currentSlide].alt}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-3xl"
+                    style={{ 
+                      transform: `scale(${carouselImages[currentSlide].scale})`,
+                      transformOrigin: 'center'
+                    }}
+                  />
+                )}
               </motion.div>
+              {/* Sound status badge (kept muted for autoplay) */}
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/40 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
+                <span className="inline-block w-2 h-2 rounded-full bg-white/70" />
+                <span>Sound off</span>
+              </div>
               
               {/* Click hint overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent flex items-end justify-center pb-8 pointer-events-none">

@@ -145,14 +145,21 @@ export function Reviews() {
   };
 
   const handleShowMore = () => {
+    const currentY = window.scrollY;
     setShowAll(true);
+    // Keep viewport stable on first expand
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: currentY });
+      });
+    });
   };
 
   const handleShowLess = () => {
     setShowAll(false);
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       reviewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+    });
   };
 
   const userJoinedReviews = approvedReviews.map((r) => ({

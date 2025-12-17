@@ -145,7 +145,14 @@ export function Portfolio() {
   ];
 
   const handleShowMore = () => {
+    const currentY = window.scrollY;
     setShowAll(true);
+    // Keep viewport anchored so first expand doesn't jump down
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: currentY });
+      });
+    });
   };
 
   const handleShowLess = () => {
