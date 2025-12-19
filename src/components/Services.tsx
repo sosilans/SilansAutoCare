@@ -1,169 +1,351 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { Droplet, Shield, Sparkles, Wind, Car, Zap, ChevronDown } from 'lucide-react';
+import { Droplet, Wind, Car, Sparkles, Zap as ZapIcon, Shield, ChevronDown, X } from 'lucide-react';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
-import { useState } from 'react';
+import { useLanguage } from './LanguageContext';
+import { useState, useRef } from 'react';
+
+interface ServiceDetails {
+  whatYouGet: string[];
+  bestFor: string;
+  toolsUsed: string[];
+  importantNotes: string[];
+  whyChooseUs: string[];
+  duration: string;
+  startingPrice: string;
+}
+
+interface Service {
+  id: number;
+  icon: React.ReactNode;
+  emoji: string;
+  title: string;
+  headline: string;
+  description: string;
+  color: string;
+  bgColorLight: string;
+  bgColorDark: string;
+  borderColorDark: string;
+  details: ServiceDetails;
+  gallery?: Array<{
+    src: string;
+    caption: string;
+    alt: string;
+  }>;
+}
 
 export function Services() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
-  
-  const services = [
+  const [showAllGallery, setShowAllGallery] = useState(false);
+  const servicesRef = useRef<HTMLDivElement>(null);
+  const galleryTopRef = useRef<HTMLDivElement>(null);
+
+  const services: Service[] = [
     {
+      id: 1,
       icon: <Droplet className="w-10 h-10" />,
       emoji: '💧',
-      title: 'Basic Wash',
-      description: 'Gentle exterior hand wash, foam bath, microfiber dry',
-      price: '$120',
+      title: 'Basic Exterior Wash',
+      headline: 'Your Car Deserves Fresh',
+      description: 'Hand-wash perfection with premium foam bath, wax protection, and mirror-shine finish.',
       color: 'from-cyan-400 via-blue-400 to-purple-400',
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-cyan-900/20',
       borderColorDark: 'border-cyan-500/30',
       details: {
-        duration: '⏱ ~1 hour',
-        includes: [
-          'Pre-wash foam treatment',
-          'Gentle hand wash',
-          'Wheel & tire cleaning',
-          'Microfiber drying',
-          'Exterior glass cleaning',
-          'Tire shine application'
+        whatYouGet: [
+          'Pre-wash foam treatment for safe cleaning',
+          'Gentle hand wash with premium soap',
+          'Wheel, tire, and trim cleaning',
+          'Microfiber drying to prevent water spots',
+          'Exterior glass polishing',
+          'Tire and trim protection'
         ],
-        ideal: 'Regular customers get maintenance discounts every 3 months'
-      }
+        bestFor: 'Cars that need regular maintenance, before events, or seasonal refresh',
+        toolsUsed: ['Foam cannon', 'Microfiber wash mitt', 'Premium soaps', 'Microfiber towels', 'Tire dressing'],
+        importantNotes: [
+          '💧 I use your property\'s water supply for washing.',
+          '⚡ If no water is available, let me know in advance.',
+          '⏱️ Typical duration: 1 hour',
+          '🚗 Optimal for: All vehicle types'
+        ],
+        whyChooseUs: [
+          'Hand-wash only — no harsh brushes that scratch paint',
+          'Premium soap protects your clear coat',
+          'Microfiber technology for spotless finish',
+          'Attention to every detail, from wheel wells to trim'
+        ],
+        duration: '~1 hour',
+        startingPrice: '$120'
+      },
+      gallery: [
+        {
+          src: '/assets/cleaningsamples/1.jpg',
+          caption: 'Exterior Wash - Before',
+          alt: 'Car before exterior wash'
+        },
+        {
+          src: '/assets/cleaningsamples/1_1.jpg',
+          caption: 'Exterior Wash - After',
+          alt: 'Car after exterior wash with shine'
+        }
+      ]
     },
     {
+      id: 2,
       icon: <Wind className="w-10 h-10" />,
       emoji: '🌪️',
       title: 'Interior Deep Clean',
-      description: 'Thorough vacuuming, seat shampoo, dash & vents detail',
-      price: '$150',
+      headline: 'Restore Fresh Car Feeling',
+      description: 'Tornado-powered extraction, steam cleaning, and precision detailing for pristine interiors.',
       color: 'from-cyan-400 via-teal-400 to-green-400',
-      bgColorLight: 'bg-cyan-50',
+      bgColorLight: 'bg-teal-50',
       bgColorDark: 'bg-teal-900/20',
       borderColorDark: 'border-teal-500/30',
       details: {
-        duration: '⏱ 1.5–2 hours',
-        includes: [
-          'Complete vacuuming',
-          'Seat shampoo & conditioning',
-          'Dashboard detailing',
-          'Vent cleaning',
-          'Door panel cleaning',
-          'Interior glass polishing'
+        whatYouGet: [
+          'Complete vacuuming with commercial-grade equipment',
+          'Tornado air circulation for deep carpet cleaning',
+          'Steam extraction for stubborn stains',
+          'Seat shampooing and conditioning',
+          'Dashboard, console, and vent detailing',
+          'Door panels and interior trim refresh'
         ],
-        ideal: 'Ideal for seasonal refresh or sale prep'
-      }
+        bestFor: 'Cars with heavy interior use, pet owners, or before resale',
+        toolsUsed: ['Tornador', 'Steam cleaner', 'Mighty extractor', 'Professional vacuums', 'Microfiber brushes'],
+        importantNotes: [
+          '💧 Water supply needed for steam and extraction.',
+          '⚡ Generator available if no power outlet on-site (small extra fee).',
+          '⏱️ Typical duration: 1.5–2 hours',
+          '🚗 Drying time: 2–4 hours recommended'
+        ],
+        whyChooseUs: [
+          'Professional-grade Tornador for deep fiber cleaning',
+          'Steam kills bacteria and odors naturally',
+          'Mighty extractor removes water for faster drying',
+          'Every surface treated with premium products'
+        ],
+        duration: '1.5–2 hours',
+        startingPrice: '$180'
+      },
+      gallery: [
+        {
+          src: '/assets/cleaningsamples/3.jpg',
+          caption: 'Seat Deep Clean - Before',
+          alt: 'Car seat before deep cleaning'
+        },
+        {
+          src: '/assets/cleaningsamples/3_1.jpg',
+          caption: 'Seat Deep Clean - After',
+          alt: 'Car seat after deep cleaning'
+        }
+      ]
     },
     {
+      id: 3,
       icon: <Car className="w-10 h-10" />,
       emoji: '🚗',
-      title: 'Engine Bay Clean',
-      description: 'Safe degreasing, dressing and shine for engine components',
-      price: '$40+',
+      title: 'Full Detail Package',
+      headline: 'Complete Transformation',
+      description: 'Premium inside + outside: wash, extract, protect, shine. Your car will feel brand new.',
+      color: 'from-purple-400 via-pink-400 to-cyan-400',
+      bgColorLight: 'bg-purple-50',
+      bgColorDark: 'bg-purple-900/20',
+      borderColorDark: 'border-purple-500/30',
+      details: {
+        whatYouGet: [
+          'Full exterior wash with foam bath and wax finish',
+          'Interior deep clean with Tornador and steam',
+          'Leather conditioning (if applicable)',
+          'Seat extraction and stain treatment',
+          'Engine bay degreasing and dressing',
+          'Windows and all glass polished to perfection'
+        ],
+        bestFor: 'Luxury vehicles, before special events, or complete refresh after heavy use',
+        toolsUsed: ['All professional tools', 'Tornador', 'Steam cleaner', 'Mighty extractor', 'Leather care products'],
+        importantNotes: [
+          '💧 Water and power supply required.',
+          '⚡ Generator option available if needed (extra fee applies).',
+          '⏱️ Typical duration: 3–5 hours (same day or scheduled)',
+          '🏆 Best results: book for early morning appointments'
+        ],
+        whyChooseUs: [
+          'Most popular choice — we\'ve perfected this package',
+          'Your car looks dealership-fresh',
+          'Engine bay included — often missed by others',
+          'All systems working together for maximum impact'
+        ],
+        duration: '3–5 hours',
+        startingPrice: '$420'
+      },
+      gallery: [
+        {
+          src: '/assets/cleaningsamples/2.jpg',
+          caption: 'Full Detail - Before',
+          alt: 'Car before full detail package'
+        },
+        {
+          src: '/assets/cleaningsamples/2_1.jpg',
+          caption: 'Full Detail - After',
+          alt: 'Car after complete full detail'
+        }
+      ]
+    },
+    {
+      id: 4,
+      icon: <Sparkles className="w-10 h-10" />,
+      emoji: '✨',
+      title: 'Exterior Shine Package',
+      headline: 'Paint Perfection, Wax Protection',
+      description: 'Professional hand wash with premium wax sealant for lasting exterior brilliance.',
       color: 'from-blue-400 via-cyan-400 to-teal-400',
       bgColorLight: 'bg-blue-50',
       bgColorDark: 'bg-blue-900/20',
       borderColorDark: 'border-blue-500/30',
       details: {
-        duration: '⏱ ~45 min',
-        includes: [
-          'Safe degreasing process',
-          'Engine component protection',
-          'Pressure washing',
-          'Plastic & rubber dressing',
-          'Final shine application',
-          'Inspection'
+        whatYouGet: [
+          'Full hand wash with two-bucket method',
+          'Tire and wheel detail with shine',
+          'Paint clarification (light clay bar treatment)',
+          'Premium wax sealant application',
+          'Trim and rubber protection',
+          'Final polish for mirror-like shine'
         ],
-        ideal: 'Best combined with Basic Wash'
+        bestFor: 'Owners wanting lasting paint protection and show-quality finish',
+        toolsUsed: ['Premium foam', 'Clay bar', 'Microfiber towels', 'Professional wax', 'Applicator pads'],
+        importantNotes: [
+          '💧 Water supply needed for washing phase.',
+          '⚡ No power required for this service.',
+          '⏱️ Typical duration: 2–3 hours',
+          '🌞 Best time: Cloudy day or morning for wax curing'
+        ],
+        whyChooseUs: [
+          'Premium wax lasts 2–3 months with proper care',
+          'Paint protection against UV and contaminants',
+          'Clay bar removes embedded iron and fallout',
+          'Results: Show-room quality shine'
+        ],
+        duration: '2–3 hours',
+        startingPrice: '$220'
       }
     },
     {
-      icon: <Sparkles className="w-10 h-10" />,
-      emoji: '✨',
-      title: 'Exterior Detail',
-      description: 'Professional full exterior cleaning — tires, trim, windows, and shine restoration.',
-      price: '$250+',
-      color: 'from-purple-400 via-pink-400 to-purple-500',
-      bgColorLight: 'bg-purple-50',
-      bgColorDark: 'bg-purple-900/20',
-      borderColorDark: 'border-purple-500/30',
-      details: {
-        duration: '⏱ 2–3 hours',
-        includes: [
-          'Hand wash with foam bath',
-          'Tire shine & rim cleaning',
-          'Light clay bar treatment',
-          'Wax or spray sealant finish',
-          'Ideal for cars needing a deeper refresh',
-          'Estimated time: 2–3 hours'
-        ],
-        ideal: 'Perfect for restoring paint brilliance'
-      }
-    },
-    {
-      icon: <Zap className="w-10 h-10" />,
+      id: 5,
+      icon: <ZapIcon className="w-10 h-10" />,
       emoji: '⚡',
-      title: 'Full Detail Package',
-      description: 'Complete interior + exterior detailing with protection',
-      price: '$400+',
-      color: 'from-purple-400 via-pink-400 to-cyan-400',
-      bgColorLight: 'bg-purple-50',
-      bgColorDark: 'bg-purple-900/20',
-      borderColorDark: 'border-pink-500/30',
+      title: 'Engine Bay Clean',
+      headline: 'Professional Under-Hood Detail',
+      description: 'Safe steam cleaning and degreasing for pristine engine components and presentation.',
+      color: 'from-yellow-400 via-orange-400 to-red-400',
+      bgColorLight: 'bg-orange-50',
+      bgColorDark: 'bg-orange-900/20',
+      borderColorDark: 'border-orange-500/30',
       details: {
-        duration: '⏱ 3–5 hours',
-        includes: [
-          'Complete exterior detail',
-          'Full interior deep clean',
-          'Engine bay cleaning',
-          'Paint protection',
-          'All surfaces treated',
-          'Premium finish'
+        whatYouGet: [
+          'Safe degreasing of engine and components',
+          'Steam cleaning for deep dirt removal',
+          'Plastic and rubber dressing application',
+          'Metal components protected with dressing',
+          'Final inspection and shine finish',
+          'Professional presentation-ready result'
         ],
-        ideal: 'All-in-one transformation'
+        bestFor: 'Before vehicle resale, trade-in, or showing your pride of ownership',
+        toolsUsed: ['Steam cleaner', 'Degreaser', 'Protective dressing', 'Brushes', 'Microfiber cloths'],
+        importantNotes: [
+          '💧 Water required for steam cleaning.',
+          '⚡ Power outlet needed for steam equipment.',
+          '⏱️ Typical duration: 45 minutes to 1 hour',
+          '🚗 Most impressive when combined with exterior wash'
+        ],
+        whyChooseUs: [
+          'Professional equipment — safe for all engine types',
+          'Degreaser removes years of buildup',
+          'Protection applied to prevent new grime',
+          'Engine runs cooler when clean'
+        ],
+        duration: '~45 min',
+        startingPrice: '$85'
       }
     },
     {
+      id: 6,
       icon: <Shield className="w-10 h-10" />,
       emoji: '🛡️',
       title: 'Maintenance Plan',
-      description: 'Recurring monthly or quarterly washes with loyalty discounts',
-      price: 'Custom',
+      headline: 'Stay Perfect Year-Round',
+      description: 'Recurring care every 60 days at loyalty rate. Consistent protection, fresh appearance always.',
       color: 'from-pink-400 via-rose-400 to-orange-400',
       bgColorLight: 'bg-pink-50',
       bgColorDark: 'bg-pink-900/20',
       borderColorDark: 'border-pink-500/30',
       details: {
-        duration: '⏱ Flexible',
-        includes: [
-          'Monthly or quarterly service',
-          'Loyalty discounts',
-          'Priority scheduling',
-          'Consistent care',
-          'Custom package options',
-          'Year-round protection'
+        whatYouGet: [
+          'Discounted service rate for recurring bookings',
+          'Flexible scheduling every 60 days',
+          'Priority appointment slots',
+          'Custom service selection each visit',
+          'Loyalty rewards and perks',
+          'Your car always show-ready'
         ],
-        ideal: 'Stay spotless all year round'
+        bestFor: 'Luxury car owners, daily drivers, and those who value consistent perfection',
+        toolsUsed: ['Full toolset', 'All professional equipment', 'Premium products'],
+        importantNotes: [
+          '💰 PRICING LOGIC: Book every 60 days → Discounted rate.',
+          '⏰ Miss 60-day window? → Full cleaning price applies.',
+          '📅 Easy rescheduling within your plan.',
+          '✅ No contracts — flexible month-to-month'
+        ],
+        whyChooseUs: [
+          'Save 20–30% vs. booking single services',
+          'Your car never gets dirty — always maintained',
+          'Priority scheduling around your lifestyle',
+          'Building trust through consistent excellence'
+        ],
+        duration: 'Varies by service',
+        startingPrice: 'Custom (Starts at $99)'
       }
-    },
+    }
   ];
 
+  const handleShowMore = () => {
+    setShowAllGallery(true);
+  };
+
+  const handleShowLess = () => {
+    setShowAllGallery(false);
+    const currentY = window.scrollY;
+    setTimeout(() => {
+      galleryTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
   return (
-    <section id="services" className="relative py-20 sm:py-32 overflow-hidden">
+    <section
+      ref={servicesRef}
+      id="services"
+      className="relative py-20 sm:py-32 overflow-hidden"
+    >
       {/* Background Decorations */}
-      <div className={`absolute top-10 right-10 w-64 h-64 rounded-full blur-3xl ${
-        theme === 'dark'
-          ? 'bg-purple-500/10'
-          : 'bg-gradient-to-br from-cyan-200 to-blue-200 opacity-30'
-      }`}></div>
-      <div className={`absolute bottom-10 left-10 w-64 h-64 rounded-full blur-3xl ${
-        theme === 'dark'
-          ? 'bg-cyan-500/10'
-          : 'bg-gradient-to-br from-orange-200 to-pink-200 opacity-30'
-      }`}></div>
+      <div
+        className={`absolute top-10 left-10 w-64 h-64 rounded-full blur-3xl ${
+          theme === 'dark'
+            ? 'bg-purple-500/10'
+            : 'bg-gradient-to-br from-purple-200 to-pink-200 opacity-30'
+        }`}
+      ></div>
+      <div
+        className={`absolute bottom-10 right-10 w-64 h-64 rounded-full blur-3xl ${
+          theme === 'dark'
+            ? 'bg-cyan-500/10'
+            : 'bg-gradient-to-br from-cyan-200 to-blue-200 opacity-30'
+        }`}
+      ></div>
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -172,204 +354,432 @@ export function Services() {
           className="text-center mb-16"
         >
           <div className="inline-block px-6 py-2 vhs-gradient text-white rounded-full mb-4 cartoon-shadow-sm vhs-glow">
-            <span>Our Services</span>
+            <span>Premium Services</span>
           </div>
-          <h2 className={`vhs-text text-transparent bg-clip-text mb-4 ${
-            theme === 'dark'
-              ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400'
-              : 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600'
-          }`}>
-            What We Offer
+          <h2
+            className={`vhs-text text-transparent bg-clip-text mb-4 ${
+              theme === 'dark'
+                ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400'
+                : 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600'
+            }`}
+          >
+            Precision Detailing for Every Need
           </h2>
-          <p className={`max-w-2xl mx-auto text-lg ${
-            theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'
-          }`}>
-            From basic wash to complete makeover — we've got you covered! 🎉
+          <p
+            className={`max-w-2xl mx-auto text-lg ${
+              theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'
+            }`}
+          >
+            Professional hand-washing, steam extraction, and premium protection. Every service tailored to your car's personality.
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 relative pb-96">
-          {services.map((service, index) => {
-            return (
+        {/* Services Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+          {services.map((service, index) => (
             <motion.div
-              key={service.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{
-                opacity: 1,
-                y: [0, -10, 0],
-              }}
-              transition={{
-                opacity: { duration: 0.6, delay: index * 0.1 },
-                y: {
-                  duration: 5.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: index * 0.35,
-                },
-              }}
-              className="group relative"
+              key={service.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
             >
               <BubbleEffect intensity="low" variant="light">
-                <div 
-                  onClick={() => setExpandedCard(expandedCard === index ? null : index)}
-                  className={`h-full p-8 rounded-3xl border-2 cartoon-shadow hover:scale-105 transition-all duration-300 cursor-pointer ${
-                  theme === 'dark' 
-                    ? `${service.bgColorDark} ${service.borderColorDark} vhs-noise vhs-scanlines` 
-                    : `${service.bgColorLight} border-white vhs-noise`
-                }`}>
-                  {/* Icon Circle */}
-                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${service.color} text-white mb-4 cartoon-shadow-sm gradient-animated ${
-                    theme === 'dark' ? 'vhs-glow-dark' : 'vhs-glow-light'
-                  }`}>
-                    {service.icon}
-                  </div>
+                <button
+                  onClick={() =>
+                    setExpandedCard(expandedCard === service.id ? null : service.id)
+                  }
+                  className={`w-full h-full p-6 rounded-3xl border-2 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 text-left group ${
+                    theme === 'dark'
+                      ? `${service.bgColorDark} ${service.borderColorDark} border-opacity-50 hover:border-opacity-100 focus:ring-offset-slate-900 focus:ring-cyan-400`
+                      : `${service.bgColorLight} border-white hover:border-gray-200 focus:ring-offset-slate-50 focus:ring-purple-400`
+                  }`}
+                  aria-label={`${service.title} - ${service.headline}. Click to see details`}
+                >
+                  {/* Icon */}
+                  <motion.div
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: index * 0.1
+                    }}
+                    className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4 cartoon-shadow-sm ${
+                      theme === 'dark' ? 'vhs-glow-dark' : 'vhs-glow-light'
+                    }`}
+                  >
+                    <span className="text-2xl">{service.emoji}</span>
+                  </motion.div>
 
-                  {/* Title */}
-                  <h3 className={`mb-3 flex items-center gap-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
-                    <motion.span
-                      aria-hidden
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.08 }}
-                      className="text-3xl"
-                    >
-                      {service.emoji}
-                    </motion.span>
-                    <span>{service.title}</span>
+                  {/* Title & Headline */}
+                  <h3
+                    className={`text-xl font-bold mb-1 ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
+                    {service.title}
                   </h3>
+                  <p
+                    className={`text-sm font-semibold mb-3 ${
+                      theme === 'dark'
+                        ? 'text-cyan-300'
+                        : 'text-purple-600'
+                    }`}
+                  >
+                    {service.headline}
+                  </p>
 
                   {/* Description */}
-                  <p className={`mb-6 leading-relaxed ${theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'}`}>{service.description}</p>
+                  <p
+                    className={`mb-4 leading-relaxed ${
+                      theme === 'dark'
+                        ? 'text-purple-200/80'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {service.description}
+                  </p>
 
-                  {/* Price Badge */}
-                  <div className={`inline-block px-6 py-3 rounded-full bg-gradient-to-r ${service.color} text-white cartoon-shadow-sm vhs-glow gradient-animated`}>
-                    <span className="text-lg">Starting at {service.price}</span>
-                  </div>
-
-                  {/* Expand indicator */}
-                  <div className="flex items-center justify-center mt-4">
-                    <motion.div
-                      animate={{ rotate: expandedCard === index ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
+                  {/* CTA and Price */}
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-sm font-semibold ${
+                        theme === 'dark'
+                          ? 'text-cyan-300'
+                          : 'text-purple-600'
+                      }`}
                     >
-                      <ChevronDown className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-300' : 'text-gray-500'}`} />
-                    </motion.div>
+                      Starting at{' '}
+                      <span className="text-lg">
+                        {service.details.startingPrice}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 transition-transform ${
+                        expandedCard === service.id ? 'rotate-180' : ''
+                      } ${
+                        theme === 'dark'
+                          ? 'text-cyan-400'
+                          : 'text-purple-500'
+                      }`}
+                    />
                   </div>
-                </div>
+                </button>
               </BubbleEffect>
             </motion.div>
-            );
-          })}
+          ))}
         </div>
 
-        {/* Expanded Details Popup - Outside Grid */}
+        {/* Modal for Service Details */}
         <AnimatePresence>
           {expandedCard !== null && (
-            <>
-              {/* Semi-transparent dark backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setExpandedCard(null)}
+            >
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-                onClick={() => setExpandedCard(null)}
-              />
-              
-              {/* Popup Card */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                transition={{ duration: 0.3, type: 'spring', stiffness: 300, damping: 25 }}
-                className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className={`max-w-2xl w-full rounded-3xl p-8 max-h-[90vh] overflow-y-auto ${
+                  theme === 'dark'
+                    ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
+                    : 'bg-white'
+                }`}
+                onClick={(e) => e.stopPropagation()}
               >
-                <BubbleEffect intensity="high" variant="bright">
-                  <motion.div
-                    className={`p-8 rounded-3xl border-2 shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto ${
-                      theme === 'dark' 
-                        ? `${services[expandedCard].bgColorDark} ${services[expandedCard].borderColorDark} vhs-noise vhs-scanlines` 
-                        : `${services[expandedCard].bgColorLight} border-white vhs-noise`
+                {/* Close Button */}
+                <button
+                  onClick={() => setExpandedCard(null)}
+                  className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${
+                    theme === 'dark'
+                      ? 'hover:bg-purple-500/20 text-purple-300'
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                  aria-label="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                {/* Modal Header */}
+                <div className="mb-6">
+                  <h2
+                    className={`text-3xl font-bold mb-2 ${
+                      theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }`}
-                    animate={{
-                      y: [0, -8, 0],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    onClick={(e) => e.stopPropagation()}
                   >
-                    {/* Header */}
-                    <div className="flex-shrink-0 mb-4">
-                      <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
-                        {services[expandedCard].title}
-                      </h3>
-                    </div>
+                    {services.find((s) => s.id === expandedCard)?.title}
+                  </h2>
+                  <p
+                    className={`text-lg ${
+                      theme === 'dark'
+                        ? 'text-cyan-300'
+                        : 'text-purple-600'
+                    }`}
+                  >
+                    {services.find((s) => s.id === expandedCard)?.headline}
+                  </p>
+                </div>
 
-                    {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto pr-4 space-y-4">
-                      <div>
-                        <h4 className={`font-semibold mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-purple-200' : 'text-gray-800'}`}>
-                          ⏱️ Duration: <span className={`font-normal ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>{services[expandedCard].details.duration}</span>
-                        </h4>
-                      </div>
-                      
-                      <div>
-                        <h4 className={`font-semibold mb-2 ${theme === 'dark' ? 'text-purple-200' : 'text-gray-800'}`}>✅ What's Included:</h4>
-                        <ul className={`space-y-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-600'}`}>
-                          {services[expandedCard].details.includes.map((item, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-green-400 mt-1 flex-shrink-0">•</span>
-                              <span className="text-sm">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-purple-800/40 border border-purple-700/40' : 'bg-white/70 border border-gray-200'}`}>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-purple-200' : 'text-gray-700'}`}>
-                          <span className="font-semibold block mb-1">💡 Ideal for:</span> {services[expandedCard].details.ideal}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Footer Buttons */}
-                    <div className="flex-shrink-0 mt-6 pt-4 border-t border-opacity-20" style={{ borderColor: 'currentColor' }}>
-                      <button
-                        onClick={() => setExpandedCard(null)}
-                        className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                {/* Service Details */}
+                {services.find((s) => s.id === expandedCard)?.details && (
+                  <div className="space-y-6">
+                    {/* What You Get */}
+                    <div>
+                      <h3
+                        className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
-                            ? 'bg-gradient-to-r from-purple-700 to-pink-600 hover:shadow-lg hover:shadow-purple-500/50 text-white'
-                            : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:shadow-lg text-white'
+                            ? 'text-purple-300'
+                            : 'text-purple-600'
                         }`}
                       >
-                        Close
-                      </button>
+                        ✨ What You Get
+                      </h3>
+                      <ul className="space-y-2">
+                        {services
+                          .find((s) => s.id === expandedCard)
+                          ?.details.whatYouGet.map((item, idx) => (
+                            <li
+                              key={idx}
+                              className={`flex gap-2 ${
+                                theme === 'dark'
+                                  ? 'text-purple-200/80'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="text-cyan-400">•</span>
+                              {item}
+                            </li>
+                          ))}
+                      </ul>
                     </div>
-                  </motion.div>
-                </BubbleEffect>
+
+                    {/* Best For */}
+                    <div>
+                      <h3
+                        className={`text-lg font-bold mb-2 ${
+                          theme === 'dark'
+                            ? 'text-purple-300'
+                            : 'text-purple-600'
+                        }`}
+                      >
+                        🎯 Best For Cars That…
+                      </h3>
+                      <p
+                        className={`${
+                          theme === 'dark'
+                            ? 'text-purple-200/80'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {services.find((s) => s.id === expandedCard)?.details
+                          .bestFor}
+                      </p>
+                    </div>
+
+                    {/* Tools Used */}
+                    <div>
+                      <h3
+                        className={`text-lg font-bold mb-2 ${
+                          theme === 'dark'
+                            ? 'text-purple-300'
+                            : 'text-purple-600'
+                        }`}
+                      >
+                        🔧 Tools Used
+                      </h3>
+                      <p
+                        className={`${
+                          theme === 'dark'
+                            ? 'text-purple-200/80'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {services
+                          .find((s) => s.id === expandedCard)
+                          ?.details.toolsUsed.join(', ')}
+                      </p>
+                    </div>
+
+                    {/* Important Notes */}
+                    <div>
+                      <h3
+                        className={`text-lg font-bold mb-3 ${
+                          theme === 'dark'
+                            ? 'text-orange-300'
+                            : 'text-orange-600'
+                        }`}
+                      >
+                        ⚠️ Important Notes
+                      </h3>
+                      <ul className="space-y-2">
+                        {services
+                          .find((s) => s.id === expandedCard)
+                          ?.details.importantNotes.map((note, idx) => (
+                            <li
+                              key={idx}
+                              className={`${
+                                theme === 'dark'
+                                  ? 'text-purple-200/70'
+                                  : 'text-gray-600'
+                              }`}
+                            >
+                              {note}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+
+                    {/* Why Choose Us */}
+                    <div>
+                      <h3
+                        className={`text-lg font-bold mb-3 ${
+                          theme === 'dark'
+                            ? 'text-cyan-300'
+                            : 'text-cyan-600'
+                        }`}
+                      >
+                        💎 Why Choose Silans Auto Care?
+                      </h3>
+                      <ul className="space-y-2">
+                        {services
+                          .find((s) => s.id === expandedCard)
+                          ?.details.whyChooseUs.map((reason, idx) => (
+                            <li
+                              key={idx}
+                              className={`flex gap-2 ${
+                                theme === 'dark'
+                                  ? 'text-purple-200/80'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="text-cyan-400">→</span>
+                              {reason}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="mt-8 pt-6 border-t border-purple-500/20">
+                      <a
+                        href="#contact"
+                        onClick={() => setExpandedCard(null)}
+                        className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 ${
+                          theme === 'dark'
+                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
+                            : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white vhs-glow-light'
+                        }`}
+                        aria-label={`Book ${services.find((s) => s.id === expandedCard)?.title}`}
+                      >
+                        Book This Service →
+                      </a>
+                      <p
+                        className={`text-sm text-center mt-3 ${
+                          theme === 'dark'
+                            ? 'text-purple-300/60'
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        Final price depends on vehicle size and condition.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </motion.div>
-            </>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-16"
-        >
-          <a
-            href="#contact"
-            className="inline-flex items-center gap-2 px-10 py-5 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg"
+        {/* Gallery Section */}
+        <div className="mt-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8"
           >
-            <Sparkles className="w-6 h-6" />
-            Book Your Service Today!
-          </a>
-        </motion.div>
+            <h3
+              className={`text-2xl font-bold mb-2 ${
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}
+            >
+              Work in Action
+            </h3>
+            <p
+              className={`${
+                theme === 'dark'
+                  ? 'text-purple-200/70'
+                  : 'text-gray-600'
+              }`}
+            >
+              Real results from real vehicles
+            </p>
+          </motion.div>
+
+          <div ref={galleryTopRef} />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(showAllGallery
+              ? services.flatMap((s) => s.gallery || [])
+              : services
+                  .flatMap((s) => s.gallery || [])
+                  .slice(0, 6)
+            ).map((photo, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.05 }}
+                className={`relative overflow-hidden rounded-2xl group cursor-pointer ${
+                  theme === 'dark' ? 'vhs-noise' : ''
+                }`}
+              >
+                <ImageWithFallback
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110 rounded-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4 rounded-2xl">
+                  <p className="text-white font-semibold text-sm">
+                    {photo.caption}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Show More/Less */}
+          {services.flatMap((s) => s.gallery || []).length > 6 && (
+            <div className="flex justify-center mt-8">
+              {!showAllGallery ? (
+                <button
+                  onClick={handleShowMore}
+                  className="px-8 py-3 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow flex items-center gap-2 hover:scale-105 transition-transform"
+                  aria-label="Show more gallery images"
+                >
+                  <span>Show More Work</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleShowLess}
+                  className="px-8 py-3 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow flex items-center gap-2 hover:scale-105 transition-transform"
+                  aria-label="Show less gallery images"
+                >
+                  <span>Show Less</span>
+                  <ChevronDown className="w-4 h-4 rotate-180" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
