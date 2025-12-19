@@ -644,105 +644,19 @@ export function Services() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-24 relative"
+          className="mt-16 text-center"
         >
-          <div className={`max-w-3xl mx-auto p-10 rounded-3xl border-2 ${
+          <p className={`text-lg mb-6 leading-relaxed max-w-2xl mx-auto ${
             theme === 'dark'
-              ? 'bg-gradient-to-br from-purple-900/30 to-cyan-900/30 border-purple-500/30'
-              : 'bg-gradient-to-br from-purple-50 to-cyan-50 border-purple-200'
+              ? 'text-purple-200/80'
+              : 'text-gray-700'
           }`}>
-            <div className="text-center">
-              <h3 className={`text-3xl font-bold mb-4 ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>
-                See Real Transformations
-              </h3>
-              
-              <p className={`text-lg mb-6 leading-relaxed ${
-                theme === 'dark'
-                  ? 'text-purple-200/80'
-                  : 'text-gray-700'
-              }`}>
-                Every service listed above has delivered stunning before-and-after results. From seat deep cleaning that removes years of wear to full detail packages that make cars shine like new — our transformation gallery showcases the real difference professional detailing makes.
-              </p>
-
-              <div className={`grid sm:grid-cols-3 gap-6 mb-8 py-6 border-t border-b ${
-                theme === 'dark'
-                  ? 'border-purple-500/20'
-                  : 'border-purple-200'
-              }`}>
-                <div className="text-center">
-                  <div className="text-4xl mb-2">🖼️</div>
-                  <p className={`font-semibold ${
-                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
-                  }`}>
-                    Before & After
-                  </p>
-                  <p className={`text-sm ${
-                    theme === 'dark'
-                      ? 'text-purple-200/60'
-                      : 'text-gray-600'
-                  }`}>
-                    Side-by-side comparisons
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-4xl mb-2">✨</div>
-                  <p className={`font-semibold ${
-                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
-                  }`}>
-                    Real Vehicles
-                  </p>
-                  <p className={`text-sm ${
-                    theme === 'dark'
-                      ? 'text-purple-200/60'
-                      : 'text-gray-600'
-                  }`}>
-                    Not stock photos
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <p className={`font-semibold ${
-                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
-                  }`}>
-                    Service-Linked
-                  </p>
-                  <p className={`text-sm ${
-                    theme === 'dark'
-                      ? 'text-purple-200/60'
-                      : 'text-gray-600'
-                  }`}>
-                    Matches each service
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href="#portfolio"
-                className={`inline-flex items-center gap-2 px-10 py-4 rounded-full font-bold transition-all duration-300 hover:scale-105 ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
-                    : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white vhs-glow-light'
-                }`}
-              >
-                <span>View Transformation Gallery</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-
-              <p className={`text-sm mt-6 ${
-                theme === 'dark'
-                  ? 'text-purple-300/60'
-                  : 'text-gray-500'
-              }`}>
-                Explore detailed before-and-after images of services in action
-              </p>
-            </div>
-          </div>
+            Ready to see your car transformed? Check out our <a href="#portfolio" className={`font-semibold transition-colors ${
+              theme === 'dark'
+                ? 'text-cyan-300 hover:text-cyan-200'
+                : 'text-cyan-600 hover:text-cyan-700'
+            }`}>before-and-after gallery</a> to see real results from real customers.
+          </p>
         </motion.div>
       </div>
     </section>

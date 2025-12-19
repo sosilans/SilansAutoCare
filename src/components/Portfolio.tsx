@@ -268,7 +268,7 @@ export function Portfolio() {
         </div>
 
         {!showAll && (
-          <div className="flex justify-center mt-8">
+          <div className="flex flex-col items-center gap-6 mt-12">
             <button
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowMore}
@@ -276,6 +276,27 @@ export function Portfolio() {
               <span>Show More</span>
               <ChevronDown className="w-5 h-5" />
             </button>
+            
+            {/* Motivational Text Below Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className={`max-w-2xl text-center px-6 py-6 rounded-2xl border ${
+                theme === 'dark'
+                  ? 'bg-gradient-to-r from-purple-900/30 to-cyan-900/30 border-purple-500/30'
+                  : 'bg-gradient-to-r from-purple-50 to-cyan-50 border-purple-200'
+              }`}
+            >
+              <p className={`text-sm leading-relaxed ${
+                theme === 'dark'
+                  ? 'text-purple-200/80'
+                  : 'text-gray-700'
+              }`}>
+                Every service creates stunning transformations. From interior deep cleaning that removes years of wear to full details that make cars shine like new — see the real difference professional detailing makes. <span className="font-semibold">Explore more before-and-after results →</span>
+              </p>
+            </motion.div>
           </div>
         )}
 
