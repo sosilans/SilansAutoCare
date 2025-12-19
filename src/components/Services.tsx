@@ -1,10 +1,9 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Droplet, Wind, Car, Sparkles, Zap as ZapIcon, Shield, ChevronDown, X } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 
 interface ServiceDetails {
   whatYouGet: string[];
@@ -28,20 +27,12 @@ interface Service {
   bgColorDark: string;
   borderColorDark: string;
   details: ServiceDetails;
-  gallery?: Array<{
-    src: string;
-    caption: string;
-    alt: string;
-  }>;
 }
 
 export function Services() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
-  const [showAllGallery, setShowAllGallery] = useState(false);
-  const servicesRef = useRef<HTMLDivElement>(null);
-  const galleryTopRef = useRef<HTMLDivElement>(null);
 
   const services: Service[] = [
     {
@@ -80,19 +71,7 @@ export function Services() {
         ],
         duration: '~1 hour',
         startingPrice: '$120'
-      },
-      gallery: [
-        {
-          src: '/assets/cleaningsamples/1.jpg',
-          caption: 'Exterior Wash - Before',
-          alt: 'Car before exterior wash'
-        },
-        {
-          src: '/assets/cleaningsamples/1_1.jpg',
-          caption: 'Exterior Wash - After',
-          alt: 'Car after exterior wash with shine'
-        }
-      ]
+      }
     },
     {
       id: 2,
@@ -130,19 +109,7 @@ export function Services() {
         ],
         duration: '1.5–2 hours',
         startingPrice: '$180'
-      },
-      gallery: [
-        {
-          src: '/assets/cleaningsamples/3.jpg',
-          caption: 'Seat Deep Clean - Before',
-          alt: 'Car seat before deep cleaning'
-        },
-        {
-          src: '/assets/cleaningsamples/3_1.jpg',
-          caption: 'Seat Deep Clean - After',
-          alt: 'Car seat after deep cleaning'
-        }
-      ]
+      }
     },
     {
       id: 3,
@@ -180,19 +147,7 @@ export function Services() {
         ],
         duration: '3–5 hours',
         startingPrice: '$420'
-      },
-      gallery: [
-        {
-          src: '/assets/cleaningsamples/2.jpg',
-          caption: 'Full Detail - Before',
-          alt: 'Car before full detail package'
-        },
-        {
-          src: '/assets/cleaningsamples/2_1.jpg',
-          caption: 'Full Detail - After',
-          alt: 'Car after complete full detail'
-        }
-      ]
+      }
     },
     {
       id: 4,
@@ -310,21 +265,8 @@ export function Services() {
     }
   ];
 
-  const handleShowMore = () => {
-    setShowAllGallery(true);
-  };
-
-  const handleShowLess = () => {
-    setShowAllGallery(false);
-    const currentY = window.scrollY;
-    setTimeout(() => {
-      galleryTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 50);
-  };
-
   return (
     <section
-      ref={servicesRef}
       id="services"
       className="relative py-20 sm:py-32 overflow-hidden"
     >
@@ -696,90 +638,112 @@ export function Services() {
           )}
         </AnimatePresence>
 
-        {/* Gallery Section */}
-        <div className="mt-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8"
-          >
-            <h3
-              className={`text-2xl font-bold mb-2 ${
+        {/* Transformation Gallery Link Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-24 relative"
+        >
+          <div className={`max-w-3xl mx-auto p-10 rounded-3xl border-2 ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-purple-900/30 to-cyan-900/30 border-purple-500/30'
+              : 'bg-gradient-to-br from-purple-50 to-cyan-50 border-purple-200'
+          }`}>
+            <div className="text-center">
+              <h3 className={`text-3xl font-bold mb-4 ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}
-            >
-              Work in Action
-            </h3>
-            <p
-              className={`${
+              }`}>
+                See Real Transformations
+              </h3>
+              
+              <p className={`text-lg mb-6 leading-relaxed ${
                 theme === 'dark'
-                  ? 'text-purple-200/70'
-                  : 'text-gray-600'
-              }`}
-            >
-              Real results from real vehicles
-            </p>
-          </motion.div>
+                  ? 'text-purple-200/80'
+                  : 'text-gray-700'
+              }`}>
+                Every service listed above has delivered stunning before-and-after results. From seat deep cleaning that removes years of wear to full detail packages that make cars shine like new — our transformation gallery showcases the real difference professional detailing makes.
+              </p>
 
-          <div ref={galleryTopRef} />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(showAllGallery
-              ? services.flatMap((s) => s.gallery || [])
-              : services
-                  .flatMap((s) => s.gallery || [])
-                  .slice(0, 6)
-            ).map((photo, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.05 }}
-                className={`relative overflow-hidden rounded-2xl group cursor-pointer ${
-                  theme === 'dark' ? 'vhs-noise' : ''
-                }`}
-              >
-                <ImageWithFallback
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110 rounded-2xl"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4 rounded-2xl">
-                  <p className="text-white font-semibold text-sm">
-                    {photo.caption}
+              <div className={`grid sm:grid-cols-3 gap-6 mb-8 py-6 border-t border-b ${
+                theme === 'dark'
+                  ? 'border-purple-500/20'
+                  : 'border-purple-200'
+              }`}>
+                <div className="text-center">
+                  <div className="text-4xl mb-2">🖼️</div>
+                  <p className={`font-semibold ${
+                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
+                  }`}>
+                    Before & After
+                  </p>
+                  <p className={`text-sm ${
+                    theme === 'dark'
+                      ? 'text-purple-200/60'
+                      : 'text-gray-600'
+                  }`}>
+                    Side-by-side comparisons
                   </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
 
-          {/* Show More/Less */}
-          {services.flatMap((s) => s.gallery || []).length > 6 && (
-            <div className="flex justify-center mt-8">
-              {!showAllGallery ? (
-                <button
-                  onClick={handleShowMore}
-                  className="px-8 py-3 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow flex items-center gap-2 hover:scale-105 transition-transform"
-                  aria-label="Show more gallery images"
-                >
-                  <span>Show More Work</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleShowLess}
-                  className="px-8 py-3 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow flex items-center gap-2 hover:scale-105 transition-transform"
-                  aria-label="Show less gallery images"
-                >
-                  <span>Show Less</span>
-                  <ChevronDown className="w-4 h-4 rotate-180" />
-                </button>
-              )}
+                <div className="text-center">
+                  <div className="text-4xl mb-2">✨</div>
+                  <p className={`font-semibold ${
+                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
+                  }`}>
+                    Real Vehicles
+                  </p>
+                  <p className={`text-sm ${
+                    theme === 'dark'
+                      ? 'text-purple-200/60'
+                      : 'text-gray-600'
+                  }`}>
+                    Not stock photos
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-4xl mb-2">🎯</div>
+                  <p className={`font-semibold ${
+                    theme === 'dark' ? 'text-cyan-300' : 'text-cyan-600'
+                  }`}>
+                    Service-Linked
+                  </p>
+                  <p className={`text-sm ${
+                    theme === 'dark'
+                      ? 'text-purple-200/60'
+                      : 'text-gray-600'
+                  }`}>
+                    Matches each service
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="#portfolio"
+                className={`inline-flex items-center gap-2 px-10 py-4 rounded-full font-bold transition-all duration-300 hover:scale-105 ${
+                  theme === 'dark'
+                    ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
+                    : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white vhs-glow-light'
+                }`}
+              >
+                <span>View Transformation Gallery</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+
+              <p className={`text-sm mt-6 ${
+                theme === 'dark'
+                  ? 'text-purple-300/60'
+                  : 'text-gray-500'
+              }`}>
+                Explore detailed before-and-after images of services in action
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
