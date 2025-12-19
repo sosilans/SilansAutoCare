@@ -19,127 +19,127 @@ export function Portfolio() {
     {
       before: '/assets/cleaningsamples/2.jpg',
       after: '/assets/cleaningsamples/2_1.jpg',
-      title: 'Full Detail Package',
+      title: t('portfolio.items.fullDetail'),
       emoji: '🚗',
     },
     {
       before: '/assets/cleaningsamples/1.jpg',
       after: '/assets/cleaningsamples/1_1.jpg',
-      title: 'Deep Interior Cleaning',
+      title: t('portfolio.items.deepInterior'),
       emoji: '✨',
     },
     {
       before: '/assets/cleaningsamples/3.jpg',
       after: '/assets/cleaningsamples/3_1.jpg',
-      title: 'Exterior Deep Clean',
+      title: t('portfolio.items.exteriorDeepClean'),
       emoji: '🛡️',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_2.png',
       after: '/assets/cleaningsamples/Screenshot_1.png',
-      title: 'Interior Restoration',
+      title: t('portfolio.items.interiorRestoration'),
       emoji: '🧼',
     },
     {
       before: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_3-low_res-scale-2_00x.jpg',
       after: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_4-standard-scale-2_00x.jpg',
-      title: 'Seat Deep Clean',
+      title: t('portfolio.items.seatDeepClean'),
       emoji: '💺',
     },
     {
       before: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_5-standard-scale-2_00x.jpg',
       after: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_6-low_res-scale-2_00x.jpg',
-      title: 'Dashboard Detail',
+      title: t('portfolio.items.dashboardDetail'),
       emoji: '🎛️',
     },
     {
       before: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_7-low_res-scale-2_00x.jpg',
       after: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_8-art-scale-2_00x.jpg',
-      title: 'Floor Mat Cleaning',
+      title: t('portfolio.items.floorMatCleaning'),
       emoji: '🧽',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_9.png',
       after: '/assets/cleaningsamples/Screenshot_10.png',
-      title: 'Console Detailing',
+      title: t('portfolio.items.consoleDetailing'),
       emoji: '🎮',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_11.png',
       after: '/assets/cleaningsamples/Screenshot_12.png',
-      title: 'Door Panel Clean',
+      title: t('portfolio.items.doorPanelClean'),
       emoji: '🚪',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_13.png',
       after: '/assets/cleaningsamples/Screenshot_14.png',
-      title: 'Carpet Shampooing',
+      title: t('portfolio.items.carpetShampooing'),
       emoji: '🧴',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_15.png',
       after: '/assets/cleaningsamples/Screenshot_16.png',
-      title: 'Leather Treatment',
+      title: t('portfolio.items.leatherTreatment'),
       emoji: '🪑',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_17.png',
       after: '/assets/cleaningsamples/Screenshot_18.png',
-      title: 'Trunk Cleaning',
+      title: t('portfolio.items.trunkCleaning'),
       emoji: '📦',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_19.png',
       after: '/assets/cleaningsamples/Screenshot_20.png',
-      title: 'Headliner Detail',
+      title: t('portfolio.items.headlinerDetail'),
       emoji: '☁️',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_21.png',
       after: '/assets/cleaningsamples/Screenshot_22.png',
-      title: 'Stain Removal',
+      title: t('portfolio.items.stainRemoval'),
       emoji: '🎯',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_23.png',
       after: '/assets/cleaningsamples/Screenshot_24.png',
-      title: 'Pet Hair Removal',
+      title: t('portfolio.items.petHairRemoval'),
       emoji: '🐾',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_25.png',
       after: '/assets/cleaningsamples/Screenshot_26.png',
-      title: 'Smoke Odor Treatment',
+      title: t('portfolio.items.smokeOdorTreatment'),
       emoji: '🚭',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_27.png',
       after: '/assets/cleaningsamples/Screenshot_28.png',
-      title: 'Upholstery Revival',
+      title: t('portfolio.items.upholsteryRevival'),
       emoji: '🛋️',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_29.png',
       after: '/assets/cleaningsamples/Screenshot_30.png',
-      title: 'Cup Holder Detail',
+      title: t('portfolio.items.cupHolderDetail'),
       emoji: '☕',
     },
     {
       before: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_31-low_res-scale-2_00x.jpg',
       after: '/assets/cleaningsamples/new_pictures_gigapixScreenshot_32-art-scale-2_00x.jpg',
-      title: 'Vent Cleaning',
+      title: t('portfolio.items.ventCleaning'),
       emoji: '💨',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_33.png',
       after: '/assets/cleaningsamples/Screenshot_34.png',
-      title: 'Window Polish',
+      title: t('portfolio.items.windowPolish'),
       emoji: '🪟',
     },
     {
       before: '/assets/cleaningsamples/Screenshot_35.png',
       after: '/assets/cleaningsamples/Screenshot_36.png',
-      title: 'Complete Transformation',
+      title: t('portfolio.items.completeTransformation'),
       emoji: '⭐',
     },
   ];
@@ -222,7 +222,7 @@ export function Portfolio() {
                 {/* Before Image */}
                 <ImageWithFallback
                   src={item.before}
-                  alt={`${item.title} - Before`}
+                  alt={`${item.title} - ${t('portfolio.before')}`}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
                     hoveredIndex === index ? 'opacity-0' : 'opacity-100'
                   }`}
@@ -230,7 +230,7 @@ export function Portfolio() {
                 {/* After Image */}
                 <ImageWithFallback
                   src={item.after}
-                  alt={`${item.title} - After`}
+                  alt={`${item.title} - ${t('portfolio.after')}`}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
                     hoveredIndex === index ? 'opacity-100' : 'opacity-0'
                   }`}
@@ -268,12 +268,12 @@ export function Portfolio() {
         </div>
 
         {!showAll && (
-          <div className="flex flex-col items-center gap-6 mt-12">
+          <div className="flex flex-col items-center gap-4 mt-10">
             <button
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowMore}
             >
-              <span>Show More</span>
+              <span>{t('portfolio.showMore')}</span>
               <ChevronDown className="w-5 h-5" />
             </button>
             
@@ -294,7 +294,8 @@ export function Portfolio() {
                   ? 'text-purple-200/80'
                   : 'text-gray-700'
               }`}>
-                Every service creates stunning transformations. From interior deep cleaning that removes years of wear to full details that make cars shine like new — see the real difference professional detailing makes. <span className="font-semibold">Explore more before-and-after results →</span>
+                {t('portfolio.motivation.text')}{' '}
+                <span className="font-semibold">{t('portfolio.motivation.cta')}</span>
               </p>
             </motion.div>
           </div>
@@ -306,7 +307,7 @@ export function Portfolio() {
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowLess}
             >
-              <span>Hide</span>
+              <span>{t('portfolio.showLess')}</span>
               <ChevronUp className="w-5 h-5" />
             </button>
           </div>
@@ -325,7 +326,7 @@ export function Portfolio() {
           <button
             onClick={() => setSelectedItem(null)}
             className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
-            aria-label="Close"
+            aria-label={t('common.close')}
           >
             <X className="w-6 h-6 text-white" />
           </button>
@@ -339,11 +340,11 @@ export function Portfolio() {
               className="relative"
             >
               <div className="absolute top-4 left-4 px-5 py-2 bg-gray-800/90 backdrop-blur-sm rounded-full text-white z-10">
-                <span>Before</span>
+                <span>{t('portfolio.before')}</span>
               </div>
               <ImageWithFallback
                 src={selectedItem.before}
-                alt={`${selectedItem.title} - Before`}
+                alt={`${selectedItem.title} - ${t('portfolio.before')}`}
                 className="w-full h-full object-cover rounded-2xl"
               />
             </motion.div>
@@ -357,12 +358,12 @@ export function Portfolio() {
             >
               <div className="absolute top-4 right-4 px-5 py-2 vhs-gradient rounded-full text-white z-10 cartoon-shadow-sm vhs-glow">
                 <span className="flex items-center gap-2">
-                  After {selectedItem.emoji}
+                  {t('portfolio.after')} {selectedItem.emoji}
                 </span>
               </div>
               <ImageWithFallback
                 src={selectedItem.after}
-                alt={`${selectedItem.title} - After`}
+                alt={`${selectedItem.title} - ${t('portfolio.after')}`}
                 className="w-full h-full object-cover rounded-2xl"
               />
             </motion.div>

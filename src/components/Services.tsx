@@ -3,7 +3,7 @@ import { Droplet, Wind, Car, Sparkles, Zap as ZapIcon, Shield, ChevronDown, X } 
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ServiceDetails {
   whatYouGet: string[];
@@ -34,42 +34,77 @@ export function Services() {
   const { t } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
+  useEffect(() => {
+    const body = document.body;
+    const html = document.documentElement;
+
+    if (expandedCard === null) return;
+
+    const scrollY = window.scrollY || 0;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyPosition = body.style.position;
+    const prevBodyTop = body.style.top;
+    const prevBodyWidth = body.style.width;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+
+    html.style.overscrollBehavior = 'none';
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+
+    return () => {
+      body.style.overflow = prevBodyOverflow;
+      body.style.position = prevBodyPosition;
+      body.style.top = prevBodyTop;
+      body.style.width = prevBodyWidth;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      window.scrollTo(0, scrollY);
+    };
+  }, [expandedCard]);
+
   const services: Service[] = [
     {
       id: 1,
       icon: <Droplet className="w-10 h-10" />,
       emoji: '💧',
-      title: 'Basic Exterior Wash',
-      headline: 'Your Car Deserves Fresh',
-      description: 'Hand-wash perfection with premium foam bath, wax protection, and mirror-shine finish.',
+      title: t('services.cards.basic.title'),
+      headline: t('services.cards.basic.headline'),
+      description: t('services.cards.basic.description'),
       color: 'from-cyan-400 via-blue-400 to-purple-400',
       bgColorLight: 'bg-cyan-50',
       bgColorDark: 'bg-cyan-900/20',
       borderColorDark: 'border-cyan-500/30',
       details: {
         whatYouGet: [
-          'Pre-wash foam treatment for safe cleaning',
-          'Gentle hand wash with premium soap',
-          'Wheel, tire, and trim cleaning',
-          'Microfiber drying to prevent water spots',
-          'Exterior glass polishing',
-          'Tire and trim protection'
+          t('services.cards.basic.what.1'),
+          t('services.cards.basic.what.2'),
+          t('services.cards.basic.what.3'),
+          t('services.cards.basic.what.4'),
+          t('services.cards.basic.what.5'),
+          t('services.cards.basic.what.6')
         ],
-        bestFor: 'Cars that need regular maintenance, before events, or seasonal refresh',
-        toolsUsed: ['Foam cannon', 'Microfiber wash mitt', 'Premium soaps', 'Microfiber towels', 'Tire dressing'],
+        bestFor: t('services.cards.basic.bestFor'),
+        toolsUsed: [
+          t('services.cards.basic.tools.1'),
+          t('services.cards.basic.tools.2'),
+          t('services.cards.basic.tools.3'),
+          t('services.cards.basic.tools.4'),
+          t('services.cards.basic.tools.5')
+        ],
         importantNotes: [
-          '💧 I use your property\'s water supply for washing.',
-          '⚡ If no water is available, let me know in advance.',
-          '⏱️ Typical duration: 1 hour',
-          '🚗 Optimal for: All vehicle types'
+          t('services.cards.basic.notes.1'),
+          t('services.cards.basic.notes.2'),
+          t('services.cards.basic.notes.3'),
+          t('services.cards.basic.notes.4')
         ],
         whyChooseUs: [
-          'Hand-wash only — no harsh brushes that scratch paint',
-          'Premium soap protects your clear coat',
-          'Microfiber technology for spotless finish',
-          'Attention to every detail, from wheel wells to trim'
+          t('services.cards.basic.why.1'),
+          t('services.cards.basic.why.2'),
+          t('services.cards.basic.why.3'),
+          t('services.cards.basic.why.4')
         ],
-        duration: '~1 hour',
+        duration: t('services.cards.basic.duration'),
         startingPrice: '$120'
       }
     },
@@ -77,37 +112,43 @@ export function Services() {
       id: 2,
       icon: <Wind className="w-10 h-10" />,
       emoji: '🌪️',
-      title: 'Interior Deep Clean',
-      headline: 'Restore Fresh Car Feeling',
-      description: 'Tornado-powered extraction, steam cleaning, and precision detailing for pristine interiors.',
+      title: t('services.cards.interior.title'),
+      headline: t('services.cards.interior.headline'),
+      description: t('services.cards.interior.description'),
       color: 'from-cyan-400 via-teal-400 to-green-400',
       bgColorLight: 'bg-teal-50',
       bgColorDark: 'bg-teal-900/20',
       borderColorDark: 'border-teal-500/30',
       details: {
         whatYouGet: [
-          'Complete vacuuming with commercial-grade equipment',
-          'Tornado air circulation for deep carpet cleaning',
-          'Steam extraction for stubborn stains',
-          'Seat shampooing and conditioning',
-          'Dashboard, console, and vent detailing',
-          'Door panels and interior trim refresh'
+          t('services.cards.interior.what.1'),
+          t('services.cards.interior.what.2'),
+          t('services.cards.interior.what.3'),
+          t('services.cards.interior.what.4'),
+          t('services.cards.interior.what.5'),
+          t('services.cards.interior.what.6')
         ],
-        bestFor: 'Cars with heavy interior use, pet owners, or before resale',
-        toolsUsed: ['Tornador', 'Steam cleaner', 'Mighty extractor', 'Professional vacuums', 'Microfiber brushes'],
+        bestFor: t('services.cards.interior.bestFor'),
+        toolsUsed: [
+          t('services.cards.interior.tools.1'),
+          t('services.cards.interior.tools.2'),
+          t('services.cards.interior.tools.3'),
+          t('services.cards.interior.tools.4'),
+          t('services.cards.interior.tools.5')
+        ],
         importantNotes: [
-          '💧 Water supply needed for steam and extraction.',
-          '⚡ Generator available if no power outlet on-site (small extra fee).',
-          '⏱️ Typical duration: 1.5–2 hours',
-          '🚗 Drying time: 2–4 hours recommended'
+          t('services.cards.interior.notes.1'),
+          t('services.cards.interior.notes.2'),
+          t('services.cards.interior.notes.3'),
+          t('services.cards.interior.notes.4')
         ],
         whyChooseUs: [
-          'Professional-grade Tornador for deep fiber cleaning',
-          'Steam kills bacteria and odors naturally',
-          'Mighty extractor removes water for faster drying',
-          'Every surface treated with premium products'
+          t('services.cards.interior.why.1'),
+          t('services.cards.interior.why.2'),
+          t('services.cards.interior.why.3'),
+          t('services.cards.interior.why.4')
         ],
-        duration: '1.5–2 hours',
+        duration: t('services.cards.interior.duration'),
         startingPrice: '$180'
       }
     },
@@ -115,37 +156,43 @@ export function Services() {
       id: 3,
       icon: <Car className="w-10 h-10" />,
       emoji: '🚗',
-      title: 'Full Detail Package',
-      headline: 'Complete Transformation',
-      description: 'Premium inside + outside: wash, extract, protect, shine. Your car will feel brand new.',
+      title: t('services.cards.full.title'),
+      headline: t('services.cards.full.headline'),
+      description: t('services.cards.full.description'),
       color: 'from-purple-400 via-pink-400 to-cyan-400',
       bgColorLight: 'bg-purple-50',
       bgColorDark: 'bg-purple-900/20',
       borderColorDark: 'border-purple-500/30',
       details: {
         whatYouGet: [
-          'Full exterior wash with foam bath and wax finish',
-          'Interior deep clean with Tornador and steam',
-          'Leather conditioning (if applicable)',
-          'Seat extraction and stain treatment',
-          'Engine bay degreasing and dressing',
-          'Windows and all glass polished to perfection'
+          t('services.cards.full.what.1'),
+          t('services.cards.full.what.2'),
+          t('services.cards.full.what.3'),
+          t('services.cards.full.what.4'),
+          t('services.cards.full.what.5'),
+          t('services.cards.full.what.6')
         ],
-        bestFor: 'Luxury vehicles, before special events, or complete refresh after heavy use',
-        toolsUsed: ['All professional tools', 'Tornador', 'Steam cleaner', 'Mighty extractor', 'Leather care products'],
+        bestFor: t('services.cards.full.bestFor'),
+        toolsUsed: [
+          t('services.cards.full.tools.1'),
+          t('services.cards.full.tools.2'),
+          t('services.cards.full.tools.3'),
+          t('services.cards.full.tools.4'),
+          t('services.cards.full.tools.5')
+        ],
         importantNotes: [
-          '💧 Water and power supply required.',
-          '⚡ Generator option available if needed (extra fee applies).',
-          '⏱️ Typical duration: 3–5 hours (same day or scheduled)',
-          '🏆 Best results: book for early morning appointments'
+          t('services.cards.full.notes.1'),
+          t('services.cards.full.notes.2'),
+          t('services.cards.full.notes.3'),
+          t('services.cards.full.notes.4')
         ],
         whyChooseUs: [
-          'Most popular choice — we\'ve perfected this package',
-          'Your car looks dealership-fresh',
-          'Engine bay included — often missed by others',
-          'All systems working together for maximum impact'
+          t('services.cards.full.why.1'),
+          t('services.cards.full.why.2'),
+          t('services.cards.full.why.3'),
+          t('services.cards.full.why.4')
         ],
-        duration: '3–5 hours',
+        duration: t('services.cards.full.duration'),
         startingPrice: '$420'
       }
     },
@@ -153,37 +200,43 @@ export function Services() {
       id: 4,
       icon: <Sparkles className="w-10 h-10" />,
       emoji: '✨',
-      title: 'Exterior Shine Package',
-      headline: 'Paint Perfection, Wax Protection',
-      description: 'Professional hand wash with premium wax sealant for lasting exterior brilliance.',
+      title: t('services.cards.exterior.title'),
+      headline: t('services.cards.exterior.headline'),
+      description: t('services.cards.exterior.description'),
       color: 'from-blue-400 via-cyan-400 to-teal-400',
       bgColorLight: 'bg-blue-50',
       bgColorDark: 'bg-blue-900/20',
       borderColorDark: 'border-blue-500/30',
       details: {
         whatYouGet: [
-          'Full hand wash with two-bucket method',
-          'Tire and wheel detail with shine',
-          'Paint clarification (light clay bar treatment)',
-          'Premium wax sealant application',
-          'Trim and rubber protection',
-          'Final polish for mirror-like shine'
+          t('services.cards.exterior.what.1'),
+          t('services.cards.exterior.what.2'),
+          t('services.cards.exterior.what.3'),
+          t('services.cards.exterior.what.4'),
+          t('services.cards.exterior.what.5'),
+          t('services.cards.exterior.what.6')
         ],
-        bestFor: 'Owners wanting lasting paint protection and show-quality finish',
-        toolsUsed: ['Premium foam', 'Clay bar', 'Microfiber towels', 'Professional wax', 'Applicator pads'],
+        bestFor: t('services.cards.exterior.bestFor'),
+        toolsUsed: [
+          t('services.cards.exterior.tools.1'),
+          t('services.cards.exterior.tools.2'),
+          t('services.cards.exterior.tools.3'),
+          t('services.cards.exterior.tools.4'),
+          t('services.cards.exterior.tools.5')
+        ],
         importantNotes: [
-          '💧 Water supply needed for washing phase.',
-          '⚡ No power required for this service.',
-          '⏱️ Typical duration: 2–3 hours',
-          '🌞 Best time: Cloudy day or morning for wax curing'
+          t('services.cards.exterior.notes.1'),
+          t('services.cards.exterior.notes.2'),
+          t('services.cards.exterior.notes.3'),
+          t('services.cards.exterior.notes.4')
         ],
         whyChooseUs: [
-          'Premium wax lasts 2–3 months with proper care',
-          'Paint protection against UV and contaminants',
-          'Clay bar removes embedded iron and fallout',
-          'Results: Show-room quality shine'
+          t('services.cards.exterior.why.1'),
+          t('services.cards.exterior.why.2'),
+          t('services.cards.exterior.why.3'),
+          t('services.cards.exterior.why.4')
         ],
-        duration: '2–3 hours',
+        duration: t('services.cards.exterior.duration'),
         startingPrice: '$220'
       }
     },
@@ -191,37 +244,43 @@ export function Services() {
       id: 5,
       icon: <ZapIcon className="w-10 h-10" />,
       emoji: '⚡',
-      title: 'Engine Bay Clean',
-      headline: 'Professional Under-Hood Detail',
-      description: 'Safe steam cleaning and degreasing for pristine engine components and presentation.',
+      title: t('services.cards.engine.title'),
+      headline: t('services.cards.engine.headline'),
+      description: t('services.cards.engine.description'),
       color: 'from-yellow-400 via-orange-400 to-red-400',
       bgColorLight: 'bg-orange-50',
       bgColorDark: 'bg-orange-900/20',
       borderColorDark: 'border-orange-500/30',
       details: {
         whatYouGet: [
-          'Safe degreasing of engine and components',
-          'Steam cleaning for deep dirt removal',
-          'Plastic and rubber dressing application',
-          'Metal components protected with dressing',
-          'Final inspection and shine finish',
-          'Professional presentation-ready result'
+          t('services.cards.engine.what.1'),
+          t('services.cards.engine.what.2'),
+          t('services.cards.engine.what.3'),
+          t('services.cards.engine.what.4'),
+          t('services.cards.engine.what.5'),
+          t('services.cards.engine.what.6')
         ],
-        bestFor: 'Before vehicle resale, trade-in, or showing your pride of ownership',
-        toolsUsed: ['Steam cleaner', 'Degreaser', 'Protective dressing', 'Brushes', 'Microfiber cloths'],
+        bestFor: t('services.cards.engine.bestFor'),
+        toolsUsed: [
+          t('services.cards.engine.tools.1'),
+          t('services.cards.engine.tools.2'),
+          t('services.cards.engine.tools.3'),
+          t('services.cards.engine.tools.4'),
+          t('services.cards.engine.tools.5')
+        ],
         importantNotes: [
-          '💧 Water required for steam cleaning.',
-          '⚡ Power outlet needed for steam equipment.',
-          '⏱️ Typical duration: 45 minutes to 1 hour',
-          '🚗 Most impressive when combined with exterior wash'
+          t('services.cards.engine.notes.1'),
+          t('services.cards.engine.notes.2'),
+          t('services.cards.engine.notes.3'),
+          t('services.cards.engine.notes.4')
         ],
         whyChooseUs: [
-          'Professional equipment — safe for all engine types',
-          'Degreaser removes years of buildup',
-          'Protection applied to prevent new grime',
-          'Engine runs cooler when clean'
+          t('services.cards.engine.why.1'),
+          t('services.cards.engine.why.2'),
+          t('services.cards.engine.why.3'),
+          t('services.cards.engine.why.4')
         ],
-        duration: '~45 min',
+        duration: t('services.cards.engine.duration'),
         startingPrice: '$85'
       }
     },
@@ -229,38 +288,42 @@ export function Services() {
       id: 6,
       icon: <Shield className="w-10 h-10" />,
       emoji: '🛡️',
-      title: 'Maintenance Plan',
-      headline: 'Stay Perfect Year-Round',
-      description: 'Recurring care every 60 days at loyalty rate. Consistent protection, fresh appearance always.',
+      title: t('services.cards.maintenance.title'),
+      headline: t('services.cards.maintenance.headline'),
+      description: t('services.cards.maintenance.description'),
       color: 'from-pink-400 via-rose-400 to-orange-400',
       bgColorLight: 'bg-pink-50',
       bgColorDark: 'bg-pink-900/20',
       borderColorDark: 'border-pink-500/30',
       details: {
         whatYouGet: [
-          'Discounted service rate for recurring bookings',
-          'Flexible scheduling every 60 days',
-          'Priority appointment slots',
-          'Custom service selection each visit',
-          'Loyalty rewards and perks',
-          'Your car always show-ready'
+          t('services.cards.maintenance.what.1'),
+          t('services.cards.maintenance.what.2'),
+          t('services.cards.maintenance.what.3'),
+          t('services.cards.maintenance.what.4'),
+          t('services.cards.maintenance.what.5'),
+          t('services.cards.maintenance.what.6')
         ],
-        bestFor: 'Luxury car owners, daily drivers, and those who value consistent perfection',
-        toolsUsed: ['Full toolset', 'All professional equipment', 'Premium products'],
+        bestFor: t('services.cards.maintenance.bestFor'),
+        toolsUsed: [
+          t('services.cards.maintenance.tools.1'),
+          t('services.cards.maintenance.tools.2'),
+          t('services.cards.maintenance.tools.3')
+        ],
         importantNotes: [
-          '💰 PRICING LOGIC: Book every 60 days → Discounted rate.',
-          '⏰ Miss 60-day window? → Full cleaning price applies.',
-          '📅 Easy rescheduling within your plan.',
-          '✅ No contracts — flexible month-to-month'
+          t('services.cards.maintenance.notes.1'),
+          t('services.cards.maintenance.notes.2'),
+          t('services.cards.maintenance.notes.3'),
+          t('services.cards.maintenance.notes.4')
         ],
         whyChooseUs: [
-          'Save 20–30% vs. booking single services',
-          'Your car never gets dirty — always maintained',
-          'Priority scheduling around your lifestyle',
-          'Building trust through consistent excellence'
+          t('services.cards.maintenance.why.1'),
+          t('services.cards.maintenance.why.2'),
+          t('services.cards.maintenance.why.3'),
+          t('services.cards.maintenance.why.4')
         ],
-        duration: 'Varies by service',
-        startingPrice: 'Custom (Starts at $99)'
+        duration: t('services.cards.maintenance.duration'),
+        startingPrice: t('services.cards.maintenance.startingPrice')
       }
     }
   ];
@@ -296,7 +359,7 @@ export function Services() {
           className="text-center mb-16"
         >
           <div className="inline-block px-6 py-2 vhs-gradient text-white rounded-full mb-4 cartoon-shadow-sm vhs-glow">
-            <span>Premium Services</span>
+            <span>{t('services.premiumBadge')}</span>
           </div>
           <h2
             className={`vhs-text text-transparent bg-clip-text mb-4 ${
@@ -305,14 +368,14 @@ export function Services() {
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600'
             }`}
           >
-            Precision Detailing for Every Need
+            {t('services.heading')}
           </h2>
           <p
             className={`max-w-2xl mx-auto text-lg ${
               theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'
             }`}
           >
-            Professional hand-washing, steam extraction, and premium protection. Every service tailored to your car's personality.
+            {t('services.lead')}
           </p>
         </motion.div>
 
@@ -331,12 +394,14 @@ export function Services() {
                   onClick={() =>
                     setExpandedCard(expandedCard === service.id ? null : service.id)
                   }
-                  className={`w-full h-full p-6 rounded-3xl border-2 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 text-left group ${
+                  className={`w-full h-full p-6 rounded-3xl border-[3px] shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 text-left group ${
                     theme === 'dark'
-                      ? `${service.bgColorDark} ${service.borderColorDark} border-opacity-50 hover:border-opacity-100 focus:ring-offset-slate-900 focus:ring-cyan-400`
-                      : `${service.bgColorLight} border-white hover:border-gray-200 focus:ring-offset-slate-50 focus:ring-purple-400`
+                      ? `${service.bgColorDark} ${service.borderColorDark} border-opacity-80 hover:border-opacity-100 focus:ring-offset-slate-900 focus:ring-cyan-400`
+                      : `${service.bgColorLight} border-purple-200 hover:border-purple-300 focus:ring-offset-slate-50 focus:ring-purple-400`
                   }`}
-                  aria-label={`${service.title} - ${service.headline}. Click to see details`}
+                  aria-label={t('services.card.aria')
+                    .replace('{title}', service.title)
+                    .replace('{headline}', service.headline)}
                 >
                   {/* Icon */}
                   <motion.div
@@ -392,7 +457,7 @@ export function Services() {
                           : 'text-purple-600'
                       }`}
                     >
-                      Starting at{' '}
+                      {t('services.startingAt')}{' '}
                       <span className="text-lg">
                         {service.details.startingPrice}
                       </span>
@@ -420,20 +485,24 @@ export function Services() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overscroll-none"
               onClick={() => setExpandedCard(null)}
+              onWheel={(e) => e.preventDefault()}
+              onTouchMove={(e) => e.preventDefault()}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`max-w-2xl w-full rounded-3xl p-8 max-h-[90vh] overflow-y-auto ${
+                className={`relative w-[92vw] max-w-xl rounded-3xl p-4 sm:p-5 h-[72svh] max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
                   theme === 'dark'
                     ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
-                    : 'bg-white'
+                    : 'bg-white border border-purple-100'
                 }`}
                 onClick={(e) => e.stopPropagation()}
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
               >
                 {/* Close Button */}
                 <button
@@ -443,22 +512,22 @@ export function Services() {
                       ? 'hover:bg-purple-500/20 text-purple-300'
                       : 'hover:bg-gray-100 text-gray-600'
                   }`}
-                  aria-label="Close modal"
+                  aria-label={t('common.close')}
                 >
                   <X className="w-6 h-6" />
                 </button>
 
                 {/* Modal Header */}
-                <div className="mb-6">
+                <div className="mb-4 pr-10">
                   <h2
-                    className={`text-3xl font-bold mb-2 ${
+                    className={`text-2xl font-bold mb-1 ${
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }`}
                   >
                     {services.find((s) => s.id === expandedCard)?.title}
                   </h2>
                   <p
-                    className={`text-lg ${
+                    className={`text-base ${
                       theme === 'dark'
                         ? 'text-cyan-300'
                         : 'text-purple-600'
@@ -468,9 +537,15 @@ export function Services() {
                   </p>
                 </div>
 
-                {/* Service Details */}
-                {services.find((s) => s.id === expandedCard)?.details && (
-                  <div className="space-y-6">
+                <div
+                  className="flex-1 min-h-0 overflow-y-auto pr-4 overscroll-contain"
+                  onWheel={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
+
+                  {/* Service Details */}
+                  {services.find((s) => s.id === expandedCard)?.details && (
+                    <div className="space-y-6">
                     {/* What You Get */}
                     <div>
                       <h3
@@ -480,7 +555,7 @@ export function Services() {
                             : 'text-purple-600'
                         }`}
                       >
-                        ✨ What You Get
+                        ✨ {t('services.modal.whatYouGet')}
                       </h3>
                       <ul className="space-y-2">
                         {services
@@ -510,7 +585,7 @@ export function Services() {
                             : 'text-purple-600'
                         }`}
                       >
-                        🎯 Best For Cars That…
+                        🎯 {t('services.modal.bestFor')}
                       </h3>
                       <p
                         className={`${
@@ -533,7 +608,7 @@ export function Services() {
                             : 'text-purple-600'
                         }`}
                       >
-                        🔧 Tools Used
+                        🔧 {t('services.modal.toolsUsed')}
                       </h3>
                       <p
                         className={`${
@@ -557,7 +632,7 @@ export function Services() {
                             : 'text-orange-600'
                         }`}
                       >
-                        ⚠️ Important Notes
+                        ⚠️ {t('services.modal.importantNotes')}
                       </h3>
                       <ul className="space-y-2">
                         {services
@@ -586,7 +661,7 @@ export function Services() {
                             : 'text-cyan-600'
                         }`}
                       >
-                        💎 Why Choose Silans Auto Care?
+                        💎 {t('services.modal.whyChoose')}
                       </h3>
                       <ul className="space-y-2">
                         {services
@@ -607,56 +682,56 @@ export function Services() {
                       </ul>
                     </div>
 
-                    {/* CTA */}
-                    <div className="mt-8 pt-6 border-t border-purple-500/20">
-                      <a
-                        href="#contact"
-                        onClick={() => setExpandedCard(null)}
-                        className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 ${
-                          theme === 'dark'
-                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
-                            : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white vhs-glow-light'
-                        }`}
-                        aria-label={`Book ${services.find((s) => s.id === expandedCard)?.title}`}
-                      >
-                        Book This Service →
-                      </a>
-                      <p
-                        className={`text-sm text-center mt-3 ${
-                          theme === 'dark'
-                            ? 'text-purple-300/60'
-                            : 'text-gray-500'
-                        }`}
-                      >
-                        Final price depends on vehicle size and condition.
-                      </p>
-                    </div>
                   </div>
                 )}
-              </motion.div>
+                </div>
+
+                {/* Modal Footer (always visible) */}
+                <div className="mt-4 pt-4 border-t border-purple-500/20 flex-shrink-0">
+                  <button
+                    onClick={() => setExpandedCard(null)}
+                    className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 ${
+                      theme === 'dark'
+                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
+                        : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white vhs-glow-light'
+                    }`}
+                    aria-label={t('services.modal.bookAria').replace(
+                      '{title}',
+                      services.find((s) => s.id === expandedCard)?.title ?? ''
+                    )}
+                  >
+                    {t('services.modal.bookCta')}
+                  </button>
+                  <p
+                    className={`mt-3 text-sm text-center ${
+                      theme === 'dark'
+                        ? 'text-purple-300/60'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    {t('services.modal.disclaimer')}
+                  </p>
+                </div>
             </motion.div>
+          </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Transformation Gallery Link Section */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mt-16 text-center"
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="text-center mt-16"
         >
-          <p className={`text-lg mb-6 leading-relaxed max-w-2xl mx-auto ${
-            theme === 'dark'
-              ? 'text-purple-200/80'
-              : 'text-gray-700'
-          }`}>
-            Ready to see your car transformed? Check out our <a href="#portfolio" className={`font-semibold transition-colors ${
-              theme === 'dark'
-                ? 'text-cyan-300 hover:text-cyan-200'
-                : 'text-cyan-600 hover:text-cyan-700'
-            }`}>before-and-after gallery</a> to see real results from real customers.
-          </p>
+          <a
+            href="#contact"
+            className="inline-flex items-center gap-2 px-10 py-5 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg"
+          >
+            <Sparkles className="w-6 h-6" />
+            {t('services.sectionCta')}
+          </a>
         </motion.div>
       </div>
     </section>

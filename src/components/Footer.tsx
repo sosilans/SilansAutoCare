@@ -1,9 +1,11 @@
 import { motion } from 'motion/react';
 import { Instagram, Facebook, Heart } from 'lucide-react';
 import { useTheme } from './ThemeContext';
+import { useLanguage } from './LanguageContext';
 
 export function Footer() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   
   return (
     <footer className={`relative py-12 overflow-hidden border-t-4 ${
@@ -29,7 +31,7 @@ export function Footer() {
               Silans Auto Care
             </h4>
             <p className={`mb-4 ${theme === 'dark' ? 'text-purple-200/70' : 'text-gray-700'}`}>
-              Your friendly auto care experts in Sacramento! Making cars happy since day one! 🚗✨
+              {t('footer.tagline')} — {t('footer.description')}
             </p>
           </motion.div>
 
@@ -40,19 +42,25 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <h4 className={`mb-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>Quick Links</h4>
+            <h4 className={`mb-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>{t('footer.quick')}</h4>
             <ul className="space-y-2">
-              {['About', 'Portfolio', 'Services', 'Reviews', 'Contact'].map((item) => (
-                <li key={item}>
+              {[
+                { label: t('nav.about'), href: '#about' },
+                { label: t('nav.portfolio'), href: '#portfolio' },
+                { label: t('nav.services'), href: '#services' },
+                { label: t('nav.reviews'), href: '#reviews' },
+                { label: t('nav.contact'), href: '#contact' }
+              ].map((item) => (
+                <li key={item.href}>
                   <a
-                    href={`#${item.toLowerCase()}`}
+                    href={item.href}
                     className={`transition-colors ${
                       theme === 'dark'
                         ? 'text-purple-300/70 hover:text-pink-400'
                         : 'text-gray-600 hover:text-blue-600'
                     }`}
                   >
-                    {item}
+                    {item.label}
                   </a>
                 </li>
               ))}
@@ -66,7 +74,7 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <h4 className={`mb-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>Follow Us!</h4>
+            <h4 className={`mb-4 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>{t('footer.follow')}</h4>
             <div className="flex gap-3 mb-4">
               <a
                 href="https://www.instagram.com/silansautocare?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
@@ -75,7 +83,7 @@ export function Footer() {
                 className={`p-3 rounded-xl bg-gradient-to-br from-pink-400 via-purple-400 to-orange-400 text-white hover:scale-110 transition-transform duration-300 cartoon-shadow-sm gradient-animated ${
                   theme === 'dark' ? 'vhs-glow-dark' : 'vhs-glow-light'
                 }`}
-                aria-label="Instagram"
+                aria-label={t('social.instagram')}
               >
                 <Instagram className="w-6 h-6" />
               </a>
@@ -86,7 +94,7 @@ export function Footer() {
                 className={`p-3 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 text-white hover:scale-110 transition-transform duration-300 cartoon-shadow-sm gradient-animated ${
                   theme === 'dark' ? 'vhs-glow-dark' : 'vhs-glow-light'
                 }`}
-                aria-label="Facebook"
+                aria-label={t('social.facebook')}
               >
                 <Facebook className="w-6 h-6" />
               </a>
@@ -107,9 +115,9 @@ export function Footer() {
           <p className={`flex items-center justify-center gap-2 flex-wrap ${
             theme === 'dark' ? 'text-purple-200/70' : 'text-gray-700'
           }`}>
-            © 2025 Silans Auto Care, Sacramento
+            © 2025 Silans Auto Care, Sacramento · {t('footer.rights')}
             <Heart className="w-4 h-4 fill-red-500 text-red-500 inline" />
-            Made with love for your car!
+            {t('footer.madeWithLove')}
           </p>
         </motion.div>
       </div>

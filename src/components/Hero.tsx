@@ -389,7 +389,7 @@ export function Hero() {
               {/* Sound status badge (kept muted for autoplay) */}
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/40 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md border border-white/10">
                 <span className="inline-block w-2 h-2 rounded-full bg-white/70" />
-                <span>Sound off</span>
+                <span>{t('hero.soundOff')}</span>
               </div>
               
               {/* Click hint overlay */}

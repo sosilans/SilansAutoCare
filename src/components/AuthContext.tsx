@@ -96,12 +96,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const existingUser = users.find(u => (u.email || '').toLowerCase() === emailLower);
     
     if (!existingUser) {
-      return { ok: false, message: 'User not found. Please register first.' };
+      return { ok: false, message: 'auth.error.userNotFound' };
     }
 
     // Verify name matches (case-insensitive)
     if (existingUser.name.toLowerCase() !== trimmedName.toLowerCase()) {
-      return { ok: false, message: 'Invalid credentials. Please check your name and email.' };
+      return { ok: false, message: 'auth.error.invalidCredentials' };
     }
 
     setUser({ name: existingUser.name, email: existingUser.email, role: existingUser.role });
@@ -118,12 +118,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // basic email shape check
     const emailOk = /.+@.+\..+/.test(emailLower);
     if (!emailOk) {
-      return { ok: false, message: 'Invalid email format' };
+      return { ok: false, message: 'auth.error.invalidEmail' };
     }
 
     const exists = users.some(u => (u.email || '').toLowerCase() === emailLower);
     if (exists) {
-      return { ok: false, message: 'User already exists. Please login.' };
+      return { ok: false, message: 'auth.error.userExists' };
     }
 
     const newUser: AuthUser = { name: trimmedName, email: trimmedEmail, role: 'user' };

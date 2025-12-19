@@ -110,7 +110,7 @@ export function Header() {
                     ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 text-white vhs-glow'
                     : 'bg-gradient-to-r from-blue-400 via-cyan-400 to-purple-400 text-white vhs-glow'
                 }`}
-                aria-label="Toggle theme"
+                aria-label={t('header.aria.toggleTheme')}
               >
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
@@ -123,7 +123,7 @@ export function Header() {
                     ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white vhs-glow'
                     : 'bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 text-white vhs-glow'
                 }`}
-                aria-label="Change language"
+                aria-label={t('header.aria.changeLanguage')}
               >
                 <span className="text-sm font-bold">{getNextLanguage()}</span>
               </button>
@@ -139,7 +139,7 @@ export function Header() {
                   }`}
                 >
                   <User size={18} />
-                  <span>Logout</span>
+                  <span>{t('auth.logout')}</span>
                 </button>
               ) : (
                 <button
@@ -151,7 +151,7 @@ export function Header() {
                   }`}
                 >
                   <User size={18} />
-                  <span>Login</span>
+                  <span>{t('auth.login')}</span>
                 </button>
               )}
             </div>
@@ -163,7 +163,7 @@ export function Header() {
             className={`md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors duration-500 ${
               theme === 'dark' ? 'text-purple-200' : isScrolled ? 'text-gray-700' : 'text-gray-900'
             }`}
-            aria-label="Toggle menu"
+            aria-label={t('header.aria.toggleMenu')}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -203,12 +203,12 @@ export function Header() {
               {theme === 'dark' ? (
                 <>
                   <Sun size={20} />
-                  <span>Light Mode</span>
+                  <span>{t('theme.lightMode')}</span>
                 </>
               ) : (
                 <>
                   <Moon size={20} />
-                  <span>Dark Mode</span>
+                  <span>{t('theme.darkMode')}</span>
                 </>
               )}
             </button>
@@ -236,7 +236,7 @@ export function Header() {
                     }`}
                   >
                     <User size={20} />
-                    <span>Logout</span>
+                    <span>{t('auth.logout')}</span>
                   </button>
                 ) : (
                   <button
@@ -248,7 +248,7 @@ export function Header() {
                     }`}
                   >
                     <User size={20} />
-                    <span>Login</span>
+                    <span>{t('auth.login')}</span>
                   </button>
                 )}
           </nav>

@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 
 export function AuthModal() {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const { authOpen, authMode, closeAuthModal, login, register, openAuthModal } = useAuth();
 
   const [form, setForm] = useState({
     name: '',
     email: '',
   });
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
 
   if (!authOpen) return null;
 
@@ -32,9 +34,9 @@ export function AuthModal() {
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className={theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}>
-            {authMode === 'login' ? 'Login' : 'Registration'}
+            {authMode === 'login' ? t('auth.login') : t('auth.register')}
           </h3>
-          <button onClick={closeAuthModal} className="text-sm opacity-60 hover:opacity-100">Close</button>
+          <button onClick={closeAuthModal} className="text-sm opacity-60 hover:opacity-100">{t('common.close')}</button>
         </div>
 
         <div className="flex gap-2 mb-4">
@@ -43,26 +45,26 @@ export function AuthModal() {
               ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50 text-purple-100' : 'bg-purple-50 border-purple-400 text-purple-900')
               : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40 text-purple-300' : 'border-purple-200 hover:border-purple-300 text-gray-700')
             }`}
-            onClick={() => { setError(null); openAuthModal('login'); }}
+            onClick={() => { setErrorKey(null); openAuthModal('login'); }}
           >
-            Login
+            {t('auth.login')}
           </button>
           <button
             className={`flex-1 py-2 rounded-2xl border-2 transition font-medium ${authMode === 'register'
               ? (theme === 'dark' ? 'bg-purple-900/40 border-purple-500/50 text-purple-100' : 'bg-purple-50 border-purple-400 text-purple-900')
               : (theme === 'dark' ? 'border-purple-500/20 hover:border-purple-400/40 text-purple-300' : 'border-purple-200 hover:border-purple-300 text-gray-700')
             }`}
-            onClick={() => { setError(null); openAuthModal('register'); }}
+            onClick={() => { setErrorKey(null); openAuthModal('register'); }}
           >
-            Register
+            {t('auth.register')}
           </button>
         </div>
 
-        {error && (
+        {errorKey && (
           <div className={`mb-3 p-3 rounded-xl border-2 ${
             theme === 'dark' ? 'bg-red-900/40 border-red-500/60 text-red-100' : 'bg-red-50 border-red-200 text-red-700'
           }`}>
-            {error}
+            {t(errorKey)}
           </div>
         )}
 
@@ -71,15 +73,15 @@ export function AuthModal() {
             className="space-y-3"
             onSubmit={async (e) => {
               e.preventDefault();
-              setError(null);
-              if (!form.name.trim()) return setError('Please enter your name');
-              if (!form.email.trim()) return setError('Please enter your email');
+              setErrorKey(null);
+              if (!form.name.trim()) return setErrorKey('auth.error.nameRequired');
+              if (!form.email.trim()) return setErrorKey('auth.error.emailRequired');
               const res = await login(form.name.trim(), form.email.trim());
-              if (!res.ok) setError(res.message || 'Login failed');
+              if (!res.ok) setErrorKey(res.message || 'auth.error.loginFailed');
             }}
           >
             <Input
-              placeholder="Name"
+              placeholder={t('auth.field.name')}
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -89,7 +91,7 @@ export function AuthModal() {
             />
             <Input
               type="email"
-              placeholder="email"
+              placeholder={t('auth.field.email')}
               required
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -105,7 +107,7 @@ export function AuthModal() {
                   : 'bg-gradient-to-r from-purple-500 to-pink-500'
               }`}
             >
-              Login
+              {t('auth.login')}
             </Button>
           </form>
         ) : (
@@ -113,15 +115,15 @@ export function AuthModal() {
             className="space-y-3"
             onSubmit={async (e) => {
               e.preventDefault();
-              setError(null);
-              if (!form.name.trim()) return setError('Please enter your name');
-              if (!form.email.trim()) return setError('Please enter your email');
+              setErrorKey(null);
+              if (!form.name.trim()) return setErrorKey('auth.error.nameRequired');
+              if (!form.email.trim()) return setErrorKey('auth.error.emailRequired');
               const res = await register(form.name.trim(), form.email.trim());
-              if (!res.ok) setError(res.message || 'Registration failed');
+              if (!res.ok) setErrorKey(res.message || 'auth.error.registerFailed');
             }}
           >
             <Input
-              placeholder="Name"
+              placeholder={t('auth.field.name')}
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -131,7 +133,7 @@ export function AuthModal() {
             />
             <Input
               type="email"
-              placeholder="email"
+              placeholder={t('auth.field.email')}
               required
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -147,7 +149,7 @@ export function AuthModal() {
                   : 'bg-gradient-to-r from-purple-500 to-pink-500'
               }`}
             >
-              Register
+              {t('auth.register')}
             </Button>
           </form>
         )}

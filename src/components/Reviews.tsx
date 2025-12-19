@@ -111,7 +111,7 @@ export function Reviews() {
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn || !user) {
-      alert('❌ Please login first to submit a review.');
+      alert(`❌ ${t('reviews.auth.prompt')}`);
       openAuthModal('login');
       return;
     }
@@ -129,19 +129,19 @@ export function Reviews() {
     const message = String(formData.get('message') || '').trim();
     
     if (!message) {
-      alert('❌ Please enter your review message.');
+      alert(`❌ ${t('reviews.form.error.messageRequired')}`);
       return;
     }
     
     submitReview(user.name, user.email || '', message);
-    alert('✅ Thank you! Your review is sent for moderation.');
+    alert(`✅ ${t('reviews.form.success.sentForModeration')}`);
     setIsFormOpen(false);
     localStorage.setItem('lastReviewTimestamp', Date.now().toString());
     setCanSubmitReview(false);
     
     // Calculate next available time
     const hoursLeft = 24;
-    setTimeUntilNextReview(`${hoursLeft} hours`);
+    setTimeUntilNextReview(`${hoursLeft}h`);
   };
 
   const handleShowMore = () => {
@@ -197,19 +197,19 @@ export function Reviews() {
           className="text-center mb-16"
         >
           <div className="inline-block px-6 py-2 vhs-gradient text-white rounded-full mb-4 cartoon-shadow-sm vhs-glow">
-            <span>Testimonials</span>
+            <span>{t('reviews.badge')}</span>
           </div>
           <h2 className={`text-transparent bg-clip-text mb-4 ${
             theme === 'dark'
               ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 vhs-text-dark'
               : 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 vhs-text-light'
           }`}>
-            Happy Customers!
+            {t('reviews.title')}
           </h2>
           <p className={`max-w-2xl mx-auto text-lg ${
             theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'
           }`}>
-            See what our wonderful clients have to say about us!
+            {t('reviews.subtitle')}
           </p>
         </motion.div>
 
@@ -301,7 +301,7 @@ export function Reviews() {
               className="px-8 py-6 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg gradient-animated"
             >
               <ChevronDown className="w-5 h-5 mr-2" />
-              Show More Reviews
+              {t('reviews.showMore')}
             </Button>
           </motion.div>
         )}
@@ -318,7 +318,7 @@ export function Reviews() {
               className="px-8 py-6 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300 text-lg gradient-animated"
             >
               <ChevronUp className="w-5 h-5 mr-2" />
-              Show Less
+              {t('reviews.showLess')}
             </Button>
           </motion.div>
         )}

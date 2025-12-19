@@ -1,10 +1,12 @@
 import { useTheme } from './ThemeContext';
 import { useAuth } from './AuthContext';
+import { useLanguage } from './LanguageContext';
 import { Settings } from 'lucide-react';
 
 export function AdminPanel() {
   const { theme } = useTheme();
   const { isAdmin } = useAuth();
+  const { t } = useLanguage();
 
   if (!isAdmin) return null;
 
@@ -21,10 +23,10 @@ export function AdminPanel() {
             ? 'border-purple-500/50 bg-purple-950/40 text-purple-200 hover:bg-purple-900/60 vhs-glow-dark'
             : 'border-purple-300 bg-white text-purple-700 hover:bg-purple-50'
         }`}
-        title="Open Admin Dashboard (New Tab)"
+        title={t('admin.panel.openTitle')}
       >
         <Settings size={20} />
-        <span className="font-medium">Admin Dashboard</span>
+        <span className="font-medium">{t('admin.panel.buttonLabel')}</span>
       </button>
     </div>
   );

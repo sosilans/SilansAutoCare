@@ -16,11 +16,11 @@ export function AboutMe() {
   const carouselImages = [
     {
       src: "/assets/misha.jpg",
-      alt: "Misha - Professional Auto Detailing Specialist"
+      alt: t('aboutMe.carousel.alt1')
     },
     {
       src: "/assets/misha_1.jpg",
-      alt: "Misha at work - Detailing in action"
+      alt: t('aboutMe.carousel.alt2')
     }
   ];
 
@@ -73,8 +73,8 @@ export function AboutMe() {
   const principles = [
     {
       icon: <Sparkles className="w-8 h-8" />,
-      title: '💎 Quality',
-      description: 'Only premium products & techniques',
+      title: t('aboutMe.principles.quality.title'),
+      description: t('aboutMe.principles.quality.desc'),
       color: 'from-blue-400 to-cyan-400',
       bgColorLight: 'bg-blue-100',
       bgColorDark: 'bg-blue-900/30',
@@ -82,8 +82,8 @@ export function AboutMe() {
     },
     {
       icon: <Award className="w-8 h-8" />,
-      title: '⚡ Precision',
-      description: 'Every detail counts — literally',
+      title: t('aboutMe.principles.precision.title'),
+      description: t('aboutMe.principles.precision.desc'),
       color: 'from-purple-400 to-pink-400',
       bgColorLight: 'bg-purple-100',
       bgColorDark: 'bg-purple-900/30',
@@ -91,8 +91,8 @@ export function AboutMe() {
     },
     {
       icon: <Heart className="w-8 h-8" />,
-      title: '❤️ Passion',
-      description: 'This isn\'t work, it\'s art',
+      title: t('aboutMe.principles.passion.title'),
+      description: t('aboutMe.principles.passion.desc'),
       color: 'from-pink-400 to-rose-400',
       bgColorLight: 'bg-pink-100',
       bgColorDark: 'bg-pink-900/30',
@@ -100,8 +100,8 @@ export function AboutMe() {
     },
     {
       icon: <Smile className="w-8 h-8" />,
-      title: '😎 Happy Clients',
-      description: 'Your car, my pride',
+      title: t('aboutMe.principles.happyClients.title'),
+      description: t('aboutMe.principles.happyClients.desc'),
       color: 'from-green-400 to-emerald-400',
       bgColorLight: 'bg-green-100',
       bgColorDark: 'bg-green-900/30',
@@ -132,7 +132,7 @@ export function AboutMe() {
           className="text-center mb-16"
         >
           <div className="inline-block px-6 py-2 vhs-gradient gradient-animated text-white rounded-full mb-4 cartoon-shadow-sm vhs-glow">
-            <span>About Me</span>
+            <span>{t('aboutMe.badge')}</span>
           </div>
           <h2 className="vhs-text mb-4">
             <span className={`text-transparent bg-clip-text ${
@@ -140,14 +140,14 @@ export function AboutMe() {
                 ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400'
                 : 'bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600'
             }`}>
-              Hey, I'm Misha — your Sacramento detailing guy
+              {t('aboutMe.title')}
             </span>
             <span className="ml-2 align-middle text-amber-300 drop-shadow-[0_0_6px_rgba(255,193,7,0.6)]">👋</span>
           </h2>
           <p className={`max-w-2xl mx-auto text-lg ${
             theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'
           }`}>
-            I turn everyday cars into head-turning rides. No rush. No shortcuts. Just precision and passion. 🌟
+            {t('aboutMe.subtitle')} 🌟
           </p>
         </motion.div>
 
@@ -318,17 +318,17 @@ export function AboutMe() {
                 ? 'bg-gradient-to-r from-pink-400 to-purple-400'
                 : 'bg-gradient-to-r from-orange-500 to-pink-500'
             }`}>
-              Making Cars Smile Since Day One!
+              {t('aboutMe.heading')}
             </h3>
             <p className={`text-lg ${
               theme === 'dark' ? 'text-purple-100/80' : 'text-gray-700'
             }`}>
-              Welcome to my world of automotive perfection! I'm not just another car wash — I'm an artist who treats every vehicle like a masterpiece.
+              {t('aboutMe.text1')}
             </p>
             <p className={`text-lg ${
               theme === 'dark' ? 'text-purple-100/80' : 'text-gray-700'
             }`}>
-              With 4+ years of experience and an obsession for perfection, I built Sac Shine Detailing to bring premium-quality detailing to Sacramento. Whether it's a quick wash or a full transformation — I put my soul into every job. Cars leave not just clean, but glowing.
+              {t('aboutMe.text2')}
             </p>
             
             <div className="flex gap-6 pt-4">
@@ -336,28 +336,28 @@ export function AboutMe() {
                 <div className="text-4xl mb-2">🚗</div>
                 <p className={`font-semibold ${
                   theme === 'dark' ? 'text-purple-200' : 'text-gray-800'
-                }`}>500+ Cars</p>
+                }`}>{t('aboutMe.stats.carsTop')}</p>
                 <p className={`text-sm ${
                   theme === 'dark' ? 'text-purple-300/60' : 'text-gray-500'
-                }`}>Detailed</p>
+                }`}>{t('aboutMe.stats.carsBottom')}</p>
               </div>
               <div className="text-center">
                 <div className="text-4xl mb-2">⭐</div>
                 <p className={`font-semibold ${
                   theme === 'dark' ? 'text-purple-200' : 'text-gray-800'
-                }`}>4.93-Star</p>
+                }`}>{t('aboutMe.stats.reviewsTop')}</p>
                 <p className={`text-sm ${
                   theme === 'dark' ? 'text-purple-300/60' : 'text-gray-500'
-                }`}>Reviews</p>
+                }`}>{t('aboutMe.stats.reviewsBottom')}</p>
               </div>
               <div className="text-center">
                 <div className="text-4xl mb-2">💯</div>
                 <p className={`font-semibold ${
                   theme === 'dark' ? 'text-purple-200' : 'text-gray-800'
-                }`}>100% Happy</p>
+                }`}>{t('aboutMe.stats.happyTop')}</p>
                 <p className={`text-sm ${
                   theme === 'dark' ? 'text-purple-300/60' : 'text-gray-500'
-                }`}>Clients</p>
+                }`}>{t('aboutMe.stats.happyBottom')}</p>
               </div>
             </div>
           </motion.div>
