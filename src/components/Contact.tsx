@@ -236,7 +236,7 @@ export function Contact() {
                       </div>
                       <div>
                         <h4 className={`mb-1 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>{info.title}</h4>
-                        <p className={theme === 'dark' ? 'text-purple-200/70' : 'text-gray-600'}>{info.content}</p>
+                        <p className={theme === 'dark' ? 'text-purple-200/70' : 'text-gray-700'}>{info.content}</p>
                       </div>
                     </div>
                   </BubbleEffect>
@@ -331,7 +331,7 @@ export function Contact() {
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
                       ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
-                      : 'bg-gray-50 border-gray-200'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-600'
                   }`}
                 />
               </div>
@@ -349,7 +349,7 @@ export function Contact() {
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
                       ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
-                      : 'bg-gray-50 border-gray-200'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-600'
                   }`}
                 />
               </div>
@@ -366,7 +366,7 @@ export function Contact() {
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
                       ? 'bg-purple-950/30 border-purple-500/20 text-purple-100 placeholder:text-purple-300/60'
-                      : 'bg-gray-50 border-gray-200'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-600'
                   }`}
                 />
               </div>
@@ -395,7 +395,7 @@ export function Contact() {
                   className={`border-2 rounded-2xl ${
                     theme === 'dark'
                       ? 'bg-purple-950/30 border-purple-500/20 text-purple-200 placeholder:text-purple-300/60'
-                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-500'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-600'
                   }`}
                 />
               </div>

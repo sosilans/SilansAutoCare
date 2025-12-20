@@ -56,6 +56,7 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
+            transitionEnd={{ height: 'auto' }}
             transition={{ duration: 0.3 }}
             className={`rounded-2xl border-2 overflow-hidden ${
               theme === 'dark'
@@ -92,7 +93,7 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
                     className={`text-sm transition-colors min-w-0 ${
                       theme === 'dark'
                         ? 'text-purple-200 group-hover:text-purple-100'
-                        : 'text-gray-700 group-hover:text-gray-900'
+                        : 'text-gray-900 group-hover:text-gray-900'
                     }`}
                   >
                     {service}
@@ -103,22 +104,6 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
           </motion.div>
         )}
       </AnimatePresence>
-
-      {selectedServices.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className={`px-4 py-2 rounded-xl text-xs ${
-            theme === 'dark'
-              ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-              : 'bg-cyan-100 text-cyan-700 border border-cyan-200'
-          }`}
-        >
-          Selected: {selectedServices.join(', ')}
-        </motion.div>
-      )}
     </div>
   );
 }
