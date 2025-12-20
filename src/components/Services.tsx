@@ -3,7 +3,7 @@ import { Droplet, Wind, Car, Sparkles, Zap as ZapIcon, Shield, ChevronDown, X } 
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ServiceDetails {
   whatYouGet: string[];
@@ -33,6 +33,35 @@ export function Services() {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const lastActiveElementRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (expandedCard === null) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      setExpandedCard(null);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [expandedCard]);
+
+  useEffect(() => {
+    if (expandedCard !== null) {
+      lastActiveElementRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      return;
+    }
+
+    if (!lastActiveElementRef.current) return;
+    try {
+      lastActiveElementRef.current.focus({ preventScroll: true } as any);
+    } catch {
+      // ignore
+    }
+  }, [expandedCard]);
 
   useEffect(() => {
     const body = document.body;
@@ -46,6 +75,7 @@ export function Services() {
     const prevBodyTop = body.style.top;
     const prevBodyWidth = body.style.width;
     const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevHtmlScrollBehavior = html.style.scrollBehavior;
 
     html.style.overscrollBehavior = 'none';
     body.style.overflow = 'hidden';
@@ -59,7 +89,10 @@ export function Services() {
       body.style.top = prevBodyTop;
       body.style.width = prevBodyWidth;
       html.style.overscrollBehavior = prevHtmlOverscroll;
+      // Prevent global `scroll-behavior: smooth` from animating the restore.
+      html.style.scrollBehavior = 'auto';
       window.scrollTo(0, scrollY);
+      html.style.scrollBehavior = prevHtmlScrollBehavior;
     };
   }, [expandedCard]);
 
@@ -495,7 +528,7 @@ export function Services() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`relative w-[92vw] max-w-xl rounded-3xl p-4 sm:p-5 h-[72svh] max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
+                className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[72svh] max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
                   theme === 'dark'
                     ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
                     : 'bg-white border border-purple-100'
@@ -507,7 +540,7 @@ export function Services() {
                 {/* Close Button */}
                 <button
                   onClick={() => setExpandedCard(null)}
-                  className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${
+                  className={`absolute top-4 right-4 sm:top-5 sm:right-5 z-10 p-2 rounded-full transition-colors ${
                     theme === 'dark'
                       ? 'hover:bg-purple-500/20 text-purple-300'
                       : 'hover:bg-gray-100 text-gray-600'
@@ -538,16 +571,16 @@ export function Services() {
                 </div>
 
                 <div
-                  className="flex-1 min-h-0 overflow-y-auto pr-4 overscroll-contain"
+                  className="flex-1 min-h-0 overflow-y-auto pr-4 sm:pr-5 overscroll-contain"
                   onWheel={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
                 >
 
                   {/* Service Details */}
                   {services.find((s) => s.id === expandedCard)?.details && (
-                    <div className="space-y-6">
+                    <div className="grid gap-6 lg:grid-cols-2">
                     {/* What You Get */}
-                    <div>
+                    <div className="lg:col-span-1">
                       <h3
                         className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
@@ -557,7 +590,7 @@ export function Services() {
                       >
                         ✨ {t('services.modal.whatYouGet')}
                       </h3>
-                      <ul className="space-y-2">
+                      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
                         {services
                           .find((s) => s.id === expandedCard)
                           ?.details.whatYouGet.map((item, idx) => (
@@ -577,7 +610,7 @@ export function Services() {
                     </div>
 
                     {/* Best For */}
-                    <div>
+                    <div className="lg:col-span-1">
                       <h3
                         className={`text-lg font-bold mb-2 ${
                           theme === 'dark'
@@ -600,7 +633,7 @@ export function Services() {
                     </div>
 
                     {/* Tools Used */}
-                    <div>
+                    <div className="lg:col-span-1">
                       <h3
                         className={`text-lg font-bold mb-2 ${
                           theme === 'dark'
@@ -610,21 +643,27 @@ export function Services() {
                       >
                         🔧 {t('services.modal.toolsUsed')}
                       </h3>
-                      <p
-                        className={`${
-                          theme === 'dark'
-                            ? 'text-purple-200/80'
-                            : 'text-gray-700'
-                        }`}
-                      >
+                      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
                         {services
                           .find((s) => s.id === expandedCard)
-                          ?.details.toolsUsed.join(', ')}
-                      </p>
+                          ?.details.toolsUsed.map((tool, idx) => (
+                            <li
+                              key={idx}
+                              className={`flex gap-2 ${
+                                theme === 'dark'
+                                  ? 'text-purple-200/80'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="text-cyan-400">•</span>
+                              {tool}
+                            </li>
+                          ))}
+                      </ul>
                     </div>
 
                     {/* Important Notes */}
-                    <div>
+                    <div className="lg:col-span-1">
                       <h3
                         className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
@@ -653,7 +692,7 @@ export function Services() {
                     </div>
 
                     {/* Why Choose Us */}
-                    <div>
+                    <div className="lg:col-span-2">
                       <h3
                         className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
@@ -663,7 +702,7 @@ export function Services() {
                       >
                         💎 {t('services.modal.whyChoose')}
                       </h3>
-                      <ul className="space-y-2">
+                      <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
                         {services
                           .find((s) => s.id === expandedCard)
                           ?.details.whyChooseUs.map((reason, idx) => (
