@@ -562,7 +562,7 @@ export function Services() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
+                className={`relative select-none w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
                   theme === 'dark'
                     ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
                     : 'bg-white border border-purple-100'
