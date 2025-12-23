@@ -173,6 +173,51 @@ User Form Submit
   - Consider WebP format for better compression
 - Current images: Original size from user's folder
 
+## Recent Work (Dec 2025) — Agent Handoff Notes
+
+### Context
+- Project is a React/Vite/Tailwind SPA with custom i18n in `src/components/LanguageContext.tsx`.
+- Deploy is via Netlify auto-deploy on pushes to `main`.
+- Live site is typically https://silansautocare.com.
+
+### What Was Changed Recently
+
+#### Contact: click-to-copy + selection UX
+- Contact cards (Phone/Email) are now **click-to-copy** (clipboard API with fallback).
+  - File: `src/components/Contact.tsx`
+- `QuickServiceSelector` was rebuilt to match `HelpfulTips` “pill” UX and labels now come from service card titles.
+  - `Not Sure Yet` is **mutually exclusive** (selecting it clears others; selecting others clears it).
+  - File: `src/components/QuickServiceSelector.tsx`
+- `HelpfulTips` is now **toggleable** (select/unselect), localized, and sends selected tips as a separate block in the outgoing message.
+  - Files: `src/components/HelpfulTips.tsx`, `src/components/Contact.tsx`, `src/components/LanguageContext.tsx`
+
+#### Services: modal CTA + mobile scrolling
+- Services modal bottom button no longer “Close”: it now **closes the modal and scrolls to the Contact form** (and attempts to focus the name field).
+  - Files: `src/components/Services.tsx`, `src/components/LanguageContext.tsx`
+- Mobile fix: Services modal overlay now uses higher z-index than the fixed header, and the inner content area is iOS-friendly scroll (`WebkitOverflowScrolling: 'touch'`, `touch-pan-y`).
+  - File: `src/components/Services.tsx`
+
+#### Admin: repeated info copy
+- In Admin Dashboard → Contacts tab, contact email is now **click-to-copy**.
+  - File: `src/components/AdminDashboard.tsx`
+
+### Pricing/i18n strategy
+- Starting prices were moved from hardcoded strings into i18n keys (`services.cards.*.startingPrice`) so pricing can be updated per language from one place.
+  - Files: `src/components/Services.tsx`, `src/components/LanguageContext.tsx`
+
+### What To Verify (QA Checklist)
+- On iPhone/iOS Safari:
+  - Open any service → modal content should **scroll**, and header should not block taps.
+  - Bottom CTA should close + scroll to `#contact`.
+- In Contact section:
+  - Phone/Email cards copy correctly.
+  - Helpful Tips toggles visually and included in submission payload.
+  - `Not Sure Yet` clears other services and vice versa.
+
+### Known sensitivities
+- Avoid changing design tokens/colors beyond existing Tailwind classes (project constraint).
+- Repo contains a `backup-*` folder and a separate copy project; changes should target `src/` (not the backup).
+
 ## Development Commands
 
 ```powershell
