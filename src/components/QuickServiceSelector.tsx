@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
@@ -22,10 +22,24 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
     t('contact.services.notSure')
   ];
 
+  const notSureLabel = t('contact.services.notSure');
+
   const handleToggleService = (service: string) => {
-    const updated = selectedServices.includes(service)
-      ? selectedServices.filter(s => s !== service)
-      : [...selectedServices, service];
+    const isSelected = selectedServices.includes(service);
+
+    // Mutually exclusive "Not sure" behavior:
+    // - Selecting it clears others.
+    // - Selecting any other service clears it.
+    if (service === notSureLabel) {
+      onServicesChange(isSelected ? [] : [notSureLabel]);
+      return;
+    }
+
+    const withoutNotSure = selectedServices.filter((s) => s !== notSureLabel);
+    const updated = isSelected
+      ? withoutNotSure.filter((s) => s !== service)
+      : [...withoutNotSure, service];
+
     onServicesChange(updated);
   };
 
