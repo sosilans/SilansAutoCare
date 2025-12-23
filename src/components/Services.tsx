@@ -732,7 +732,7 @@ export function Services() {
                         className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
                             ? 'text-cyan-300'
-                            : 'text-cyan-800'
+                            : 'text-purple-700'
                         }`}
                       >
                         💎 {t('services.modal.whyChoose')}
@@ -751,7 +751,7 @@ export function Services() {
                             >
                               <span
                                 className={
-                                  theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'
+                                  theme === 'dark' ? 'text-cyan-400' : 'text-purple-600'
                                 }
                               >
                                 →
