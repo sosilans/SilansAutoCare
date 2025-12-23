@@ -21,6 +21,14 @@ export function AboutMe() {
     {
       src: "/assets/misha_1.jpg",
       alt: t('aboutMe.carousel.alt2')
+    },
+    {
+      src: "/assets/misha3.jpg",
+      alt: t('aboutMe.carousel.alt3')
+    },
+    {
+      src: "/assets/misha4.jpg",
+      alt: t('aboutMe.carousel.alt4')
     }
   ];
 

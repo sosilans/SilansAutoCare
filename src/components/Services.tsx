@@ -89,24 +89,40 @@ export function Services() {
     if (expandedCard === null) return;
 
     const scrollY = window.scrollY || 0;
+    const isIOS = (() => {
+      const ua = window.navigator.userAgent || '';
+      const platform = (window.navigator as any).platform || '';
+      const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
+      // iPadOS can report as MacIntel with touch points.
+      return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+    })();
+
     const prevBodyOverflow = body.style.overflow;
     const prevBodyPosition = body.style.position;
     const prevBodyTop = body.style.top;
     const prevBodyWidth = body.style.width;
+    const prevHtmlOverflow = html.style.overflow;
     const prevHtmlOverscroll = html.style.overscrollBehavior;
     const prevHtmlScrollBehavior = html.style.scrollBehavior;
 
     html.style.overscrollBehavior = 'none';
+    html.style.overflow = 'hidden';
     body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
+
+    // On iOS, `position: fixed` body scroll-lock can break nested scrolling.
+    // We prefer a lighter lock that keeps the modal scrollable.
+    if (!isIOS) {
+      body.style.position = 'fixed';
+      body.style.top = `-${scrollY}px`;
+      body.style.width = '100%';
+    }
 
     return () => {
       body.style.overflow = prevBodyOverflow;
       body.style.position = prevBodyPosition;
       body.style.top = prevBodyTop;
       body.style.width = prevBodyWidth;
+      html.style.overflow = prevHtmlOverflow;
       html.style.overscrollBehavior = prevHtmlOverscroll;
       // Prevent global `scroll-behavior: smooth` from animating the restore.
       html.style.scrollBehavior = 'auto';
@@ -537,6 +553,8 @@ export function Services() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
+              onMouseDown={() => setExpandedCard(null)}
+              onTouchStart={() => setExpandedCard(null)}
               onClick={() => setExpandedCard(null)}
             >
               <motion.div
@@ -544,11 +562,15 @@ export function Services() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[72svh] max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
+                className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
                   theme === 'dark'
                     ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
                     : 'bg-white border border-purple-100'
                 }`}
+                role="dialog"
+                aria-modal="true"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Close Button */}
