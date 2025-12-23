@@ -138,7 +138,7 @@ export function Services() {
           t('services.cards.basic.why.4')
         ],
         duration: t('services.cards.basic.duration'),
-        startingPrice: '$120'
+        startingPrice: t('services.cards.basic.startingPrice')
       }
     },
     {
@@ -182,7 +182,7 @@ export function Services() {
           t('services.cards.interior.why.4')
         ],
         duration: t('services.cards.interior.duration'),
-        startingPrice: '$180'
+        startingPrice: t('services.cards.interior.startingPrice')
       }
     },
     {
@@ -226,7 +226,7 @@ export function Services() {
           t('services.cards.full.why.4')
         ],
         duration: t('services.cards.full.duration'),
-        startingPrice: '$420'
+        startingPrice: t('services.cards.full.startingPrice')
       }
     },
     {
@@ -270,7 +270,7 @@ export function Services() {
           t('services.cards.exterior.why.4')
         ],
         duration: t('services.cards.exterior.duration'),
-        startingPrice: '$220'
+        startingPrice: t('services.cards.exterior.startingPrice')
       }
     },
     {
@@ -314,7 +314,7 @@ export function Services() {
           t('services.cards.engine.why.4')
         ],
         duration: t('services.cards.engine.duration'),
-        startingPrice: '$85'
+        startingPrice: t('services.cards.engine.startingPrice')
       }
     },
     {

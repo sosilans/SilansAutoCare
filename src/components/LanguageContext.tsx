@@ -176,6 +176,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.basic.why.3': 'Premium products + professional tools.',
     'services.cards.basic.why.4': 'Consistent results every visit.',
     'services.cards.basic.duration': '1–1.5 hours',
+    'services.cards.basic.startingPrice': '$120',
 
     'services.cards.interior.title': 'Deep Interior Clean',
     'services.cards.interior.headline': 'Fresh, clean, comfortable',
@@ -201,6 +202,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.interior.why.3': 'Odor-focused without harsh chemicals.',
     'services.cards.interior.why.4': 'Refreshes high-touch areas.',
     'services.cards.interior.duration': '2–3 hours',
+    'services.cards.interior.startingPrice': '$180',
 
     'services.cards.full.title': 'Full Package',
     'services.cards.full.headline': 'Interior + exterior reset',
@@ -226,6 +228,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.full.why.3': 'Premium products for high gloss.',
     'services.cards.full.why.4': 'Careful, detail-focused work.',
     'services.cards.full.duration': '4–5 hours',
+    'services.cards.full.startingPrice': '$350',
 
     'services.cards.exterior.title': 'Exterior Shine & Protection',
     'services.cards.exterior.headline': 'Gloss that lasts',
@@ -251,6 +254,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.exterior.why.3': 'Protection reduces future buildup.',
     'services.cards.exterior.why.4': 'Stays cleaner between washes.',
     'services.cards.exterior.duration': '2–3 hours',
+    'services.cards.exterior.startingPrice': '$160',
 
     'services.cards.engine.title': 'Engine Bay Detail',
     'services.cards.engine.headline': 'Clean under the hood',
@@ -276,6 +280,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.engine.why.3': 'Great for resale photos.',
     'services.cards.engine.why.4': 'Detail-level finishing.',
     'services.cards.engine.duration': '45–75 min',
+    'services.cards.engine.startingPrice': '$85',
 
     'services.cards.maintenance.title': 'Maintenance Plan',
     'services.cards.maintenance.headline': 'Stay clean between details',
@@ -714,6 +719,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.basic.why.3': 'Herramientas profesionales y productos premium.',
     'services.cards.basic.why.4': 'Resultados consistentes.',
     'services.cards.basic.duration': '1–1.5 horas',
+    'services.cards.basic.startingPrice': '$120',
 
     'services.cards.interior.title': 'Interior Profundo',
     'services.cards.interior.headline': 'Fresco, limpio y cómodo',
@@ -739,6 +745,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.interior.why.3': 'Enfoque en olores sin químicos fuertes.',
     'services.cards.interior.why.4': 'Zonas de contacto renovadas.',
     'services.cards.interior.duration': '2–3 horas',
+    'services.cards.interior.startingPrice': '$180',
 
     'services.cards.full.title': 'Paquete Completo',
     'services.cards.full.headline': 'Transformación interior y exterior',
@@ -764,6 +771,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.full.why.3': 'Productos premium para alto brillo.',
     'services.cards.full.why.4': 'Trabajo cuidadoso y detallista.',
     'services.cards.full.duration': '4–5 horas',
+    'services.cards.full.startingPrice': '$350',
 
     'services.cards.exterior.title': 'Exterior Brillo y Protección',
     'services.cards.exterior.headline': 'Brillo que dura',
@@ -789,6 +797,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.exterior.why.3': 'Protección para reducir acumulación futura.',
     'services.cards.exterior.why.4': 'Más tiempo limpio entre lavados.',
     'services.cards.exterior.duration': '2–3 horas',
+    'services.cards.exterior.startingPrice': '$160',
 
     'services.cards.engine.title': 'Compartimento del Motor',
     'services.cards.engine.headline': 'Limpio bajo el cofre',
@@ -814,6 +823,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.engine.why.3': 'Ideal para reventa.',
     'services.cards.engine.why.4': 'Detalles finales profesionales.',
     'services.cards.engine.duration': '45–75 min',
+    'services.cards.engine.startingPrice': '$85',
 
     'services.cards.maintenance.title': 'Plan de Mantenimiento',
     'services.cards.maintenance.headline': 'Siempre limpio entre detallados',
@@ -1252,6 +1262,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.basic.why.3': 'Премиальные средства и профессиональные инструменты.',
     'services.cards.basic.why.4': 'Стабильный результат.',
     'services.cards.basic.duration': '1–1.5 часа',
+    'services.cards.basic.startingPrice': '$120',
 
     'services.cards.interior.title': 'Глубокая Чистка Салона',
     'services.cards.interior.headline': 'Свежо, чисто, комфортно',
@@ -1277,6 +1288,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.interior.why.3': 'Фокус на запахах без резкой химии.',
     'services.cards.interior.why.4': 'Обновляем зоны частого контакта.',
     'services.cards.interior.duration': '2–3 часа',
+    'services.cards.interior.startingPrice': '$180',
 
     'services.cards.full.title': 'Полный Пакет',
     'services.cards.full.headline': 'Салон + кузов',
@@ -1302,6 +1314,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.full.why.3': 'Премиальные средства для блеска.',
     'services.cards.full.why.4': 'Аккуратная работа.',
     'services.cards.full.duration': '4–5 часов',
+    'services.cards.full.startingPrice': '$350',
 
     'services.cards.exterior.title': 'Экстерьер: Блеск и Защита',
     'services.cards.exterior.headline': 'Блеск надолго',
@@ -1327,6 +1340,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.exterior.why.3': 'Защита уменьшает будущее загрязнение.',
     'services.cards.exterior.why.4': 'Дольше чистый вид.',
     'services.cards.exterior.duration': '2–3 часа',
+    'services.cards.exterior.startingPrice': '$160',
 
     'services.cards.engine.title': 'Детейлинг Моторного Отсека',
     'services.cards.engine.headline': 'Чисто под капотом',
@@ -1352,6 +1366,7 @@ const translations: Record<Language, Record<string, string>> = {
     'services.cards.engine.why.3': 'Отлично для фото при продаже.',
     'services.cards.engine.why.4': 'Финиш на уровне детейлинга.',
     'services.cards.engine.duration': '45–75 мин',
+    'services.cards.engine.startingPrice': '$85',
 
     'services.cards.maintenance.title': 'План Поддержания',
     'services.cards.maintenance.headline': 'Чистота между визитами',
