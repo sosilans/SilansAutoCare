@@ -268,7 +268,7 @@ export function Portfolio() {
         </div>
 
         {!showAll && (
-          <div className="flex flex-col items-center gap-4 mt-10">
+          <div className="flex flex-col items-center gap-4 mt-14 sm:mt-16">
             <button
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowMore}
@@ -302,7 +302,7 @@ export function Portfolio() {
         )}
 
         {showAll && (
-          <div className="flex justify-center mt-8">
+          <div className="flex justify-center mt-12 sm:mt-14">
             <button
               className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
               onClick={handleShowLess}
