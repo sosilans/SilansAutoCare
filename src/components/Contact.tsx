@@ -35,6 +35,32 @@ export function Contact() {
     });
   };
 
+  const PHONE_NUMBER = '+1 (916) 534-5547';
+  const EMAIL_ADDRESS = 'silansautocare@gmail.com';
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      // Fallback for older browsers / restricted clipboard contexts
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    } catch {
+      // Intentionally silent: user only requested copy behavior.
+    }
+  };
+
   async function getRecaptchaToken(): Promise<string | undefined> {
     if (!RECAPTCHA_SITE_KEY) return undefined;
     // ensure script
@@ -134,14 +160,16 @@ export function Contact() {
     {
       icon: <Phone className="w-6 h-6" />,
       title: t('contact.phone'),
-      content: '+1 (916) 534-5547 (9am-9pm)',
+      content: `${PHONE_NUMBER} (9am-9pm)`,
+      copyValue: PHONE_NUMBER,
       emoji: '📞',
       color: 'from-pink-400 via-purple-400 to-cyan-400',
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: t('contact.email'),
-      content: 'silansautocare@gmail.com',
+      content: EMAIL_ADDRESS,
+      copyValue: EMAIL_ADDRESS,
       emoji: '✉️',
       color: 'from-purple-400 via-pink-400 to-orange-400',
     },
@@ -224,11 +252,32 @@ export function Contact() {
                   }}
                 >
                   <BubbleEffect intensity="low" variant="light">
-                    <div className={`flex items-center gap-4 p-6 rounded-2xl border-2 cartoon-shadow-sm hover:scale-105 transition-transform duration-300 ${
+                    <div
+                      className={`flex items-center gap-4 p-6 rounded-2xl border-2 cartoon-shadow-sm hover:scale-105 transition-transform duration-300 ${
                       theme === 'dark'
                         ? 'bg-purple-900/20 border-purple-500/30 vhs-noise vhs-scanlines'
                         : 'bg-white border-gray-100 vhs-noise'
-                    }`}>
+                      } ${info.copyValue ? 'cursor-pointer' : ''}`}
+                      role={info.copyValue ? 'button' : undefined}
+                      tabIndex={info.copyValue ? 0 : undefined}
+                      onClick={
+                        info.copyValue
+                          ? () => {
+                              void copyToClipboard(info.copyValue);
+                            }
+                          : undefined
+                      }
+                      onKeyDown={
+                        info.copyValue
+                          ? (e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                void copyToClipboard(info.copyValue);
+                              }
+                            }
+                          : undefined
+                      }
+                    >
                       <div className={`flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br ${info.color} flex items-center justify-center text-3xl gradient-animated ${
                         theme === 'dark' ? 'vhs-glow-dark' : 'vhs-glow-light'
                       }`}>
