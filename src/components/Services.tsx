@@ -34,6 +34,7 @@ export function Services() {
   const { t } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const scrollToContactForm = () => {
     const contactSection = document.getElementById('contact');
@@ -85,49 +86,38 @@ export function Services() {
   useEffect(() => {
     const body = document.body;
     const html = document.documentElement;
-
     if (expandedCard === null) return;
 
     const scrollY = window.scrollY || 0;
-    const isIOS = (() => {
-      const ua = window.navigator.userAgent || '';
-      const platform = (window.navigator as any).platform || '';
-      const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
-      // iPadOS can report as MacIntel with touch points.
-      return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
-    })();
-
-    const prevBodyOverflow = body.style.overflow;
-    const prevBodyPosition = body.style.position;
-    const prevBodyTop = body.style.top;
-    const prevBodyWidth = body.style.width;
     const prevHtmlOverflow = html.style.overflow;
     const prevHtmlOverscroll = html.style.overscrollBehavior;
     const prevHtmlScrollBehavior = html.style.scrollBehavior;
+    const prevBodyScrollBehavior = body.style.scrollBehavior;
+    const prevBodyVar = body.style.getPropertyValue('--modal-scroll-y');
 
-    html.style.overscrollBehavior = 'none';
+    body.dataset.modalScrollY = String(scrollY);
+    body.style.setProperty('--modal-scroll-y', `-${scrollY}px`);
+    body.classList.add('modal-open');
     html.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
 
-    // On iOS, `position: fixed` body scroll-lock can break nested scrolling.
-    // We prefer a lighter lock that keeps the modal scrollable.
-    if (!isIOS) {
-      body.style.position = 'fixed';
-      body.style.top = `-${scrollY}px`;
-      body.style.width = '100%';
-    }
+    // Move focus into the modal (close button) after mount.
+    window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true } as any), 0);
 
     return () => {
-      body.style.overflow = prevBodyOverflow;
-      body.style.position = prevBodyPosition;
-      body.style.top = prevBodyTop;
-      body.style.width = prevBodyWidth;
+      body.classList.remove('modal-open');
+      body.style.setProperty('--modal-scroll-y', prevBodyVar);
+      delete body.dataset.modalScrollY;
       html.style.overflow = prevHtmlOverflow;
       html.style.overscrollBehavior = prevHtmlOverscroll;
+
+      const restoreY = scrollY;
       // Prevent global `scroll-behavior: smooth` from animating the restore.
       html.style.scrollBehavior = 'auto';
-      window.scrollTo(0, scrollY);
+      body.style.scrollBehavior = 'auto';
+      window.scrollTo(0, restoreY);
       html.style.scrollBehavior = prevHtmlScrollBehavior;
+      body.style.scrollBehavior = prevBodyScrollBehavior;
     };
   }, [expandedCard]);
 
@@ -552,31 +542,35 @@ export function Services() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
-              onMouseDown={() => setExpandedCard(null)}
-              onTouchStart={() => setExpandedCard(null)}
-              onClick={() => setExpandedCard(null)}
+              className="fixed inset-0 z-[100]"
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`relative select-none w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
-                  theme === 'dark'
-                    ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
-                    : 'bg-white border border-purple-100'
-                }`}
-                role="dialog"
-                aria-modal="true"
-                onMouseDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-              >
+              {/* Full-screen backdrop: tap anywhere outside closes */}
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onPointerDown={() => setExpandedCard(null)}
+                aria-hidden="true"
+              />
+
+              {/* Content layer */}
+              <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
+                    theme === 'dark'
+                      ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
+                      : 'bg-white border border-purple-100'
+                  }`}
+                  role="dialog"
+                  aria-modal="true"
+                >
                 {/* Close Button */}
                 <button
                   onClick={() => setExpandedCard(null)}
-                  className={`absolute top-4 right-4 sm:top-5 sm:right-5 z-10 p-2 rounded-full transition-colors ${
+                  ref={closeButtonRef}
+                  className={`absolute top-3 right-3 sm:top-5 sm:right-5 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
                     theme === 'dark'
                       ? 'hover:bg-purple-500/20 text-purple-300'
                       : 'hover:bg-gray-100 text-gray-600'
@@ -792,8 +786,9 @@ export function Services() {
                     {t('services.modal.disclaimer')}
                   </p>
                 </div>
+                </motion.div>
+              </div>
             </motion.div>
-          </motion.div>
           )}
         </AnimatePresence>
 

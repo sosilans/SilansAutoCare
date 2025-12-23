@@ -325,7 +325,8 @@ export function Portfolio() {
         >
           <button
             onClick={() => setSelectedItem(null)}
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+            type="button"
+            className="absolute top-6 right-6 inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10 touch-manipulation"
             aria-label={t('common.close')}
           >
             <X className="w-6 h-6 text-white" />

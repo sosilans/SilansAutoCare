@@ -280,6 +280,16 @@
   position: relative;
 }
 
+/* Modal scroll lock (service details) */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: var(--modal-scroll-y, 0px);
+  left: 0;
+  right: 0;
+}
+
 .vhs-noise::before {
   content: '';
   position: absolute;

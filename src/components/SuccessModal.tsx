@@ -58,13 +58,15 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
                 {/* Close button */}
                 <button
                   onClick={onClose}
-                  className={`absolute top-4 right-4 p-2 rounded-full transition-all duration-200 ${ 
+                  type="button"
+                  aria-label={t('common.close')}
+                  className={`absolute top-3 right-3 inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 touch-manipulation ${ 
                     theme === 'dark'
                       ? 'hover:bg-purple-800/50 text-purple-300 hover:text-purple-100'
                       : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
 
                 {/* Success Icon with animation */}
