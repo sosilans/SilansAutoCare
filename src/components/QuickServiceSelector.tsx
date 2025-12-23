@@ -2,24 +2,27 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import { useTheme } from './ThemeContext';
+import { useLanguage } from './LanguageContext';
 
 interface QuickServiceSelectorProps {
   selectedServices: string[];
   onServicesChange: (services: string[]) => void;
 }
 
-const SERVICES = [
-  'Interior Cleaning',
-  'Exterior Cleaning',
-  'Full Detail Package',
-  'Engine Bay Cleaning',
-  'Maintenance (Recurring Wash)',
-  'Not Sure Yet (Need Recommendation)',
-];
-
 export function QuickServiceSelector({ selectedServices, onServicesChange }: QuickServiceSelectorProps) {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+
+  const services = [
+    t('services.cards.basic.title'),
+    t('services.cards.interior.title'),
+    t('services.cards.full.title'),
+    t('services.cards.exterior.title'),
+    t('services.cards.engine.title'),
+    t('services.cards.maintenance.title'),
+    t('contact.services.notSure')
+  ];
 
   const handleToggleService = (service: string) => {
     const updated = selectedServices.includes(service)
@@ -33,20 +36,20 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-6 py-3 rounded-2xl border-2 transition-all duration-300 flex items-center justify-between gradient-animated ${
+        className={`w-full px-6 py-3 rounded-2xl border transition-all duration-300 flex items-center justify-between gradient-animated ${
           theme === 'dark'
-            ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 border-purple-400/50 vhs-glow-dark'
-            : 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 border-purple-400/50 vhs-glow-light'
+            ? 'bg-gradient-to-r from-pink-500/40 to-purple-500/40 text-pink-200 hover:from-pink-500/60 hover:to-purple-500/60 border-pink-500/20'
+            : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 border-pink-600'
         }`}
       >
-        <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-white'}`}>
-          Choose Your Services
+        <span className="text-sm font-medium">
+          {t('contact.services.choose')}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ChevronDown className="w-5 h-5 text-white" />
+          <ChevronDown className="w-5 h-5" />
         </motion.div>
       </button>
 
@@ -65,7 +68,7 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
             }`}
           >
             <div className="p-4 space-y-3">
-              {SERVICES.map((service) => (
+              {services.map((service) => (
                 <label key={service} className="flex items-center gap-3 cursor-pointer group w-full">
                   <input
                     type="checkbox"

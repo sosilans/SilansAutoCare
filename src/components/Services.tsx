@@ -216,7 +216,6 @@ export function Services() {
         importantNotes: [
           t('services.cards.full.notes.1'),
           t('services.cards.full.notes.2'),
-          t('services.cards.full.notes.3'),
           t('services.cards.full.notes.4')
         ],
         whyChooseUs: [
@@ -697,7 +696,7 @@ export function Services() {
                         className={`text-lg font-bold mb-3 ${
                           theme === 'dark'
                             ? 'text-cyan-300'
-                            : 'text-cyan-600'
+                            : 'text-cyan-800'
                         }`}
                       >
                         💎 {t('services.modal.whyChoose')}
@@ -714,7 +713,13 @@ export function Services() {
                                   : 'text-gray-700'
                               }`}
                             >
-                              <span className="text-cyan-400">→</span>
+                              <span
+                                className={
+                                  theme === 'dark' ? 'text-cyan-400' : 'text-cyan-700'
+                                }
+                              >
+                                →
+                              </span>
                               {reason}
                             </li>
                           ))}
