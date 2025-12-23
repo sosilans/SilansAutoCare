@@ -60,7 +60,15 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
                   onClick={onClose}
                   type="button"
                   aria-label={t('common.close')}
-                  className={`absolute top-3 right-3 inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 touch-manipulation ${ 
+                  style={
+                    {
+                      '--safe-top': '0.75rem',
+                      '--safe-right': '0.75rem',
+                      '--safe-top-sm': '0.75rem',
+                      '--safe-right-sm': '0.75rem'
+                    } as any
+                  }
+                  className={`absolute safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 touch-manipulation ${ 
                     theme === 'dark'
                       ? 'hover:bg-purple-800/50 text-purple-300 hover:text-purple-100'
                       : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'

@@ -290,6 +290,19 @@ body.modal-open {
   right: 0;
 }
 
+/* iOS safe-area helper for top-right absolute elements (e.g., modal close button) */
+.safe-abs-tr {
+  top: calc(var(--safe-top, 0.75rem) + env(safe-area-inset-top));
+  right: calc(var(--safe-right, 0.75rem) + env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .safe-abs-tr {
+    top: calc(var(--safe-top-sm, var(--safe-top, 1.25rem)) + env(safe-area-inset-top));
+    right: calc(var(--safe-right-sm, var(--safe-right, 1.25rem)) + env(safe-area-inset-right));
+  }
+}
+
 .vhs-noise::before {
   content: '';
   position: absolute;

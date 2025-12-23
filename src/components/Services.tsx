@@ -570,7 +570,15 @@ export function Services() {
                 <button
                   onClick={() => setExpandedCard(null)}
                   ref={closeButtonRef}
-                  className={`absolute top-3 right-3 sm:top-5 sm:right-5 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
+                  style={
+                    {
+                      '--safe-top': '0.75rem',
+                      '--safe-right': '0.75rem',
+                      '--safe-top-sm': '1.25rem',
+                      '--safe-right-sm': '1.25rem'
+                    } as any
+                  }
+                  className={`absolute safe-abs-tr z-10 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
                     theme === 'dark'
                       ? 'hover:bg-purple-500/20 text-purple-300'
                       : 'hover:bg-gray-100 text-gray-600'
