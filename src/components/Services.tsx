@@ -35,6 +35,25 @@ export function Services() {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
 
+  const scrollToContactForm = () => {
+    const contactSection = document.getElementById('contact');
+    if (!contactSection) return;
+
+    contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Try to focus the first field shortly after scrolling starts.
+    window.setTimeout(() => {
+      const nameInput = document.querySelector('#contact input[name="name"]') as HTMLInputElement | null;
+      nameInput?.focus({ preventScroll: true } as any);
+    }, 350);
+  };
+
+  const closeAndGoToForm = () => {
+    setExpandedCard(null);
+    // Wait for scroll-lock cleanup + overlay unmount.
+    window.setTimeout(() => scrollToContactForm(), 80);
+  };
+
   useEffect(() => {
     if (expandedCard === null) return;
 
@@ -517,10 +536,8 @@ export function Services() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overscroll-none"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6"
               onClick={() => setExpandedCard(null)}
-              onWheel={(e) => e.preventDefault()}
-              onTouchMove={(e) => e.preventDefault()}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -533,8 +550,6 @@ export function Services() {
                     : 'bg-white border border-purple-100'
                 }`}
                 onClick={(e) => e.stopPropagation()}
-                onWheel={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
               >
                 {/* Close Button */}
                 <button
@@ -570,9 +585,8 @@ export function Services() {
                 </div>
 
                 <div
-                  className="flex-1 min-h-0 overflow-y-auto pr-4 sm:pr-5 overscroll-contain"
-                  onWheel={(e) => e.stopPropagation()}
-                  onTouchMove={(e) => e.stopPropagation()}
+                  className="flex-1 min-h-0 overflow-y-auto pr-4 sm:pr-5 overscroll-contain touch-pan-y"
+                  style={{ WebkitOverflowScrolling: 'touch' } as any}
                 >
 
                   {/* Service Details */}
@@ -733,7 +747,7 @@ export function Services() {
                 {/* Modal Footer (always visible) */}
                 <div className="mt-4 pt-4 border-t border-purple-500/20 flex-shrink-0">
                   <button
-                    onClick={() => setExpandedCard(null)}
+                    onClick={closeAndGoToForm}
                     className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 ${
                       theme === 'dark'
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white vhs-glow-dark'
@@ -750,7 +764,7 @@ export function Services() {
                     className={`mt-3 text-sm text-center ${
                       theme === 'dark'
                         ? 'text-purple-300/60'
-                        : 'text-gray-500'
+                        : 'text-gray-600'
                     }`}
                   >
                     {t('services.modal.disclaimer')}

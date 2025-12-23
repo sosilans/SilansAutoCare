@@ -78,6 +78,28 @@ export function AdminDashboard() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    } catch {
+      // ignore
+    }
+  };
+
   // Calculate analytics
   const analytics = useMemo(() => {
     const last7Days = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -604,7 +626,18 @@ export function AdminDashboard() {
                               </Badge>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
+                              <span
+                                className="flex items-center gap-1 cursor-pointer"
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => void copyToClipboard(contact.email)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    void copyToClipboard(contact.email);
+                                  }
+                                }}
+                              >
                                 <Mail className="w-3 h-3" />
                                 {contact.email}
                               </span>

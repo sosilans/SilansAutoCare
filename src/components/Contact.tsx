@@ -17,6 +17,7 @@ export function Contact() {
   const { t } = useLanguage();
   const { submitContact } = useDataStore();
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedTips, setSelectedTips] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   // Optional: set this to your Google Apps Script Web App URL to use proxy
   const TELEGRAM_PROXY_URL = CONFIG_PROXY_URL || (typeof window !== 'undefined' && (window as any).__TELEGRAM_PROXY_URL) || '';
@@ -28,10 +29,10 @@ export function Contact() {
     return `Selected: ${selectedServices.join(', ')}.\nTell us more about your vehicle (condition, size, any concerns)...`;
   };
 
-  const handleTipClick = (tip: string) => {
-    setMessage((prev) => {
-      const updated = prev ? `${prev}\n${tip}` : tip;
-      return updated;
+  const handleToggleTip = (tip: string) => {
+    setSelectedTips((prev) => {
+      if (prev.includes(tip)) return prev.filter((t) => t !== tip);
+      return [...prev, tip];
     });
   };
 
@@ -113,7 +114,8 @@ export function Contact() {
       const endpoint = '/.netlify/functions/contact-proxy';
       const recaptchaToken = await getRecaptchaToken();
       const servicesText = selectedServices.length > 0 ? `\n\n📋 Selected Services:\n${selectedServices.map(s => `• ${s}`).join('\n')}` : '';
-      const fullMessage = `${messageValue}${servicesText}`;
+      const tipsText = selectedTips.length > 0 ? `\n\n💡 ${t('contact.tips.sectionLabel')}:\n${selectedTips.map(tip => `• ${tip}`).join('\n')}` : '';
+      const fullMessage = `${messageValue}${servicesText}${tipsText}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -140,6 +142,7 @@ export function Contact() {
         alert(t('contact.submitSuccess'));
         setMessage('');
         setSelectedServices([]);
+        setSelectedTips([]);
       }
     } catch (error) {
       console.error('Submission request failed:', error);
@@ -427,7 +430,7 @@ export function Contact() {
               />
 
               {/* Helpful Tips */}
-              <HelpfulTips onTipClick={handleTipClick} />
+              <HelpfulTips selectedTips={selectedTips} onToggleTip={handleToggleTip} />
 
               <div>
                 <label htmlFor="message" className={`block mb-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>

@@ -56,6 +56,15 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.services.choose': 'Choose Your Services',
     'contact.services.notSure': 'Not Sure Yet (Need Recommendation)',
 
+    // Contact (Helpful tips)
+    'contact.tips.title': '💡 Helpful Tips',
+    'contact.tips.sectionLabel': 'Helpful Tips',
+    'contact.tips.1': 'My car is very dirty inside',
+    'contact.tips.2': 'Pet hair issues',
+    'contact.tips.3': 'Smell removal needed',
+    'contact.tips.4': 'Exterior oxidation / dull paint',
+    'contact.tips.5': 'Just want a quick refresh',
+
     // About Me
     'aboutMe.badge': 'About Me',
     'aboutMe.title': 'Hey, I\'m Misha — your Sacramento detailing guy',
@@ -152,8 +161,8 @@ const translations: Record<Language, Record<string, string>> = {
     'services.modal.toolsUsed': 'Tools & products',
     'services.modal.importantNotes': 'Important notes',
     'services.modal.whyChoose': 'Why choose us',
-    'services.modal.bookCta': 'Close',
-    'services.modal.bookAria': 'Close details for {title}',
+    'services.modal.bookCta': 'Go to Contact Form',
+    'services.modal.bookAria': 'Scroll to contact form for {title}',
     'services.modal.disclaimer': 'Questions or special requests? Message us and we\'ll help you pick the right package.',
 
     'services.cards.basic.title': 'Basic Detailing',
@@ -602,6 +611,15 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.services.choose': 'Elige Tus Servicios',
     'contact.services.notSure': 'Not Sure Yet (Need Recommendation)',
 
+    // Contact (Helpful tips)
+    'contact.tips.title': '💡 Consejos útiles',
+    'contact.tips.sectionLabel': 'Consejos útiles',
+    'contact.tips.1': 'Mi coche está muy sucio por dentro',
+    'contact.tips.2': 'Problemas con pelo de mascota',
+    'contact.tips.3': 'Necesito eliminar olores',
+    'contact.tips.4': 'Oxidación exterior / pintura opaca',
+    'contact.tips.5': 'Solo quiero un refresh rápido',
+
     // About Me
     'aboutMe.badge': 'Sobre mí',
     'aboutMe.title': 'Hola, soy Misha — tu detallador en Sacramento',
@@ -698,8 +716,8 @@ const translations: Record<Language, Record<string, string>> = {
     'services.modal.toolsUsed': 'Herramientas y productos',
     'services.modal.importantNotes': 'Notas importantes',
     'services.modal.whyChoose': 'Por qué elegirnos',
-    'services.modal.bookCta': 'Cerrar',
-    'services.modal.bookAria': 'Cerrar detalles de {title}',
+    'services.modal.bookCta': 'Ir al formulario de contacto',
+    'services.modal.bookAria': 'Desplazar al formulario de contacto para {title}',
     'services.modal.disclaimer': '¿Preguntas o solicitudes especiales? Envíanos un mensaje y te ayudamos a elegir el paquete ideal.',
 
     'services.cards.basic.title': 'Detallado Básico',
@@ -1148,6 +1166,15 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.services.choose': 'Выберите услуги',
     'contact.services.notSure': 'Not Sure Yet (Need Recommendation)',
 
+    // Contact (Helpful tips)
+    'contact.tips.title': '💡 Полезные подсказки',
+    'contact.tips.sectionLabel': 'Полезные подсказки',
+    'contact.tips.1': 'Очень грязно внутри',
+    'contact.tips.2': 'Проблема с шерстью',
+    'contact.tips.3': 'Нужно убрать запах',
+    'contact.tips.4': 'Окисление / тусклая краска',
+    'contact.tips.5': 'Хочу быстро освежить',
+
     // About Me
     'aboutMe.badge': 'Обо мне',
     'aboutMe.title': 'Привет, я Миша — детейлинг в Сакраменто',
@@ -1244,8 +1271,8 @@ const translations: Record<Language, Record<string, string>> = {
     'services.modal.toolsUsed': 'Инструменты и средства',
     'services.modal.importantNotes': 'Важные заметки',
     'services.modal.whyChoose': 'Почему мы',
-    'services.modal.bookCta': 'Закрыть',
-    'services.modal.bookAria': 'Закрыть детали для {title}',
+    'services.modal.bookCta': 'Перейти к форме',
+    'services.modal.bookAria': 'Прокрутить к форме для {title}',
     'services.modal.disclaimer': 'Есть вопросы или особые пожелания? Напишите нам — поможем выбрать лучший пакет.',
 
     'services.cards.basic.title': 'Базовый Детейлинг',
