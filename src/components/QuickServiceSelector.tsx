@@ -52,6 +52,9 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
       <div className="flex flex-wrap gap-2">
         {services.map((service) => {
           const isSelected = selectedServices.includes(service);
+          const shouldAnimateGradient =
+            theme === 'dark' || !isSelected;
+
           return (
             <motion.button
               key={service}
@@ -60,13 +63,15 @@ export function QuickServiceSelector({ selectedServices, onServicesChange }: Qui
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               aria-pressed={isSelected}
-              className={`inline-flex items-center justify-center px-3 py-2 rounded-full text-xs font-medium text-center transition-all duration-300 gradient-animated ${
+              className={`inline-flex items-center justify-center px-3 py-2 rounded-full text-xs font-medium text-center transition-all duration-300 ${
+                shouldAnimateGradient ? 'gradient-animated' : ''
+              } ${
                 theme === 'dark'
                   ? isSelected
                     ? 'bg-gradient-to-r from-pink-500/70 to-purple-500/70 text-white border border-pink-500/30'
                     : 'bg-gradient-to-r from-pink-500/40 to-purple-500/40 text-pink-200 hover:from-pink-500/60 hover:to-purple-500/60 border border-pink-500/20'
                   : isSelected
-                    ? 'bg-white text-purple-700 border border-purple-300'
+                    ? 'bg-white !text-purple-700 border border-purple-300'
                     : 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 border border-pink-600'
               }`}
             >

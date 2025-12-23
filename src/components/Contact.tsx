@@ -29,10 +29,32 @@ export function Contact() {
     return `Selected: ${selectedServices.join(', ')}.\nTell us more about your vehicle (condition, size, any concerns)...`;
   };
 
+  const appendTipToMessage = (current: string, tip: string) => {
+    const trimmed = current.trimEnd();
+    const line = `• ${tip}`;
+    if (trimmed.includes(line) || trimmed.includes(tip)) return current;
+    if (!trimmed) return line;
+    return `${trimmed}\n${line}`;
+  };
+
+  const removeTipFromMessage = (current: string, tip: string) => {
+    const lines = current.split('\n');
+    const filtered = lines.filter((l) => {
+      const line = l.trim();
+      if (!line) return true;
+      if (line === tip) return false;
+      if (line === `• ${tip}`) return false;
+      return true;
+    });
+    return filtered.join('\n').replace(/\n{3,}/g, '\n\n');
+  };
+
   const handleToggleTip = (tip: string) => {
     setSelectedTips((prev) => {
-      if (prev.includes(tip)) return prev.filter((t) => t !== tip);
-      return [...prev, tip];
+      const isSelected = prev.includes(tip);
+      const next = isSelected ? prev.filter((t) => t !== tip) : [...prev, tip];
+      setMessage((current) => (isSelected ? removeTipFromMessage(current, tip) : appendTipToMessage(current, tip)));
+      return next;
     });
   };
 
