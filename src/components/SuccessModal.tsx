@@ -41,12 +41,12 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
           
           {/* Modal */}
-          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[1010] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

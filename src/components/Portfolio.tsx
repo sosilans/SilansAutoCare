@@ -330,7 +330,7 @@ export function Portfolio() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/95 z-50 overflow-y-auto overscroll-contain"
+                className="fixed inset-0 bg-black/95 z-[1000] overflow-y-auto overscroll-contain"
                 onClick={() => setSelectedItem(null)}
                 style={{ WebkitOverflowScrolling: 'touch' } as any}
               >
@@ -348,7 +348,7 @@ export function Portfolio() {
                       '--safe-right-sm': '1.5rem'
                     } as any
                   }
-                  className="fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[60] touch-manipulation"
+                  className="fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[1010] touch-manipulation"
                   aria-label={t('common.close')}
                 >
                   <X className="w-6 h-6 text-white" />

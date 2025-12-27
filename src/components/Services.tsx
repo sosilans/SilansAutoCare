@@ -528,7 +528,7 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100]"
+                  className="fixed inset-0 z-[1000]"
                 >
                   {/* Full-screen backdrop: tap anywhere outside closes */}
                   <div
@@ -539,17 +539,16 @@ export function Services() {
 
                   {/* Content layer (scroll-safe on mobile) */}
                   <div
-                    className="absolute inset-0 flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto overscroll-contain"
-                    style={{ WebkitOverflowScrolling: 'touch' } as any}
+                    className="absolute inset-0 flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-hidden"
                   >
                     <motion.div
                       initial={{ scale: 0.98, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.98, opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                      className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 max-h-[calc(100vh-2rem)] max-h-[calc(100svh-2rem)] max-h-[calc(100dvh-2rem)] sm:my-0 sm:max-h-[72vh] sm:max-h-[72svh] sm:max-h-[72dvh] ${
+                      className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 max-h-[calc(100vh-2rem)] max-h-[calc(100svh-2rem)] max-h-[calc(100dvh-2rem)] sm:my-0 sm:max-h-[72vh] sm:max-h-[72svh] sm:max-h-[72dvh] ${
                         theme === 'dark'
-                          ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
+                          ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
                       role="dialog"
@@ -567,7 +566,7 @@ export function Services() {
                       '--safe-right-sm': '1.25rem'
                     } as any
                   }
-                  className={`absolute safe-abs-tr z-10 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
+                  className={`absolute safe-abs-tr z-20 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
                     theme === 'dark'
                       ? 'hover:bg-purple-500/20 text-purple-300'
                       : 'hover:bg-gray-100 text-gray-600'

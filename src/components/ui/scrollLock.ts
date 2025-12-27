@@ -6,6 +6,11 @@ type ScrollLockSnapshot = {
   bodyScrollBehavior: string;
   bodyPaddingRight: string;
   bodyModalScrollY: string;
+  rootPosition: string;
+  rootTop: string;
+  rootLeft: string;
+  rootRight: string;
+  rootWidth: string;
 };
 
 let lockCount = 0;
@@ -20,10 +25,13 @@ export function lockScroll(): () => void {
 
   const body = document.body;
   const html = document.documentElement;
+  const root = document.getElementById('root') as HTMLElement | null;
 
   lockCount += 1;
   if (lockCount === 1) {
     const scrollY = window.scrollY || 0;
+
+    const rootStyle = root?.style;
 
     snapshot = {
       scrollY,
@@ -33,6 +41,11 @@ export function lockScroll(): () => void {
       bodyScrollBehavior: body.style.scrollBehavior,
       bodyPaddingRight: body.style.paddingRight,
       bodyModalScrollY: body.style.getPropertyValue("--modal-scroll-y"),
+      rootPosition: rootStyle?.position || "",
+      rootTop: rootStyle?.top || "",
+      rootLeft: rootStyle?.left || "",
+      rootRight: rootStyle?.right || "",
+      rootWidth: rootStyle?.width || "",
     };
 
     const scrollbarWidth = getScrollbarWidth();
@@ -40,7 +53,19 @@ export function lockScroll(): () => void {
       body.style.paddingRight = `calc(${snapshot.bodyPaddingRight || "0px"} + ${scrollbarWidth}px)`;
     }
 
-    body.style.setProperty("--modal-scroll-y", `-${scrollY}px`);
+    // Lock the app container instead of <body> to avoid iOS Safari bugs
+    // where fixed-position descendants become relative to the fixed body.
+    if (root) {
+      root.style.position = 'fixed';
+      root.style.top = `-${scrollY}px`;
+      root.style.left = '0';
+      root.style.right = '0';
+      root.style.width = '100%';
+    } else {
+      // Fallback to legacy strategy.
+      body.style.setProperty("--modal-scroll-y", `-${scrollY}px`);
+    }
+
     body.classList.add("modal-open");
 
     html.style.overflow = "hidden";
@@ -55,6 +80,7 @@ export function lockScroll(): () => void {
 
     const body = document.body;
     const html = document.documentElement;
+    const root = document.getElementById('root') as HTMLElement | null;
 
     const restore = snapshot;
     snapshot = null;
@@ -64,6 +90,14 @@ export function lockScroll(): () => void {
     if (restore) {
       body.style.paddingRight = restore.bodyPaddingRight;
       body.style.setProperty("--modal-scroll-y", restore.bodyModalScrollY);
+
+      if (root) {
+        root.style.position = restore.rootPosition;
+        root.style.top = restore.rootTop;
+        root.style.left = restore.rootLeft;
+        root.style.right = restore.rootRight;
+        root.style.width = restore.rootWidth;
+      }
 
       html.style.overflow = restore.htmlOverflow;
       (html.style as any).overscrollBehavior = restore.htmlOverscrollBehavior;
@@ -79,6 +113,14 @@ export function lockScroll(): () => void {
       body.style.removeProperty("--modal-scroll-y");
       html.style.overflow = "";
       (html.style as any).overscrollBehavior = "";
+
+      if (root) {
+        root.style.position = '';
+        root.style.top = '';
+        root.style.left = '';
+        root.style.right = '';
+        root.style.width = '';
+      }
     }
   };
 }
