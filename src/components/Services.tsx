@@ -609,7 +609,7 @@ export function Services() {
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.98, opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                      className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 max-h-[calc(100vh-2rem)] max-h-[calc(100svh-2rem)] max-h-[calc(100dvh-2rem)] sm:my-0 sm:max-h-[72vh] sm:max-h-[72svh] sm:max-h-[72dvh] ${
+                      className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 h-[calc(100svh-2rem)] max-h-[calc(100svh-2rem)] sm:my-0 sm:h-auto sm:max-h-[72vh] sm:max-h-[72svh] ${
                         theme === 'dark'
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
@@ -820,7 +820,7 @@ export function Services() {
                 </div>
 
                 {/* Modal Footer (always visible) */}
-                <div className="mt-4 pt-4 border-t border-purple-500/20 flex-shrink-0">
+                <div className="mt-4 pt-4 border-t border-purple-500/20 flex-shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                   <button
                     onClick={closeAndGoToForm}
                     className={`inline-flex items-center justify-center w-full px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 ${
