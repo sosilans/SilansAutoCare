@@ -50,9 +50,405 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, setting: data ?? null }) };
     }
 
+    if (path.startsWith('/api/public/contact')) {
+      if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+      if (isRateLimited(ip, 20, 60_000)) {
+        return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+      }
+
+      const ContactSchema = z.object({
+        name: z.string().min(1).max(120),
+        email: z.string().min(3).max(320),
+        phone: z.string().max(64).optional().nullable(),
+        message: z.string().min(1).max(20_000),
+        meta: z.record(z.unknown()).optional(),
+      });
+      const body = event.body ? JSON.parse(event.body) : {};
+      const parsed = ContactSchema.safeParse(body);
+      if (!parsed.success) {
+        return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+      }
+
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data, error } = await supabaseAdmin
+        .from('contact_submissions')
+        .insert({
+          name: parsed.data.name,
+          email: parsed.data.email,
+          phone: parsed.data.phone ?? null,
+          message: parsed.data.message,
+          status: 'new',
+          meta: {
+            ...(parsed.data.meta || {}),
+            ip,
+            ua: (event.headers as any)?.['user-agent'] || (event.headers as any)?.['User-Agent'] || null,
+          },
+        })
+        .select('id,created_at')
+        .single();
+
+      if (error || !data) {
+        return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to save contact' }) };
+      }
+
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, id: data.id, created_at: data.created_at }) };
+    }
+
+    if (path.startsWith('/api/public/reviews')) {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const status = (event.queryStringParameters?.status || 'approved').trim();
+        if (!['approved'].includes(status)) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+        }
+
+        const limit = Math.min(200, Math.max(1, Number(event.queryStringParameters?.limit || 50) || 50));
+        const { data, error } = await supabaseAdmin
+          .from('review_submissions')
+          .select('id,created_at,name,message,status')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load reviews' }) };
+        }
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+      }
+
+      if (event.httpMethod === 'POST') {
+        if (isRateLimited(ip, 15, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const ReviewSchema = z.object({
+          name: z.string().min(1).max(120),
+          email: z.string().min(3).max(320),
+          message: z.string().min(1).max(5000),
+          meta: z.record(z.unknown()).optional(),
+        });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = ReviewSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('review_submissions')
+          .insert({
+            name: parsed.data.name,
+            email: parsed.data.email,
+            message: parsed.data.message,
+            status: 'pending',
+            meta: {
+              ...(parsed.data.meta || {}),
+              ip,
+              ua: (event.headers as any)?.['user-agent'] || (event.headers as any)?.['User-Agent'] || null,
+            },
+          })
+          .select('id,created_at')
+          .single();
+
+        if (error || !data) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to submit review' }) };
+        }
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, id: data.id, created_at: data.created_at }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
+    if (path.startsWith('/api/public/faqs')) {
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const status = (event.queryStringParameters?.status || 'approved').trim();
+        if (!['approved'].includes(status)) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+        }
+        const limit = Math.min(200, Math.max(1, Number(event.queryStringParameters?.limit || 50) || 50));
+
+        const { data, error } = await supabaseAdmin
+          .from('faq_submissions')
+          .select('id,created_at,name,question,answer,status')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load faqs' }) };
+        }
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+      }
+
+      if (event.httpMethod === 'POST') {
+        if (isRateLimited(ip, 15, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const FaqSchema = z.object({
+          name: z.string().min(1).max(120),
+          email: z.string().min(3).max(320),
+          question: z.string().min(1).max(5000),
+          meta: z.record(z.unknown()).optional(),
+        });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = FaqSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('faq_submissions')
+          .insert({
+            name: parsed.data.name,
+            email: parsed.data.email,
+            question: parsed.data.question,
+            status: 'pending',
+            meta: {
+              ...(parsed.data.meta || {}),
+              ip,
+              ua: (event.headers as any)?.['user-agent'] || (event.headers as any)?.['User-Agent'] || null,
+            },
+          })
+          .select('id,created_at')
+          .single();
+
+        if (error || !data) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to submit question' }) };
+        }
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, id: data.id, created_at: data.created_at }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
     if (path.startsWith('/api/admin/me')) {
       const admin = await requireAdmin(event);
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, admin }) };
+    }
+
+    if (path.startsWith('/api/admin/contacts')) {
+      const admin = await requireAdmin(event);
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const status = (event.queryStringParameters?.status || '').trim();
+        let q = supabaseAdmin
+          .from('contact_submissions')
+          .select('id,created_at,name,email,phone,message,status')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (status) {
+          if (!['new', 'contacted', 'resolved'].includes(status)) {
+            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+          }
+          q = q.eq('status', status as any);
+        }
+        const { data, error } = await q;
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load contacts' }) };
+        }
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+      }
+
+      if (event.httpMethod === 'PATCH') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const PatchSchema = z.object({ id: z.string().min(10).max(80), status: z.enum(['new', 'contacted', 'resolved']) });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = PatchSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('contact_submissions')
+          .update({ status: parsed.data.status })
+          .eq('id', parsed.data.id)
+          .select('id,status')
+          .single();
+
+        if (error || !data) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to update contact' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'contact_update_status',
+          target_type: 'contact_submissions',
+          target_id: data.id,
+          diff: { status: data.status },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      if (event.httpMethod === 'DELETE') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const id = (event.queryStringParameters?.id || '').trim();
+        if (!id) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Missing id' }) };
+        }
+
+        const { error } = await supabaseAdmin.from('contact_submissions').delete().eq('id', id);
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to delete contact' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'contact_delete',
+          target_type: 'contact_submissions',
+          target_id: id,
+          diff: {},
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
+    if (path.startsWith('/api/admin/reviews')) {
+      const admin = await requireAdmin(event);
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const status = (event.queryStringParameters?.status || '').trim();
+        let q = supabaseAdmin
+          .from('review_submissions')
+          .select('id,created_at,name,email,message,status')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (status) {
+          if (!['pending', 'approved', 'rejected'].includes(status)) {
+            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+          }
+          q = q.eq('status', status as any);
+        }
+        const { data, error } = await q;
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load reviews' }) };
+        }
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+      }
+
+      if (event.httpMethod === 'PATCH') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const PatchSchema = z.object({ id: z.string().min(10).max(80), status: z.enum(['pending', 'approved', 'rejected']) });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = PatchSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('review_submissions')
+          .update({ status: parsed.data.status })
+          .eq('id', parsed.data.id)
+          .select('id,status')
+          .single();
+
+        if (error || !data) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to update review' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'review_update_status',
+          target_type: 'review_submissions',
+          target_id: data.id,
+          diff: { status: data.status },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+    }
+
+    if (path.startsWith('/api/admin/faqs')) {
+      const admin = await requireAdmin(event);
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const status = (event.queryStringParameters?.status || '').trim();
+        let q = supabaseAdmin
+          .from('faq_submissions')
+          .select('id,created_at,name,email,question,answer,status')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (status) {
+          if (!['pending', 'approved', 'rejected'].includes(status)) {
+            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+          }
+          q = q.eq('status', status as any);
+        }
+        const { data, error } = await q;
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load faqs' }) };
+        }
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+      }
+
+      if (event.httpMethod === 'PATCH') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const PatchSchema = z.object({
+          id: z.string().min(10).max(80),
+          status: z.enum(['pending', 'approved', 'rejected']),
+          answer: z.string().max(10_000).optional().nullable(),
+        });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = PatchSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const patch: any = { status: parsed.data.status };
+        if (typeof parsed.data.answer === 'string') patch.answer = parsed.data.answer;
+
+        const { data, error } = await supabaseAdmin
+          .from('faq_submissions')
+          .update(patch)
+          .eq('id', parsed.data.id)
+          .select('id,status')
+          .single();
+
+        if (error || !data) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to update faq' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'faq_update',
+          target_type: 'faq_submissions',
+          target_id: data.id,
+          diff: { status: data.status },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
     if (path.startsWith('/api/admin/bootstrap')) {

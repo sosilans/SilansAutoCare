@@ -56,7 +56,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     pendingReviews, approvedReviews, approveReview, rejectReview,
     pendingFAQs, approvedFAQs, approveFAQ, rejectFAQ,
     contactSubmissions, updateContactStatus, deleteContact,
-    stats
+    stats,
+    setAdminAccessToken,
   } = useDataStore();
   const { isOnline, setIsOnline } = useOnlineStatus();
 
@@ -93,6 +94,10 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     const timer = setTimeout(() => setIsLoading(false), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (adminAccessToken) setAdminAccessToken(adminAccessToken);
+  }, [adminAccessToken, setAdminAccessToken]);
 
   if (isLoading) {
     return (
@@ -179,30 +184,30 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     }
   };
 
-  const handleApproveReview = (id: string) => {
-    approveReview(id);
-    showNotification('success', t('admin.dashboard.notifications.reviewApproved'));
+  const handleApproveReview = async (id: string) => {
+    const ok = await approveReview(id);
+    showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.reviewApproved') : t('admin.dashboard.notifications.actionFailed'));
   };
 
-  const handleRejectReview = (id: string) => {
-    rejectReview(id);
-    showNotification('success', t('admin.dashboard.notifications.reviewRejected'));
+  const handleRejectReview = async (id: string) => {
+    const ok = await rejectReview(id);
+    showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.reviewRejected') : t('admin.dashboard.notifications.actionFailed'));
   };
 
-  const handleAnswerFAQ = (id: string) => {
+  const handleAnswerFAQ = async (id: string) => {
     const answer = faqAnswers[id]?.trim();
     if (!answer) {
       showNotification('error', t('admin.dashboard.notifications.answerRequired'));
       return;
     }
-    approveFAQ(id, answer);
-    setFaqAnswers(prev => ({ ...prev, [id]: '' }));
-    showNotification('success', t('admin.dashboard.notifications.faqAnswered'));
+    const ok = await approveFAQ(id, answer);
+    if (ok) setFaqAnswers(prev => ({ ...prev, [id]: '' }));
+    showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.faqAnswered') : t('admin.dashboard.notifications.actionFailed'));
   };
 
-  const handleRejectFAQ = (id: string) => {
-    rejectFAQ(id);
-    showNotification('success', t('admin.dashboard.notifications.faqRejected'));
+  const handleRejectFAQ = async (id: string) => {
+    const ok = await rejectFAQ(id);
+    showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.faqRejected') : t('admin.dashboard.notifications.actionFailed'));
   };
 
   const handleExportData = () => {

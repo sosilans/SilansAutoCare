@@ -518,6 +518,7 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.notifications.siteNowOnline': 'Site is now online',
     'admin.dashboard.notifications.siteNowOffline': 'Site is now offline',
     'admin.dashboard.notifications.failedToSaveSetting': 'Could not save changes (server error)',
+    'admin.dashboard.notifications.actionFailed': 'Action failed (server error)',
     
     // FAQ
     'faq.badge': 'FAQ',
@@ -1076,6 +1077,7 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.notifications.siteNowOnline': 'El sitio está en línea',
     'admin.dashboard.notifications.siteNowOffline': 'El sitio está fuera de línea',
     'admin.dashboard.notifications.failedToSaveSetting': 'No se pudieron guardar los cambios (error del servidor)',
+    'admin.dashboard.notifications.actionFailed': 'La acción falló (error del servidor)',
     
     // FAQ
     'faq.badge': 'Preguntas',
@@ -1634,6 +1636,7 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.notifications.siteNowOnline': 'Сайт теперь онлайн',
     'admin.dashboard.notifications.siteNowOffline': 'Сайт теперь офлайн',
     'admin.dashboard.notifications.failedToSaveSetting': 'Не удалось сохранить изменения (ошибка сервера)',
+    'admin.dashboard.notifications.actionFailed': 'Действие не выполнено (ошибка сервера)',
     
     // FAQ
     'faq.badge': 'Вопросы',

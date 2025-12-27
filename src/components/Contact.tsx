@@ -135,7 +135,7 @@ export function Contact() {
     });
     
     // Save to contact submissions
-    submitContact(name, email, messageValue);
+    submitContact(name, email, messageValue, phone);
     
     // Send via Netlify proxy (avoids CORS issues with GAS)
     try {
