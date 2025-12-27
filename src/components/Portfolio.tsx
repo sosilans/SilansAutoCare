@@ -1,5 +1,6 @@
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { BubbleEffect } from './BubbleEffect';
@@ -321,32 +322,40 @@ export function Portfolio() {
       </div>
 
       {/* Fullscreen Modal */}
-      {selectedItem && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedItem(null)}
-        >
-          <button
-            onClick={() => setSelectedItem(null)}
-            type="button"
-            style={
-              {
-                '--safe-top': '1.5rem',
-                '--safe-right': '1.5rem',
-                '--safe-top-sm': '1.5rem',
-                '--safe-right-sm': '1.5rem'
-              } as any
-            }
-            className="absolute safe-abs-tr inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10 touch-manipulation"
-            aria-label={t('common.close')}
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {selectedItem && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/95 z-50 overflow-y-auto overscroll-contain"
+                onClick={() => setSelectedItem(null)}
+                style={{ WebkitOverflowScrolling: 'touch' } as any}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedItem(null);
+                  }}
+                  type="button"
+                  style={
+                    {
+                      '--safe-top': '1.25rem',
+                      '--safe-right': '1.25rem',
+                      '--safe-top-sm': '1.5rem',
+                      '--safe-right-sm': '1.5rem'
+                    } as any
+                  }
+                  className="fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[60] touch-manipulation"
+                  aria-label={t('common.close')}
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
 
-          <div className="max-w-7xl w-full grid md:grid-cols-2 gap-4" onClick={(e) => e.stopPropagation()}>
+                <div className="min-h-full flex items-start sm:items-center justify-center p-4">
+                  <div className="max-w-7xl w-full grid md:grid-cols-2 gap-4" onClick={(e) => e.stopPropagation()}>
             {/* Before Image */}
             <motion.div
               initial={{ x: -50, opacity: 0 }}
@@ -387,9 +396,13 @@ export function Portfolio() {
             <div className="md:col-span-2 text-center">
               <h3 className="text-white">{selectedItem.title}</h3>
             </div>
-          </div>
-        </motion.div>
-      )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </section>
   );
 }

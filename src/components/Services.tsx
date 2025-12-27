@@ -4,6 +4,7 @@ import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { lockScroll } from './ui/scrollLock';
 import { track } from '../analytics/client';
 
@@ -519,36 +520,41 @@ export function Services() {
         </div>
 
         {/* Modal for Service Details */}
-        <AnimatePresence>
-          {expandedCard !== null && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100]"
-            >
-              {/* Full-screen backdrop: tap anywhere outside closes */}
-              <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onPointerDown={() => setExpandedCard(null)}
-                aria-hidden="true"
-              />
-
-              {/* Content layer */}
-              <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+        {typeof document !== 'undefined' &&
+          createPortal(
+            <AnimatePresence>
+              {expandedCard !== null && (
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 h-[85vh] max-h-[85vh] h-[85svh] max-h-[85svh] sm:h-[72vh] sm:max-h-[72vh] sm:h-[72svh] sm:max-h-[72svh] overflow-hidden shadow-2xl my-auto flex flex-col min-h-0 ${
-                    theme === 'dark'
-                      ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
-                      : 'bg-white border border-purple-100'
-                  }`}
-                  role="dialog"
-                  aria-modal="true"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[100]"
                 >
+                  {/* Full-screen backdrop: tap anywhere outside closes */}
+                  <div
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    onPointerDown={() => setExpandedCard(null)}
+                    aria-hidden="true"
+                  />
+
+                  {/* Content layer (scroll-safe on mobile) */}
+                  <div
+                    className="absolute inset-0 flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-y-auto overscroll-contain"
+                    style={{ WebkitOverflowScrolling: 'touch' } as any}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.98, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.98, opacity: 0 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      className={`relative w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 max-h-[calc(100vh-2rem)] max-h-[calc(100svh-2rem)] max-h-[calc(100dvh-2rem)] sm:my-0 sm:max-h-[72vh] sm:max-h-[72svh] sm:max-h-[72dvh] ${
+                        theme === 'dark'
+                          ? 'bg-slate-900/95 border border-purple-500/30 vhs-noise'
+                          : 'bg-white border border-purple-100'
+                      }`}
+                      role="dialog"
+                      aria-modal="true"
+                    >
                 {/* Close Button */}
                 <button
                   onClick={() => setExpandedCard(null)}
@@ -777,11 +783,13 @@ export function Services() {
                     {t('services.modal.disclaimer')}
                   </p>
                 </div>
+                    </motion.div>
+                  </div>
                 </motion.div>
-              </div>
-            </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
           )}
-        </AnimatePresence>
 
         {/* CTA */}
         <motion.div

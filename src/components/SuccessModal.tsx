@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { lockScroll } from './ui/scrollLock';
@@ -28,7 +29,9 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
     }
   }, [isOpen, onClose]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -157,6 +160,7 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
           </div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
