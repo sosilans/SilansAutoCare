@@ -18,6 +18,7 @@ import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
+import { AdminSiteAnalytics } from './AdminSiteAnalytics';
 
 export function AdminDashboard() {
   const { theme } = useTheme();
@@ -312,6 +313,7 @@ export function AdminDashboard() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
+            <AdminSiteAnalytics />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Activity Chart */}
               <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>

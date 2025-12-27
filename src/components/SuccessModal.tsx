@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, X } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
+import { lockScroll } from './ui/scrollLock';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -12,6 +13,11 @@ interface SuccessModalProps {
 export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
   const { theme } = useTheme();
   const { t } = useLanguage();
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    return lockScroll();
+  }, [isOpen]);
 
   React.useEffect(() => {
     if (isOpen) {

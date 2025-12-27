@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { lockScroll } from './ui/scrollLock';
 
 export function AuthModal() {
   const { theme } = useTheme();
@@ -16,6 +17,11 @@ export function AuthModal() {
     email: '',
   });
   const [errorKey, setErrorKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authOpen) return;
+    return lockScroll();
+  }, [authOpen]);
 
   if (!authOpen) return null;
 
@@ -36,7 +42,13 @@ export function AuthModal() {
           <h3 className={theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}>
             {authMode === 'login' ? t('auth.login') : t('auth.register')}
           </h3>
-          <button onClick={closeAuthModal} className="text-sm opacity-60 hover:opacity-100">{t('common.close')}</button>
+          <button
+            onClick={closeAuthModal}
+            type="button"
+            className="inline-flex min-h-10 items-center justify-center rounded-xl px-3 py-2 text-sm opacity-80 transition-opacity touch-manipulation hover:opacity-100"
+          >
+            {t('common.close')}
+          </button>
         </div>
 
         <div className="flex gap-2 mb-4">

@@ -4,6 +4,8 @@ import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useState, useEffect, useRef } from 'react';
+import { lockScroll } from './ui/scrollLock';
+import { track } from '../analytics/client';
 
 interface ServiceDetails {
   whatYouGet: string[];
@@ -55,6 +57,17 @@ export function Services() {
     window.setTimeout(() => scrollToContactForm(), 80);
   };
 
+  const toggleService = (service: Service) => {
+    track('service_card_click', { service: { id: service.id, title: service.title } });
+
+    const willOpen = expandedCard !== service.id;
+    setExpandedCard(willOpen ? service.id : null);
+
+    if (willOpen) {
+      track('service_modal_open', { service: { id: service.id, title: service.title } });
+    }
+  };
+
   useEffect(() => {
     if (expandedCard === null) return;
 
@@ -84,41 +97,13 @@ export function Services() {
   }, [expandedCard]);
 
   useEffect(() => {
-    const body = document.body;
-    const html = document.documentElement;
     if (expandedCard === null) return;
-
-    const scrollY = window.scrollY || 0;
-    const prevHtmlOverflow = html.style.overflow;
-    const prevHtmlOverscroll = html.style.overscrollBehavior;
-    const prevHtmlScrollBehavior = html.style.scrollBehavior;
-    const prevBodyScrollBehavior = body.style.scrollBehavior;
-    const prevBodyVar = body.style.getPropertyValue('--modal-scroll-y');
-
-    body.dataset.modalScrollY = String(scrollY);
-    body.style.setProperty('--modal-scroll-y', `-${scrollY}px`);
-    body.classList.add('modal-open');
-    html.style.overflow = 'hidden';
-    html.style.overscrollBehavior = 'none';
+    const unlock = lockScroll();
 
     // Move focus into the modal (close button) after mount.
     window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true } as any), 0);
 
-    return () => {
-      body.classList.remove('modal-open');
-      body.style.setProperty('--modal-scroll-y', prevBodyVar);
-      delete body.dataset.modalScrollY;
-      html.style.overflow = prevHtmlOverflow;
-      html.style.overscrollBehavior = prevHtmlOverscroll;
-
-      const restoreY = scrollY;
-      // Prevent global `scroll-behavior: smooth` from animating the restore.
-      html.style.scrollBehavior = 'auto';
-      body.style.scrollBehavior = 'auto';
-      window.scrollTo(0, restoreY);
-      html.style.scrollBehavior = prevHtmlScrollBehavior;
-      body.style.scrollBehavior = prevBodyScrollBehavior;
-    };
+    return unlock;
   }, [expandedCard]);
 
   const services: Service[] = [
@@ -448,9 +433,7 @@ export function Services() {
             >
               <BubbleEffect intensity="low" variant="light">
                 <button
-                  onClick={() =>
-                    setExpandedCard(expandedCard === service.id ? null : service.id)
-                  }
+                  onClick={() => toggleService(service)}
                   className={`w-full h-full p-6 rounded-3xl border-[3px] shadow-lg transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 text-left group ${
                     theme === 'dark'
                       ? `${service.bgColorDark} ${service.borderColorDark} border-opacity-80 hover:border-opacity-100 focus:ring-offset-slate-900 focus:ring-cyan-400`

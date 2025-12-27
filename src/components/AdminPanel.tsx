@@ -11,7 +11,8 @@ export function AdminPanel() {
   if (!isAdmin) return null;
 
   const handleOpenAdmin = () => {
-    window.location.hash = 'admin';
+    // Prefer path route (Netlify SPA fallback supports /admin/*).
+    window.location.href = '/admin/analytics';
   };
 
   return (

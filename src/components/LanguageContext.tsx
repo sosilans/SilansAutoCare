@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { track } from '../analytics/client';
 
 type Language = 'en' | 'es' | 'ru';
 
@@ -1685,7 +1686,12 @@ const translations: Record<Language, Record<string, string>> = {
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('en');
+
+  const setLanguage = (next: Language) => {
+    track('language_switch', { language: { from: language, to: next } });
+    setLanguageState(next);
+  };
 
   const t = (key: string): string => {
     return translations[language][key] || key;

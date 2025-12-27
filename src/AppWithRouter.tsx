@@ -3,7 +3,7 @@ import { Hero } from './components/Hero';
 import { AboutMe } from './components/AboutMe';
 import { Footer } from './components/Footer';
 import { AdminPanel } from './components/AdminPanel';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AdminSecureDashboard } from './components/AdminSecureDashboard';
 import { lazy, Suspense, useEffect, useState } from 'react';
 const Portfolio = lazy(() => import('./components/Portfolio').then(m => ({ default: m.Portfolio })));
 const Services = lazy(() => import('./components/Services').then(m => ({ default: m.Services })));
@@ -41,7 +41,7 @@ function AppContent() {
             : 'bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950'
         }`}
       >
-        <AdminDashboard />
+        <AdminSecureDashboard />
       </div>
     );
   }

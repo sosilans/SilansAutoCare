@@ -1,10 +1,11 @@
 import { motion } from 'motion/react';
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
+import { lockScroll } from './ui/scrollLock';
 
 export function Portfolio() {
   const { theme } = useTheme();
@@ -14,6 +15,11 @@ export function Portfolio() {
   const [selectedItem, setSelectedItem] = useState<{ before: string; after: string; title: string; emoji: string } | null>(null);
   const sectionTitleRef = useRef<HTMLDivElement>(null);
   const galleryTopRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedItem) return;
+    return lockScroll();
+  }, [selectedItem]);
 
   const portfolioItems = [
     {

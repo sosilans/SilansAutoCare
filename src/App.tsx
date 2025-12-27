@@ -10,17 +10,19 @@ import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
 import { FloatingBubbles } from './components/FloatingBubbles';
 import { AdminPanel } from './components/AdminPanel';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AdminSecureDashboard } from './components/AdminSecureDashboard';
 import { AuthProvider } from './components/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { ThemeProvider, useTheme } from './components/ThemeContext';
 import { LanguageProvider } from './components/LanguageContext';
 import { OnlineStatusProvider } from './components/OnlineStatusContext';
 import { DataStoreProvider } from './components/DataStoreContext';
+import { initAnalytics } from './analytics/client';
 
 function AppContent() {
   const { theme } = useTheme();
   const [currentHash, setCurrentHash] = useState(window.location.hash);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
     const handleHashChange = () => setCurrentHash(window.location.hash);
@@ -28,8 +30,21 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Show AdminDashboard on #admin route
-  if (currentHash === '#admin') {
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    // Initialize analytics only on the public site (not admin routes).
+    initAnalytics();
+  }, []);
+
+  const isAdminRoute = currentPath.startsWith('/admin') || currentHash === '#admin';
+
+  // Show secure admin dashboard on /admin/* or legacy #admin route
+  if (isAdminRoute) {
     return (
       <div 
         className={`min-h-screen overflow-x-hidden relative transition-colors duration-500 ${
@@ -38,7 +53,7 @@ function AppContent() {
             : 'bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950 text-white'
         }`}
       >
-        <AdminDashboard />
+        <AdminSecureDashboard />
       </div>
     );
   }

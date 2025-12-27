@@ -44,7 +44,7 @@
 
   h1 {
     font-family: var(--font-family-display);
-    font-size: 3.75rem;
+    font-size: clamp(2.25rem, 7vw, 3.75rem);
     font-weight: 800;
     line-height: 1.1;
     letter-spacing: -0.02em;
@@ -52,7 +52,7 @@
 
   h2 {
     font-family: var(--font-family-display);
-    font-size: 2.5rem;
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: -0.01em;
@@ -60,22 +60,34 @@
 
   h3 {
     font-family: var(--font-family-display);
-    font-size: 1.875rem;
+    font-size: clamp(1.375rem, 4vw, 1.875rem);
     font-weight: 600;
     line-height: 1.3;
   }
 
   h4 {
     font-family: var(--font-family-display);
-    font-size: 1.5rem;
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
     font-weight: 600;
     line-height: 1.4;
   }
 
   p {
-    font-size: 1.125rem;
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
     font-weight: 400;
     line-height: 1.7;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p {
+    overflow-wrap: anywhere;
+  }
+
+  section[id] {
+    scroll-margin-top: 6rem;
   }
 
   html {

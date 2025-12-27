@@ -7,6 +7,7 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useOnlineStatus } from './OnlineStatusContext';
 import { useAuth } from './AuthContext';
+import { track } from '../analytics/client';
 
 export function Hero() {
   const { theme } = useTheme();
@@ -266,6 +267,7 @@ export function Hero() {
             >
               <a
                 href="#services"
+                onClick={() => track('cta_click', { cta: { label: 'hero_primary_services' } })}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 vhs-gradient text-white rounded-full cartoon-shadow vhs-glow hover:scale-105 transition-transform duration-300"
               >
                 <Sparkles className="w-5 h-5" />
@@ -273,6 +275,7 @@ export function Hero() {
               </a>
               <a
                 href="#contact"
+                onClick={() => track('cta_click', { cta: { label: 'hero_secondary_contact' } })}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-purple-600 rounded-full vhs-border-animated cartoon-shadow-sm hover:scale-105 transition-transform duration-300"
               >
                 <Droplets className="w-5 h-5" />

@@ -11,6 +11,7 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useDataStore } from './DataStoreContext';
 import { TELEGRAM_PROXY_URL as CONFIG_PROXY_URL, RECAPTCHA_SITE_KEY } from '../config';
+import { track } from '../analytics/client';
 
 export function Contact() {
   const { theme } = useTheme();
@@ -127,6 +128,11 @@ export function Contact() {
       alert('❌ Please enter a valid email address.');
       return;
     }
+
+    // Anonymized analytics (no name/email/phone/message values)
+    track('contact_submit', {
+      contact: { action: 'submit', selectedServicesCount: selectedServices.length },
+    });
     
     // Save to contact submissions
     submitContact(name, email, messageValue);
