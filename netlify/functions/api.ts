@@ -5,6 +5,8 @@ import { getBearerToken, getClientIp } from './_shared/http';
 import { requireAdmin } from './_shared/adminAuth';
 import { getSupabaseAdmin, getSupabasePublic } from './_shared/supabase';
 
+const SERVICES_OVERRIDES_KEY = 'services_overrides_v1';
+
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -230,9 +232,144 @@ export const handler: Handler = async (event) => {
       return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
+    if (path.startsWith('/api/public/services')) {
+      if (event.httpMethod !== 'GET') {
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data, error } = await supabaseAdmin
+        .from('system_settings')
+        .select('key,value,updated_at')
+        .eq('key', SERVICES_OVERRIDES_KEY)
+        .maybeSingle();
+
+      if (error) {
+        return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load services overrides' }) };
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+        body: JSON.stringify({ ok: true, overrides: (data?.value as any) ?? null, updated_at: data?.updated_at ?? null }),
+      };
+    }
+
     if (path.startsWith('/api/admin/me')) {
       const admin = await requireAdmin(event);
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, admin }) };
+    }
+
+    if (path.startsWith('/api/admin/services')) {
+      const admin = await requireAdmin(event);
+      const supabaseAdmin = getSupabaseAdmin();
+
+      if (event.httpMethod === 'GET') {
+        const { data, error } = await supabaseAdmin
+          .from('system_settings')
+          .select('key,value,updated_at,updated_by')
+          .eq('key', SERVICES_OVERRIDES_KEY)
+          .maybeSingle();
+
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load services overrides' }) };
+        }
+
+        return {
+          statusCode: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+          body: JSON.stringify({ ok: true, overrides: (data?.value as any) ?? null, setting: data ?? null }),
+        };
+      }
+
+      if (event.httpMethod === 'PUT') {
+        if (isRateLimited(ip, 30, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const LineSchema = z.string().min(1).max(200);
+        const DetailsSchema = z
+          .object({
+            whatYouGet: z.array(LineSchema).max(12).optional(),
+            bestFor: z.string().max(500).optional(),
+            toolsUsed: z.array(LineSchema).max(12).optional(),
+            importantNotes: z.array(LineSchema).max(12).optional(),
+            whyChooseUs: z.array(LineSchema).max(12).optional(),
+            duration: z.string().max(100).optional(),
+            startingPrice: z.string().max(100).optional(),
+          })
+          .partial();
+
+        const ServiceTextSchema = z
+          .object({
+            title: z.string().max(200).optional(),
+            headline: z.string().max(300).optional(),
+            description: z.string().max(2000).optional(),
+            details: DetailsSchema.optional(),
+          })
+          .partial();
+
+        const ServiceOverrideSchema = z
+          .object({
+            id: z.number().int().min(1).max(6),
+            emoji: z.string().max(16).optional(),
+            text: z
+              .object({
+                en: ServiceTextSchema.optional(),
+                es: ServiceTextSchema.optional(),
+                ru: ServiceTextSchema.optional(),
+              })
+              .partial()
+              .optional(),
+          })
+          .strict();
+
+        const OverridesSchema = z
+          .object({
+            version: z.literal(1),
+            services: z.array(ServiceOverrideSchema).length(6),
+          })
+          .strict()
+          .superRefine((val, ctx) => {
+            const ids = val.services.map((s) => s.id);
+            const uniq = new Set(ids);
+            if (uniq.size !== ids.length) {
+              ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Duplicate service id' });
+            }
+            for (const id of [1, 2, 3, 4, 5, 6]) {
+              if (!uniq.has(id)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Missing service id ${id}` });
+            }
+          });
+
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = OverridesSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        const now = new Date().toISOString();
+        const { data: upserted, error } = await supabaseAdmin
+          .from('system_settings')
+          .upsert({ key: SERVICES_OVERRIDES_KEY, value: parsed.data as any, updated_at: now, updated_by: admin.profileUserId }, { onConflict: 'key' })
+          .select('key,value,updated_at,updated_by')
+          .single();
+
+        if (error || !upserted) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to save services overrides' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'services_overrides_upsert',
+          target_type: 'system_settings',
+          target_id: SERVICES_OVERRIDES_KEY,
+          diff: { key: SERVICES_OVERRIDES_KEY },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, setting: upserted }) };
+      }
+
+      return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
     if (path.startsWith('/api/admin/contacts')) {

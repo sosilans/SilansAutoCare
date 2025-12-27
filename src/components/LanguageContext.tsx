@@ -7,6 +7,7 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
+  tForLanguage: (language: Language, key: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -507,6 +508,31 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.adminLabel': 'Admin:',
     'admin.dashboard.settings.totalStorage': 'Total Storage:',
     'admin.dashboard.settings.lastActivity': 'Last Activity:',
+
+    'admin.services.title': 'Services Editor',
+    'admin.services.description': 'Edit the text for the 6 service cards and their popups (per language).',
+    'admin.services.language': 'Editing language',
+    'admin.services.loading': 'Loading saved services…',
+    'admin.services.save': 'Save Services',
+    'admin.services.saving': 'Saving…',
+    'admin.services.saved': 'Services saved!',
+    'admin.services.saveFailed': 'Failed to save services',
+    'admin.services.fillDefaults': 'Fill from current site text',
+    'admin.services.filledDefaults': 'Filled from current site text',
+    'admin.services.fillDefaultsOne': 'Fill defaults',
+    'admin.services.copyFromEn': 'Copy from EN',
+    'admin.services.emoji': 'Emoji (optional)',
+    'admin.services.titleField': 'Card title',
+    'admin.services.headline': 'Card headline',
+    'admin.services.descriptionField': 'Card description',
+    'admin.services.startingPrice': 'Starting price',
+    'admin.services.duration': 'Duration',
+    'admin.services.bestFor': 'Best for',
+    'admin.services.whatYouGet': 'What you get (popup)',
+    'admin.services.toolsUsed': 'Tools & products (popup)',
+    'admin.services.importantNotes': 'Important notes (popup)',
+    'admin.services.whyChooseUs': 'Why choose us (popup)',
+    'admin.services.onePerLine': 'One item per line',
 
     'admin.dashboard.export.filenamePrefix': 'data-export',
 
@@ -1079,6 +1105,31 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.totalStorage': 'Almacenamiento Total:',
     'admin.dashboard.settings.lastActivity': 'Última Actividad:',
 
+    'admin.services.title': 'Editor de Servicios',
+    'admin.services.description': 'Edita el texto de las 6 tarjetas de servicios y sus popups (por idioma).',
+    'admin.services.language': 'Idioma de edición',
+    'admin.services.loading': 'Cargando servicios guardados…',
+    'admin.services.save': 'Guardar servicios',
+    'admin.services.saving': 'Guardando…',
+    'admin.services.saved': '¡Servicios guardados!',
+    'admin.services.saveFailed': 'No se pudieron guardar los servicios',
+    'admin.services.fillDefaults': 'Rellenar desde el texto actual del sitio',
+    'admin.services.filledDefaults': 'Rellenado desde el texto actual del sitio',
+    'admin.services.fillDefaultsOne': 'Rellenar por defecto',
+    'admin.services.copyFromEn': 'Copiar desde EN',
+    'admin.services.emoji': 'Emoji (opcional)',
+    'admin.services.titleField': 'Título de la tarjeta',
+    'admin.services.headline': 'Subtítulo',
+    'admin.services.descriptionField': 'Descripción',
+    'admin.services.startingPrice': 'Precio desde',
+    'admin.services.duration': 'Duración',
+    'admin.services.bestFor': 'Ideal para',
+    'admin.services.whatYouGet': 'Qué incluye (popup)',
+    'admin.services.toolsUsed': 'Herramientas y productos (popup)',
+    'admin.services.importantNotes': 'Notas importantes (popup)',
+    'admin.services.whyChooseUs': 'Por qué elegirnos (popup)',
+    'admin.services.onePerLine': 'Un elemento por línea',
+
     'admin.dashboard.export.filenamePrefix': 'exportar-datos',
 
     'admin.dashboard.confirm.deleteContact': '¿Eliminar esta solicitud de contacto?',
@@ -1650,6 +1701,31 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.totalStorage': 'Размер данных:',
     'admin.dashboard.settings.lastActivity': 'Последняя активность:',
 
+    'admin.services.title': 'Редактор услуг',
+    'admin.services.description': 'Редактируй текст 6 карточек услуг и их попапов (по языкам).',
+    'admin.services.language': 'Язык редактирования',
+    'admin.services.loading': 'Загружаю сохранённые услуги…',
+    'admin.services.save': 'Сохранить услуги',
+    'admin.services.saving': 'Сохранение…',
+    'admin.services.saved': 'Услуги сохранены!',
+    'admin.services.saveFailed': 'Не удалось сохранить услуги',
+    'admin.services.fillDefaults': 'Заполнить текстом сайта',
+    'admin.services.filledDefaults': 'Заполнено текстом сайта',
+    'admin.services.fillDefaultsOne': 'Заполнить по умолчанию',
+    'admin.services.copyFromEn': 'Копировать из EN',
+    'admin.services.emoji': 'Эмодзи (необязательно)',
+    'admin.services.titleField': 'Заголовок карточки',
+    'admin.services.headline': 'Подзаголовок',
+    'admin.services.descriptionField': 'Описание',
+    'admin.services.startingPrice': 'Цена от',
+    'admin.services.duration': 'Время',
+    'admin.services.bestFor': 'Лучше всего для',
+    'admin.services.whatYouGet': 'Что входит (попап)',
+    'admin.services.toolsUsed': 'Инструменты и продукты (попап)',
+    'admin.services.importantNotes': 'Важные заметки (попап)',
+    'admin.services.whyChooseUs': 'Почему выбирают нас (попап)',
+    'admin.services.onePerLine': 'Один пункт на строку',
+
     'admin.dashboard.export.filenamePrefix': 'export-dannye',
 
     'admin.dashboard.confirm.deleteContact': 'Удалить эту заявку?',
@@ -1739,8 +1815,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return translations[language][key] || key;
   };
 
+  const tForLanguage = (lang: Language, key: string): string => {
+    return translations[lang]?.[key] || key;
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tForLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

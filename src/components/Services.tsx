@@ -7,6 +7,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { lockScroll } from './ui/scrollLock';
 import { track } from '../analytics/client';
+import type { Lang, ServicesOverrides, ServiceTextOverride } from './servicesConfig';
+import { isServicesOverrides } from './servicesConfig';
 
 interface ServiceDetails {
   whatYouGet: string[];
@@ -34,10 +36,49 @@ interface Service {
 
 export function Services() {
   const { theme } = useTheme();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [servicesOverrides, setServicesOverrides] = useState<ServicesOverrides | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/public/services');
+        const json = await res.json();
+        if (!cancelled && json?.ok && isServicesOverrides(json?.overrides)) {
+          setServicesOverrides(json.overrides);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const applyTextOverride = (base: { title: string; headline: string; description: string; details: any }, override?: ServiceTextOverride) => {
+    if (!override) return base;
+    return {
+      ...base,
+      title: override.title ?? base.title,
+      headline: override.headline ?? base.headline,
+      description: override.description ?? base.description,
+      details: {
+        ...base.details,
+        whatYouGet: override.details?.whatYouGet ?? base.details.whatYouGet,
+        bestFor: override.details?.bestFor ?? base.details.bestFor,
+        toolsUsed: override.details?.toolsUsed ?? base.details.toolsUsed,
+        importantNotes: override.details?.importantNotes ?? base.details.importantNotes,
+        whyChooseUs: override.details?.whyChooseUs ?? base.details.whyChooseUs,
+        duration: override.details?.duration ?? base.details.duration,
+        startingPrice: override.details?.startingPrice ?? base.details.startingPrice,
+      },
+    };
+  };
 
   const scrollToContactForm = () => {
     const contactSection = document.getElementById('contact');
@@ -107,7 +148,7 @@ export function Services() {
     return unlock;
   }, [expandedCard]);
 
-  const services: Service[] = [
+  const baseServices: Service[] = [
     {
       id: 1,
       icon: <Droplet className="w-10 h-10" />,
@@ -370,6 +411,28 @@ export function Services() {
       }
     }
   ];
+
+  const services: Service[] = baseServices.map((svc) => {
+    const ov = servicesOverrides?.services?.find((s) => s.id === svc.id);
+    const textOv = ov?.text?.[language as Lang];
+    const nextText = applyTextOverride(
+      {
+        title: svc.title,
+        headline: svc.headline,
+        description: svc.description,
+        details: svc.details,
+      },
+      textOv
+    );
+    return {
+      ...svc,
+      emoji: ov?.emoji || svc.emoji,
+      title: nextText.title,
+      headline: nextText.headline,
+      description: nextText.description,
+      details: nextText.details,
+    };
+  });
 
   return (
     <section

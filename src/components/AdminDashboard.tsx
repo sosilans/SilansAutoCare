@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
 import { AdminSiteAnalytics } from './AdminSiteAnalytics';
+import { AdminServicesEditor } from './AdminServicesEditor';
 
 type AdminDashboardProps = {
   isAdminOverride?: boolean;
@@ -945,6 +946,12 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </div>
               </CardContent>
             </Card>
+
+            <AdminServicesEditor
+              adminAccessToken={adminAccessToken}
+              theme={theme}
+              onNotify={(type, message) => showNotification(type, message)}
+            />
           </TabsContent>
         </Tabs>
       </div>
