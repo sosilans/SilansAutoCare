@@ -1,10 +1,11 @@
 import type { Handler, HandlerEvent } from '@netlify/functions';
 import { getSql } from './_shared/postgres';
+import { requireAdmin } from './_shared/adminAuth';
 
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 const requestCache = new Map<string, number[]>();
@@ -68,6 +69,9 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 
   try {
+    // Admin-only: protects analytics & heatmap endpoints from public access.
+    await requireAdmin(event);
+
     const sql = getSql();
     const params = event.queryStringParameters || {};
     const metric = params.metric || 'service_opens';

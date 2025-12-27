@@ -227,7 +227,14 @@ export function AdminSecureDashboard() {
   // 1) Secure mode (Supabase)
   if (supabaseAvailable) {
     if (admin) {
-      return <AdminDashboard isAdminOverride adminDisplayName={admin.email || 'Admin'} />;
+      return (
+        <AdminDashboard
+          isAdminOverride
+          adminDisplayName={admin.email || 'Admin'}
+          adminEmail={admin.email || undefined}
+          adminAccessToken={session?.access_token || undefined}
+        />
+      );
     }
 
     return (
@@ -314,7 +321,7 @@ export function AdminSecureDashboard() {
 
   // 2) Fallback mode (local admin via AuthModal)
   if (localIsAdmin) {
-    return <AdminDashboard isAdminOverride adminDisplayName={localUser?.name || 'Admin'} />;
+    return <AdminDashboard isAdminOverride adminDisplayName={localUser?.name || 'Admin'} adminEmail={localUser?.email} />;
   }
 
   return (

@@ -26,6 +26,30 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
     }
 
+    if (path.startsWith('/api/public/settings')) {
+      if (event.httpMethod !== 'GET') {
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+      const key = (event.queryStringParameters?.key || '').trim();
+      const allowList = new Set(['site_online']);
+      if (!key || !allowList.has(key)) {
+        return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid key' }) };
+      }
+
+      const supabaseAdmin = getSupabaseAdmin();
+      const { data, error } = await supabaseAdmin
+        .from('system_settings')
+        .select('key,value,updated_at')
+        .eq('key', key)
+        .maybeSingle();
+
+      if (error) {
+        return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load setting' }) };
+      }
+
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, setting: data ?? null }) };
+    }
+
     if (path.startsWith('/api/admin/me')) {
       const admin = await requireAdmin(event);
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, admin }) };

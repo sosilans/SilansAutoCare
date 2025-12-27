@@ -32,14 +32,16 @@ function msToMinutes(ms: number) {
   return Math.round((ms / 60000) * 10) / 10;
 }
 
-async function fetchMetric<T>(metric: string, params: Record<string, string>) {
+async function fetchMetric<T>(metric: string, params: Record<string, string>, accessToken?: string) {
   const qs = new URLSearchParams({ metric, ...params });
-  const res = await fetch(`/.netlify/functions/analytics-query?${qs.toString()}`);
+  const res = await fetch(`/.netlify/functions/analytics-query?${qs.toString()}`, {
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+  });
   if (!res.ok) throw new Error(`analytics-query failed: ${res.status}`);
   return (await res.json()) as QueryResponse<T>;
 }
 
-export function AdminSiteAnalytics() {
+export function AdminSiteAnalytics({ accessToken }: { accessToken?: string }) {
   const { theme } = useTheme();
   const [days, setDays] = useState(14);
   const [page, setPage] = useState('/');
@@ -69,11 +71,11 @@ export function AdminSiteAnalytics() {
     try {
       const daysStr = String(days);
       const [svc, utm, scroll, section, heat] = await Promise.all([
-        fetchMetric<ServiceOpenRow>('service_opens', { days: daysStr }),
-        fetchMetric<UtmRow>('utm', { days: daysStr }),
-        fetchMetric<ScrollDepthRow>('scroll_depth', { days: daysStr }),
-        fetchMetric<SectionEngagementRow>('section_engagement', { days: daysStr }),
-        fetchMetric<HeatmapRow>('heatmap', { days: daysStr, page, limit: '2000' }),
+        fetchMetric<ServiceOpenRow>('service_opens', { days: daysStr }, accessToken),
+        fetchMetric<UtmRow>('utm', { days: daysStr }, accessToken),
+        fetchMetric<ScrollDepthRow>('scroll_depth', { days: daysStr }, accessToken),
+        fetchMetric<SectionEngagementRow>('section_engagement', { days: daysStr }, accessToken),
+        fetchMetric<HeatmapRow>('heatmap', { days: daysStr, page, limit: '2000' }, accessToken),
       ]);
 
       setServiceOpens(svc.rows || []);
@@ -90,7 +92,12 @@ export function AdminSiteAnalytics() {
 
       setHeatmap(heat.rows || []);
     } catch (e: any) {
-      setError(e?.message || String(e));
+      const msg = e?.message || String(e);
+      if (/failed: 401|failed: 403/.test(msg)) {
+        setError('Not authorized. Please re-login as admin.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

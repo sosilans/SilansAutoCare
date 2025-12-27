@@ -23,14 +23,35 @@ import { AdminSiteAnalytics } from './AdminSiteAnalytics';
 type AdminDashboardProps = {
   isAdminOverride?: boolean;
   adminDisplayName?: string;
+  adminEmail?: string;
+  adminAccessToken?: string;
 };
 
-export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashboardProps = {}) {
+async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init);
+  const text = await res.text();
+  let body: any = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = { error: text || 'Invalid JSON response' };
+  }
+  if (!res.ok) {
+    const err: any = new Error(body?.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.body = body;
+    throw err;
+  }
+  return body as T;
+}
+
+export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, adminAccessToken }: AdminDashboardProps = {}) {
   const { theme } = useTheme();
   const { t } = useLanguage();
   const { isAdmin: authIsAdmin, user, users, removeUser } = useAuth();
   const isAdmin = isAdminOverride ?? authIsAdmin;
   const effectiveName = adminDisplayName ?? user?.name ?? '';
+  const effectiveEmail = adminEmail ?? user?.email ?? '';
   const { 
     pendingReviews, approvedReviews, approveReview, rejectReview,
     pendingFAQs, approvedFAQs, approveFAQ, rejectFAQ,
@@ -107,6 +128,33 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const persistSiteOnline = async (nextOnline: boolean) => {
+    if (!adminAccessToken) return;
+    await apiJson<{ ok: true }>(`/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAccessToken}`,
+      },
+      body: JSON.stringify({ key: 'site_online', value: nextOnline }),
+    });
+  };
+
+  const handleToggleSiteOnline = async () => {
+    const prev = isOnline;
+    const next = !prev;
+    setIsOnline(next);
+    showNotification('success', next ? t('admin.dashboard.notifications.siteNowOnline') : t('admin.dashboard.notifications.siteNowOffline'));
+
+    try {
+      await persistSiteOnline(next);
+    } catch {
+      // Roll back UI if server save fails.
+      setIsOnline(prev);
+      showNotification('error', t('admin.dashboard.notifications.failedToSaveSetting'));
+    }
   };
 
   const copyToClipboard = async (text: string) => {
@@ -319,7 +367,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
-            <AdminSiteAnalytics />
+            <AdminSiteAnalytics accessToken={adminAccessToken} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Activity Chart */}
               <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
@@ -776,10 +824,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
                     <p className="text-sm text-muted-foreground">{t('admin.dashboard.settings.siteStatusDesc')}</p>
                   </div>
                   <Button
-                    onClick={() => {
-                      setIsOnline(!isOnline);
-                      showNotification('success', !isOnline ? t('admin.dashboard.notifications.siteNowOnline') : t('admin.dashboard.notifications.siteNowOffline'));
-                    }}
+                    onClick={() => void handleToggleSiteOnline()}
                     variant={isOnline ? 'default' : 'destructive'}
                   >
                     {isOnline ? t('admin.dashboard.settings.online') : t('admin.dashboard.settings.offline')}
@@ -800,7 +845,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
                 <div className="p-4 rounded-lg border">
                   <p className="font-medium mb-2">{t('admin.dashboard.settings.systemInfo')}</p>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>{t('admin.dashboard.settings.adminLabel')} {user?.name} ({user?.email})</p>
+                    <p>{t('admin.dashboard.settings.adminLabel')} {effectiveName} {effectiveEmail ? `(${effectiveEmail})` : ''}</p>
                     <p>{t('admin.dashboard.settings.totalStorage')} ~{Math.round((JSON.stringify({
                       reviews: { pending: pendingReviews, approved: approvedReviews },
                       faqs: { pending: pendingFAQs, approved: approvedFAQs },
