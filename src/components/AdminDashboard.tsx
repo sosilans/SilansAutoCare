@@ -44,6 +44,29 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Calculate analytics (must be defined before any early returns to keep hook order stable).
+  const analytics = useMemo(() => {
+    const last7Days = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+    const recentReviews = [...pendingReviews, ...approvedReviews].filter(r => r.createdAt > last7Days).length;
+    const recentFAQs = [...pendingFAQs, ...approvedFAQs].filter(f => f.createdAt > last7Days).length;
+    const recentContacts = contactSubmissions.filter(c => c.createdAt > last7Days).length;
+
+    return {
+      totalReviews: stats.reviews.total,
+      totalFAQs: stats.faqs.total,
+      totalContacts: stats.contacts.total,
+      totalUsers: users.length,
+      recentReviews,
+      recentFAQs,
+      recentContacts,
+      pendingReviews: stats.reviews.pending,
+      pendingFAQs: stats.faqs.pending,
+      newContacts: stats.contacts.new,
+      approvalRate: stats.reviews.total > 0 ? Math.round((stats.reviews.approved / stats.reviews.total) * 100) : 0,
+    };
+  }, [stats, users, pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
+
   // Wait for auth to load
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 100);
@@ -107,30 +130,6 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashb
       // ignore
     }
   };
-
-  // Calculate analytics
-  const analytics = useMemo(() => {
-    const last7Days = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const last30Days = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-    const recentReviews = [...pendingReviews, ...approvedReviews].filter(r => r.createdAt > last7Days).length;
-    const recentFAQs = [...pendingFAQs, ...approvedFAQs].filter(f => f.createdAt > last7Days).length;
-    const recentContacts = contactSubmissions.filter(c => c.createdAt > last7Days).length;
-
-    return {
-      totalReviews: stats.reviews.total,
-      totalFAQs: stats.faqs.total,
-      totalContacts: stats.contacts.total,
-      totalUsers: users.length,
-      recentReviews,
-      recentFAQs,
-      recentContacts,
-      pendingReviews: stats.reviews.pending,
-      pendingFAQs: stats.faqs.pending,
-      newContacts: stats.contacts.new,
-      approvalRate: stats.reviews.total > 0 ? Math.round((stats.reviews.approved / stats.reviews.total) * 100) : 0,
-    };
-  }, [stats, users, pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
 
   const handleApproveReview = (id: string) => {
     approveReview(id);
