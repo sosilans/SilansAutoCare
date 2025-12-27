@@ -20,10 +20,17 @@ import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
 import { AdminSiteAnalytics } from './AdminSiteAnalytics';
 
-export function AdminDashboard() {
+type AdminDashboardProps = {
+  isAdminOverride?: boolean;
+  adminDisplayName?: string;
+};
+
+export function AdminDashboard({ isAdminOverride, adminDisplayName }: AdminDashboardProps = {}) {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { isAdmin, user, users, removeUser } = useAuth();
+  const { isAdmin: authIsAdmin, user, users, removeUser } = useAuth();
+  const isAdmin = isAdminOverride ?? authIsAdmin;
+  const effectiveName = adminDisplayName ?? user?.name ?? '';
   const { 
     pendingReviews, approvedReviews, approveReview, rejectReview,
     pendingFAQs, approvedFAQs, approveFAQ, rejectFAQ,
@@ -179,7 +186,7 @@ export function AdminDashboard() {
               {t('admin.dashboard.title')}
             </h1>
             <p className={theme === 'dark' ? 'text-purple-300/70' : 'text-gray-600'}>
-              {t('admin.dashboard.welcome').replace('{name}', user?.name || '')}
+              {t('admin.dashboard.welcome').replace('{name}', effectiveName)}
             </p>
           </div>
           <div className="flex gap-3">

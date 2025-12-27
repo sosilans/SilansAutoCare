@@ -4,5 +4,6 @@ build/
 .DS_Store
 *.log
 .vite/
+.netlify/
 .wrangler/state/
 .wrangler/tmp/
