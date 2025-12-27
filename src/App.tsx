@@ -11,6 +11,7 @@ import { Footer } from './components/Footer';
 import { FloatingBubbles } from './components/FloatingBubbles';
 import { AdminPanel } from './components/AdminPanel';
 import { AdminSecureDashboard } from './components/AdminSecureDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './components/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { ThemeProvider, useTheme } from './components/ThemeContext';
@@ -53,7 +54,9 @@ function AppContent() {
             : 'bg-gradient-to-b from-slate-900 via-blue-950 to-indigo-950 text-white'
         }`}
       >
-        <AdminSecureDashboard />
+        <ErrorBoundary fallbackTitle="Admin crashed">
+          <AdminSecureDashboard />
+        </ErrorBoundary>
       </div>
     );
   }
