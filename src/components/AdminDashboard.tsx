@@ -4,6 +4,8 @@ import { useTheme } from './ThemeContext';
 import { useDataStore } from './DataStoreContext';
 import { useAuth } from './AuthContext';
 import { useOnlineStatus } from './OnlineStatusContext';
+import { useAvailabilityStatus } from './AvailabilityStatusContext';
+import { useMaintenanceMode } from './MaintenanceModeContext';
 import { useLanguage } from './LanguageContext';
 import { 
   TrendingUp, Users, MessageSquare, HelpCircle, Star, Clock, 
@@ -60,6 +62,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     setAdminAccessToken,
   } = useDataStore();
   const { isOnline, setIsOnline } = useOnlineStatus();
+  const { status: availabilityStatus, setStatus: setAvailabilityStatus } = useAvailabilityStatus();
+  const { isMaintenanceMode, setIsMaintenanceMode } = useMaintenanceMode();
 
   const [selectedTab, setSelectedTab] = useState('analytics');
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
@@ -147,6 +151,30 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     });
   };
 
+  const persistAvailabilityStatus = async (nextStatus: 'available' | 'unavailable') => {
+    if (!adminAccessToken) return;
+    await apiJson<{ ok: true }>(`/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAccessToken}`,
+      },
+      body: JSON.stringify({ key: 'availability_status', value: nextStatus }),
+    });
+  };
+
+  const persistMaintenanceMode = async (nextValue: boolean) => {
+    if (!adminAccessToken) return;
+    await apiJson<{ ok: true }>(`/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAccessToken}`,
+      },
+      body: JSON.stringify({ key: 'maintenance_mode', value: nextValue }),
+    });
+  };
+
   const handleToggleSiteOnline = async () => {
     const prev = isOnline;
     const next = !prev;
@@ -158,6 +186,32 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     } catch {
       // Roll back UI if server save fails.
       setIsOnline(prev);
+      showNotification('error', t('admin.dashboard.notifications.failedToSaveSetting'));
+    }
+  };
+
+  const handleToggleAvailability = async () => {
+    const prev = availabilityStatus;
+    const next: 'available' | 'unavailable' = prev === 'available' ? 'unavailable' : 'available';
+    setAvailabilityStatus(next);
+
+    try {
+      await persistAvailabilityStatus(next);
+    } catch {
+      setAvailabilityStatus(prev);
+      showNotification('error', t('admin.dashboard.notifications.failedToSaveSetting'));
+    }
+  };
+
+  const handleToggleMaintenanceMode = async () => {
+    const prev = isMaintenanceMode;
+    const next = !prev;
+    setIsMaintenanceMode(next);
+
+    try {
+      await persistMaintenanceMode(next);
+    } catch {
+      setIsMaintenanceMode(prev);
       showNotification('error', t('admin.dashboard.notifications.failedToSaveSetting'));
     }
   };
@@ -251,7 +305,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               {t('admin.dashboard.backToSite')}
             </Button>
             <Button
-              onClick={() => setIsOnline(!isOnline)}
+              onClick={() => void handleToggleSiteOnline()}
               variant={isOnline ? 'default' : 'destructive'}
               className="flex items-center gap-2"
             >
@@ -833,6 +887,36 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                     variant={isOnline ? 'default' : 'destructive'}
                   >
                     {isOnline ? t('admin.dashboard.settings.online') : t('admin.dashboard.settings.offline')}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <p className="font-medium">{t('admin.dashboard.settings.availabilityStatus')}</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.dashboard.settings.availabilityStatusDesc')}</p>
+                  </div>
+                  <Button
+                    onClick={() => void handleToggleAvailability()}
+                    variant={availabilityStatus === 'available' ? 'default' : 'destructive'}
+                  >
+                    {availabilityStatus === 'available'
+                      ? t('admin.dashboard.settings.availabilityAvailable')
+                      : t('admin.dashboard.settings.availabilityUnavailable')}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <p className="font-medium">{t('admin.dashboard.settings.maintenanceMode')}</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.dashboard.settings.maintenanceModeDesc')}</p>
+                  </div>
+                  <Button
+                    onClick={() => void handleToggleMaintenanceMode()}
+                    variant={isMaintenanceMode ? 'destructive' : 'outline'}
+                  >
+                    {isMaintenanceMode
+                      ? t('admin.dashboard.settings.maintenanceOn')
+                      : t('admin.dashboard.settings.maintenanceOff')}
                   </Button>
                 </div>
 

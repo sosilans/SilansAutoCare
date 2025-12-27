@@ -5,14 +5,14 @@ import { useState, useEffect, useRef } from 'react';
 import { BubbleEffect } from './BubbleEffect';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
-import { useOnlineStatus } from './OnlineStatusContext';
+import { useAvailabilityStatus } from './AvailabilityStatusContext';
 import { useAuth } from './AuthContext';
 import { track } from '../analytics/client';
 
 export function Hero() {
   const { theme } = useTheme();
   const { t } = useLanguage();
-  const { isOnline } = useOnlineStatus();
+  const { status } = useAvailabilityStatus();
   const { user, openAuthModal } = useAuth();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
@@ -232,9 +232,9 @@ export function Hero() {
               <span className="text-sm flex items-center gap-2">
                 {t('hero.badge')}
                 <span className="text-white/50">•</span>
-                <span className={`flex items-center gap-1 ${isOnline ? 'text-green-300' : 'text-red-300'}`}>
-                  <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
-                  {isOnline ? t('hero.online') : t('hero.offline')}
+                <span className={`flex items-center gap-1 ${status === 'available' ? 'text-green-300' : 'text-red-300'}`}>
+                  <span className={`w-2 h-2 rounded-full ${status === 'available' ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></span>
+                  {status === 'available' ? t('hero.online') : t('hero.offline')}
                 </span>
               </span>
             </motion.div>

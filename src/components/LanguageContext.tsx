@@ -492,6 +492,14 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.siteStatusDesc': 'Control if customers can see the site',
     'admin.dashboard.settings.online': 'Online',
     'admin.dashboard.settings.offline': 'Offline',
+    'admin.dashboard.settings.availabilityStatus': 'Availability Badge',
+    'admin.dashboard.settings.availabilityStatusDesc': 'Controls the “Available Now” badge in the hero section',
+    'admin.dashboard.settings.availabilityAvailable': 'Available',
+    'admin.dashboard.settings.availabilityUnavailable': 'Not Available',
+    'admin.dashboard.settings.maintenanceMode': 'Maintenance Mode',
+    'admin.dashboard.settings.maintenanceModeDesc': 'Show a maintenance placeholder to visitors',
+    'admin.dashboard.settings.maintenanceOn': 'Enabled',
+    'admin.dashboard.settings.maintenanceOff': 'Disabled',
     'admin.dashboard.settings.exportData': 'Export Data',
     'admin.dashboard.settings.exportDataDesc': 'Download all data as JSON',
     'admin.dashboard.settings.export': 'Export',
@@ -562,6 +570,10 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.form.emailPlaceholder': 'john@example.com',
     'contact.form.phonePlaceholder': '+1 (916) 555-0123',
     'contact.form.messagePlaceholder': 'Tell us about your car and what service you need...',
+
+    // Maintenance
+    'maintenance.title': 'We\'ll be right back',
+    'maintenance.message': 'The site is temporarily unavailable due to maintenance. Please check back soon.',
     
     // Footer
     'footer.tagline': 'Premium Mobile Auto Detailing',
@@ -1051,6 +1063,14 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.siteStatusDesc': 'Controla si los clientes pueden ver el sitio',
     'admin.dashboard.settings.online': 'En línea',
     'admin.dashboard.settings.offline': 'Fuera de línea',
+    'admin.dashboard.settings.availabilityStatus': 'Indicador de Disponibilidad',
+    'admin.dashboard.settings.availabilityStatusDesc': 'Controla el indicador “Disponible Ahora” en la sección principal',
+    'admin.dashboard.settings.availabilityAvailable': 'Disponible',
+    'admin.dashboard.settings.availabilityUnavailable': 'No Disponible',
+    'admin.dashboard.settings.maintenanceMode': 'Modo de Mantenimiento',
+    'admin.dashboard.settings.maintenanceModeDesc': 'Muestra una pantalla de mantenimiento a los visitantes',
+    'admin.dashboard.settings.maintenanceOn': 'Activado',
+    'admin.dashboard.settings.maintenanceOff': 'Desactivado',
     'admin.dashboard.settings.exportData': 'Exportar Datos',
     'admin.dashboard.settings.exportDataDesc': 'Descargar todos los datos como JSON',
     'admin.dashboard.settings.export': 'Exportar',
@@ -1121,6 +1141,10 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.form.emailPlaceholder': 'juan@example.com',
     'contact.form.phonePlaceholder': '+1 (916) 555-0123',
     'contact.form.messagePlaceholder': 'Cuéntanos sobre tu auto y el servicio que necesitas...',
+
+    // Maintenance
+    'maintenance.title': 'Volveremos pronto',
+    'maintenance.message': 'El sitio no está disponible temporalmente por mantenimiento. Por favor vuelve más tarde.',
     
     // Footer
     'footer.tagline': 'Detallado de Autos Móvil Premium',
@@ -1610,6 +1634,14 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.dashboard.settings.siteStatusDesc': 'Управляйте тем, видят ли клиенты сайт',
     'admin.dashboard.settings.online': 'Онлайн',
     'admin.dashboard.settings.offline': 'Офлайн',
+    'admin.dashboard.settings.availabilityStatus': 'Индикатор Доступности',
+    'admin.dashboard.settings.availabilityStatusDesc': 'Управляет бейджем “Available Now” в первом блоке',
+    'admin.dashboard.settings.availabilityAvailable': 'Доступен',
+    'admin.dashboard.settings.availabilityUnavailable': 'Недоступен',
+    'admin.dashboard.settings.maintenanceMode': 'Режим Техработ',
+    'admin.dashboard.settings.maintenanceModeDesc': 'Показывает заглушку для посетителей',
+    'admin.dashboard.settings.maintenanceOn': 'Включен',
+    'admin.dashboard.settings.maintenanceOff': 'Выключен',
     'admin.dashboard.settings.exportData': 'Экспорт данных',
     'admin.dashboard.settings.exportDataDesc': 'Скачать все данные в формате JSON',
     'admin.dashboard.settings.export': 'Экспорт',
@@ -1680,6 +1712,10 @@ const translations: Record<Language, Record<string, string>> = {
     'contact.form.emailPlaceholder': 'ivan@example.com',
     'contact.form.phonePlaceholder': '+1 (916) 555-0123',
     'contact.form.messagePlaceholder': 'Расскажите о вашем автомобиле и нужной услуге...',
+
+    // Maintenance
+    'maintenance.title': 'Технические работы',
+    'maintenance.message': 'Сайт временно недоступен из-за технических работ. Пожалуйста, зайдите позже.',
     
     // Footer
     'footer.tagline': 'Премиум Мобильный Автодетейлинг',

@@ -31,7 +31,7 @@ export const handler: Handler = async (event) => {
         return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
       }
       const key = (event.queryStringParameters?.key || '').trim();
-      const allowList = new Set(['site_online']);
+      const allowList = new Set(['site_online', 'availability_status', 'maintenance_mode']);
       if (!key || !allowList.has(key)) {
         return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid key' }) };
       }
