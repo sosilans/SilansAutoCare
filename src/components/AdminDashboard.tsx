@@ -308,6 +308,27 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               <Home className="w-4 h-4" />
               {t('admin.dashboard.backToSite')}
             </Button>
+
+            <Button
+              onClick={() => void handleToggleAvailability()}
+              variant={availabilityStatus === 'available' ? 'default' : 'destructive'}
+              className="flex items-center gap-2"
+            >
+              {availabilityStatus === 'available'
+                ? t('admin.dashboard.settings.availabilityAvailable')
+                : t('admin.dashboard.settings.availabilityUnavailable')}
+            </Button>
+
+            <Button
+              onClick={() => void handleToggleMaintenanceMode()}
+              variant={isMaintenanceMode ? 'destructive' : 'outline'}
+              className="flex items-center gap-2"
+            >
+              {isMaintenanceMode
+                ? t('admin.dashboard.settings.maintenanceOn')
+                : t('admin.dashboard.settings.maintenanceOff')}
+            </Button>
+
             <Button
               onClick={() => void handleToggleSiteOnline()}
               variant={isOnline ? 'default' : 'destructive'}
