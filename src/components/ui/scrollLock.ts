@@ -69,7 +69,6 @@ export function lockScroll(): () => void {
     body.classList.add("modal-open");
 
     html.style.overflow = "hidden";
-    (html.style as any).overscrollBehavior = "none";
   }
 
   return () => {

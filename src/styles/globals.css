@@ -295,7 +295,6 @@
 /* Modal scroll lock (service details) */
 body.modal-open {
   overflow: hidden;
-  overscroll-behavior: none;
 }
 
 /* iOS safe-area helper for top-right absolute elements (e.g., modal close button) */
