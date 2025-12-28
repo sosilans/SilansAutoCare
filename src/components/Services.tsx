@@ -591,29 +591,25 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[1000]"
+                  className="fixed inset-0 z-[1000] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm"
+                  onPointerDown={(e) => {
+                    if (e.target === e.currentTarget) setExpandedCard(null);
+                  }}
+                  style={{ WebkitOverflowScrolling: 'touch' } as any}
                 >
-                  {/* Full-screen backdrop: tap anywhere outside closes */}
-                  <div
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                    onPointerDown={() => setExpandedCard(null)}
-                    aria-hidden="true"
-                  />
-
-                  {/* Content layer (scroll-safe on mobile) */}
-                  <div
-                    className="absolute inset-0 flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-hidden"
-                  >
+                  {/* Content layer */}
+                  <div className="min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6">
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 h-[calc(100svh-2rem)] max-h-[calc(100svh-2rem)] sm:my-0 sm:h-auto sm:max-h-[72vh] sm:max-h-[72svh] ${
+                      className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col my-4 sm:my-0 ${
                         theme === 'dark'
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
+                      onPointerDown={(e) => e.stopPropagation()}
                       role="dialog"
                       aria-modal="true"
                     >
@@ -659,10 +655,7 @@ export function Services() {
                   </p>
                 </div>
 
-                <div
-                  className="flex-1 min-h-0 overflow-y-auto pr-4 sm:pr-5 overscroll-contain touch-pan-y"
-                  style={{ WebkitOverflowScrolling: 'touch' } as any}
-                >
+                <div className="pr-4 sm:pr-5">
 
                   {/* Service Details */}
                   {services.find((s) => s.id === expandedCard)?.details && (
