@@ -295,6 +295,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             <p className={theme === 'dark' ? 'text-purple-300/70' : 'text-gray-600'}>
               {t('admin.dashboard.welcome').replace('{name}', effectiveName)}
             </p>
+            <p className={theme === 'dark' ? 'text-purple-300/50 text-xs mt-1' : 'text-gray-500 text-xs mt-1'}>
+              Build {(__BUILD_COMMIT__ || '').slice(0, 7)} • {__BUILD_TIME__}
+            </p>
           </div>
           <div className="flex gap-3">
             <Button

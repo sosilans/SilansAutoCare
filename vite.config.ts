@@ -1,14 +1,37 @@
 
-  import { defineConfig } from 'vite';
-  import react from '@vitejs/plugin-react-swc';
-  import path from 'path';
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
-  export default defineConfig({
+export default defineConfig(() => {
+  const buildCommit = process.env.COMMIT_REF || process.env.GITHUB_SHA || process.env.GIT_COMMIT || 'dev';
+  const buildContext = process.env.CONTEXT || '';
+  const buildTime = new Date().toISOString();
+
+  return {
     // Use repo name as base on GitHub Actions for Pages
-    base: process.env.GITHUB_ACTIONS && process.env.GITHUB_REPOSITORY
-      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
-      : '/',
-    plugins: [react()],
+    base:
+      process.env.GITHUB_ACTIONS && process.env.GITHUB_REPOSITORY
+        ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
+        : '/',
+    plugins: [
+      react(),
+      {
+        name: 'inject-build-meta',
+        transformIndexHtml(html) {
+          const meta =
+            `  <meta name="x-build-commit" content="${buildCommit}">\n` +
+            `  <meta name="x-build-time" content="${buildTime}">\n` +
+            `  <meta name="x-build-context" content="${buildContext}">\n`;
+          return html.replace('</head>', `${meta}</head>`);
+        },
+      },
+    ],
+    define: {
+      __BUILD_COMMIT__: JSON.stringify(buildCommit),
+      __BUILD_TIME__: JSON.stringify(buildTime),
+      __BUILD_CONTEXT__: JSON.stringify(buildContext),
+    },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
@@ -61,4 +84,5 @@
       port: 3000,
       open: true,
     },
-  });
+  };
+});
