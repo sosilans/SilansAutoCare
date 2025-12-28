@@ -592,9 +592,7 @@ export function Services() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="fixed inset-0 z-[1000] overflow-y-auto overscroll-contain touch-pan-y bg-black/60 backdrop-blur-sm"
-                  onPointerDown={(e) => {
-                    if (e.target === e.currentTarget) setExpandedCard(null);
-                  }}
+                  onClick={() => setExpandedCard(null)}
                   style={{ WebkitOverflowScrolling: 'touch' } as any}
                 >
                   {/* Content layer */}
@@ -609,7 +607,7 @@ export function Services() {
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
-                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                       role="dialog"
                       aria-modal="true"
                     >
