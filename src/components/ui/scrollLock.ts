@@ -1,16 +1,10 @@
 type ScrollLockSnapshot = {
   scrollY: number;
-  htmlOverflow: string;
-  htmlOverscrollBehavior: string;
   htmlScrollBehavior: string;
   bodyScrollBehavior: string;
+  bodyOverflow: string;
   bodyPaddingRight: string;
   bodyModalScrollY: string;
-  rootPosition: string;
-  rootTop: string;
-  rootLeft: string;
-  rootRight: string;
-  rootWidth: string;
 };
 
 let lockCount = 0;
@@ -25,27 +19,18 @@ export function lockScroll(): () => void {
 
   const body = document.body;
   const html = document.documentElement;
-  const root = document.getElementById('root') as HTMLElement | null;
 
   lockCount += 1;
   if (lockCount === 1) {
     const scrollY = window.scrollY || 0;
 
-    const rootStyle = root?.style;
-
     snapshot = {
       scrollY,
-      htmlOverflow: html.style.overflow,
-      htmlOverscrollBehavior: (html.style as any).overscrollBehavior ?? "",
       htmlScrollBehavior: html.style.scrollBehavior,
       bodyScrollBehavior: body.style.scrollBehavior,
+      bodyOverflow: body.style.overflow,
       bodyPaddingRight: body.style.paddingRight,
       bodyModalScrollY: body.style.getPropertyValue("--modal-scroll-y"),
-      rootPosition: rootStyle?.position || "",
-      rootTop: rootStyle?.top || "",
-      rootLeft: rootStyle?.left || "",
-      rootRight: rootStyle?.right || "",
-      rootWidth: rootStyle?.width || "",
     };
 
     const scrollbarWidth = getScrollbarWidth();
@@ -53,22 +38,11 @@ export function lockScroll(): () => void {
       body.style.paddingRight = `calc(${snapshot.bodyPaddingRight || "0px"} + ${scrollbarWidth}px)`;
     }
 
-    // Lock the app container instead of <body> to avoid iOS Safari bugs
-    // where fixed-position descendants become relative to the fixed body.
-    if (root) {
-      root.style.position = 'fixed';
-      root.style.top = `-${scrollY}px`;
-      root.style.left = '0';
-      root.style.right = '0';
-      root.style.width = '100%';
-    } else {
-      // Fallback to legacy strategy.
-      body.style.setProperty("--modal-scroll-y", `-${scrollY}px`);
-    }
-
     body.classList.add("modal-open");
 
-    html.style.overflow = "hidden";
+    // Keep background fixed by disabling body scroll only.
+    // This is the most compatible approach with portaled modals.
+    body.style.overflow = "hidden";
   }
 
   return () => {
@@ -79,7 +53,6 @@ export function lockScroll(): () => void {
 
     const body = document.body;
     const html = document.documentElement;
-    const root = document.getElementById('root') as HTMLElement | null;
 
     const restore = snapshot;
     snapshot = null;
@@ -87,19 +60,9 @@ export function lockScroll(): () => void {
     body.classList.remove("modal-open");
 
     if (restore) {
+      body.style.overflow = restore.bodyOverflow;
       body.style.paddingRight = restore.bodyPaddingRight;
       body.style.setProperty("--modal-scroll-y", restore.bodyModalScrollY);
-
-      if (root) {
-        root.style.position = restore.rootPosition;
-        root.style.top = restore.rootTop;
-        root.style.left = restore.rootLeft;
-        root.style.right = restore.rootRight;
-        root.style.width = restore.rootWidth;
-      }
-
-      html.style.overflow = restore.htmlOverflow;
-      (html.style as any).overscrollBehavior = restore.htmlOverscrollBehavior;
 
       // Prevent global smooth scrolling from animating the restoration.
       html.style.scrollBehavior = "auto";
@@ -108,18 +71,9 @@ export function lockScroll(): () => void {
       html.style.scrollBehavior = restore.htmlScrollBehavior;
       body.style.scrollBehavior = restore.bodyScrollBehavior;
     } else {
+      body.style.overflow = "";
       body.style.paddingRight = "";
       body.style.removeProperty("--modal-scroll-y");
-      html.style.overflow = "";
-      (html.style as any).overscrollBehavior = "";
-
-      if (root) {
-        root.style.position = '';
-        root.style.top = '';
-        root.style.left = '';
-        root.style.right = '';
-        root.style.width = '';
-      }
     }
   };
 }
