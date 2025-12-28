@@ -73,8 +73,10 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   const [selectedTab, setSelectedTab] = useState('analytics');
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
-  const [reviewEdits, setReviewEdits] = useState<Record<string, { name: string; message: string }>>({});
-  const [faqEdits, setFaqEdits] = useState<Record<string, { name: string; question: string; answer: string }>>({});
+  const [reviewEdits, setReviewEdits] = useState<
+    Record<string, { name: string; message: string; date: string; avatar: string; color: string; rating: string }>
+  >({});
+  const [faqEdits, setFaqEdits] = useState<Record<string, { name: string; question: string; answer: string; date: string; avatar: string; color: string }>>({});
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -293,7 +295,18 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
       return;
     }
 
-    const ok = await updateReview(id, { name, message });
+    const meta: Record<string, unknown> = {
+      date: draft.date.trim() || undefined,
+      avatar: draft.avatar.trim() || undefined,
+      color: draft.color.trim() || undefined,
+    };
+    const ratingRaw = draft.rating.trim();
+    if (ratingRaw) {
+      const rating = Number(ratingRaw);
+      if (Number.isFinite(rating)) meta.rating = rating;
+    }
+
+    const ok = await updateReview(id, { name, message, meta });
     if (ok) {
       setReviewEdits((prev) => {
         const next = { ...prev };
@@ -334,7 +347,13 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
       return;
     }
 
-    const ok = await updateFAQ(id, { name, question, answer });
+    const meta: Record<string, unknown> = {
+      date: draft.date.trim() || undefined,
+      avatar: draft.avatar.trim() || undefined,
+      color: draft.color.trim() || undefined,
+    };
+
+    const ok = await updateFAQ(id, { name, question, answer, meta });
     if (ok) {
       setFaqEdits((prev) => {
         const next = { ...prev };
@@ -762,7 +781,16 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 <CardContent>
                   <div className="space-y-4">
                     {approvedReviews.map((review, index) => {
-                      const draft = reviewEdits[review.id] || { name: review.name, message: review.message };
+                      const draft =
+                        reviewEdits[review.id] ||
+                        {
+                          name: review.name,
+                          message: review.message,
+                          date: review.date || '',
+                          avatar: review.avatar || '',
+                          color: review.color || '',
+                          rating: typeof review.rating === 'number' ? String(review.rating) : '',
+                        };
                       return (
                         <div key={review.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
                           <div className="flex items-start justify-between gap-3 mb-3">
@@ -805,6 +833,29 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                               rows={3}
                               placeholder="Review"
                             />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input
+                                value={draft.date}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, date: e.target.value } }))}
+                                placeholder="Date (e.g., November 2024)"
+                              />
+                              <Input
+                                value={draft.rating}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, rating: e.target.value } }))}
+                                placeholder="Rating (1-5)"
+                                inputMode="numeric"
+                              />
+                              <Input
+                                value={draft.avatar}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, avatar: e.target.value } }))}
+                                placeholder="Avatar (emoji or text)"
+                              />
+                              <Input
+                                value={draft.color}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, color: e.target.value } }))}
+                                placeholder="Color classes (e.g., from-cyan-400 via-blue-400 to-purple-400)"
+                              />
+                            </div>
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => void handleSaveApprovedReview(review.id)}>
                                 Save
@@ -896,7 +947,16 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 <CardContent>
                   <div className="space-y-4">
                     {approvedFAQs.map((faq, index) => {
-                      const draft = faqEdits[faq.id] || { name: faq.name, question: faq.question, answer: faq.answer || '' };
+                      const draft =
+                        faqEdits[faq.id] ||
+                        {
+                          name: faq.name,
+                          question: faq.question,
+                          answer: faq.answer || '',
+                          date: faq.date || '',
+                          avatar: faq.avatar || '',
+                          color: faq.color || '',
+                        };
                       return (
                         <div key={faq.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
                           <div className="flex items-start justify-between gap-3 mb-3">
@@ -945,6 +1005,23 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                               rows={3}
                               placeholder="Answer"
                             />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <Input
+                                value={draft.date}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, date: e.target.value } }))}
+                                placeholder="Date (e.g., November 2024)"
+                              />
+                              <Input
+                                value={draft.avatar}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, avatar: e.target.value } }))}
+                                placeholder="Avatar (emoji or text)"
+                              />
+                              <Input
+                                value={draft.color}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, color: e.target.value } }))}
+                                placeholder="Color classes (e.g., from-cyan-400 via-blue-400 to-purple-400)"
+                              />
+                            </div>
                             <div className="flex gap-2">
                               <Button size="sm" onClick={() => void handleSaveApprovedFAQ(faq.id)}>
                                 Save
