@@ -589,8 +589,15 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm overflow-y-auto overscroll-contain"
-                  style={{ WebkitOverflowScrolling: 'touch' } as any}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                  style={
+                    {
+                      zIndex: 2147483647,
+                      overflowY: 'auto',
+                      WebkitOverflowScrolling: 'touch',
+                      overscrollBehavior: 'contain',
+                    } as any
+                  }
                   onClick={(e) => {
                     if (e.target === e.currentTarget) setExpandedCard(null);
                   }}
@@ -604,13 +611,14 @@ export function Services() {
                     type="button"
                     style={
                       {
+                        zIndex: 2147483648,
                         '--safe-top': '0.75rem',
                         '--safe-right': '0.75rem',
                         '--safe-top-sm': '1.25rem',
                         '--safe-right-sm': '1.25rem'
                       } as any
                     }
-                    className={`fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors z-[1010] touch-manipulation ${
+                    className={`fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
                       theme === 'dark'
                         ? 'bg-white/10 hover:bg-white/20 text-white'
                         : 'bg-black/10 hover:bg-black/20 text-white'
@@ -620,13 +628,13 @@ export function Services() {
                     <X className="w-6 h-6" />
                   </button>
 
-                  <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
+                  <div className="min-h-screen flex items-start justify-center p-4 sm:p-6">
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className={`relative isolate w-[94vw] max-w-4xl mx-auto rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col my-4 sm:my-10 ${
+                      className={`relative isolate w-full max-w-2xl mx-auto rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col my-4 sm:my-10 ${
                         theme === 'dark'
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
