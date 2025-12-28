@@ -217,6 +217,17 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     }
   };
 
+  const openServicesEditor = () => {
+    setSelectedTab('settings');
+    setTimeout(() => {
+      try {
+        document.getElementById('admin-services-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch {
+        // ignore
+      }
+    }, 0);
+  };
+
   const copyToClipboard = async (text: string) => {
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
@@ -327,6 +338,15 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               {isMaintenanceMode
                 ? t('admin.dashboard.settings.maintenanceOn')
                 : t('admin.dashboard.settings.maintenanceOff')}
+            </Button>
+
+            <Button
+              onClick={openServicesEditor}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Package className="w-4 h-4" />
+              {t('admin.services.title')}
             </Button>
 
             <Button
@@ -971,11 +991,13 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               </CardContent>
             </Card>
 
-            <AdminServicesEditor
-              adminAccessToken={adminAccessToken}
-              theme={theme}
-              onNotify={(type, message) => showNotification(type, message)}
-            />
+            <div id="admin-services-editor">
+              <AdminServicesEditor
+                adminAccessToken={adminAccessToken}
+                theme={theme}
+                onNotify={(type, message) => showNotification(type, message)}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
