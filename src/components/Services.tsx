@@ -37,9 +37,12 @@ interface Service {
 export function Services() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const modalScrollLayerRef = useRef<HTMLDivElement | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const touchStartScrollTopRef = useRef<number>(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const [servicesOverrides, setServicesOverrides] = useState<ServicesOverrides | null>(null);
 
   useEffect(() => {
@@ -603,6 +606,7 @@ export function Services() {
                   <div
                     className="fixed inset-0 overflow-y-auto overscroll-contain touch-pan-y"
                     style={{ WebkitOverflowScrolling: 'touch' } as any}
+                    ref={modalScrollLayerRef}
                     onClick={(e) => {
                       if (e.target === e.currentTarget) setExpandedCard(null);
                     }}
@@ -620,6 +624,32 @@ export function Services() {
                           : 'bg-white border border-purple-100'
                       }`}
                       onClick={(e) => e.stopPropagation()}
+                        onWheel={(e) => {
+                          const scroller = modalScrollLayerRef.current;
+                          if (!scroller) return;
+                          // Fallback: force scrolling the modal scroll layer.
+                          scroller.scrollTop += e.deltaY;
+                        }}
+                        onTouchStart={(e) => {
+                          const scroller = modalScrollLayerRef.current;
+                          if (!scroller) return;
+                          const touch = e.touches?.[0];
+                          if (!touch) return;
+                          touchStartYRef.current = touch.clientY;
+                          touchStartScrollTopRef.current = scroller.scrollTop;
+                        }}
+                        onTouchMove={(e) => {
+                          const scroller = modalScrollLayerRef.current;
+                          const startY = touchStartYRef.current;
+                          if (!scroller || startY === null) return;
+                          const touch = e.touches?.[0];
+                          if (!touch) return;
+                          const dy = startY - touch.clientY;
+                          scroller.scrollTop = touchStartScrollTopRef.current + dy;
+                        }}
+                        onTouchEnd={() => {
+                          touchStartYRef.current = null;
+                        }}
                       role="dialog"
                       aria-modal="true"
                     >
