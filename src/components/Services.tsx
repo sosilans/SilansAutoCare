@@ -605,10 +605,10 @@ export function Services() {
                     className="absolute inset-0 flex items-start sm:items-center justify-center p-4 sm:p-6 overflow-hidden"
                   >
                     <motion.div
-                      initial={{ scale: 0.98, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.98, opacity: 0 }}
-                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
                       className={`relative isolate w-[94vw] max-w-4xl rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col min-h-0 my-4 h-[calc(100svh-2rem)] max-h-[calc(100svh-2rem)] sm:my-0 sm:h-auto sm:max-h-[72vh] sm:max-h-[72svh] ${
                         theme === 'dark'
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
