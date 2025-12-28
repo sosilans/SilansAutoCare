@@ -331,6 +331,58 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.faqRejected') : t('admin.dashboard.notifications.actionFailed'));
   };
 
+  const handleSavePendingReviewMeta = async (id: string) => {
+    const draft = reviewEdits[id];
+    if (!draft) {
+      showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+      return;
+    }
+
+    const meta: Record<string, unknown> = {
+      date: draft.date?.trim() || undefined,
+      avatar: draft.avatar?.trim() || undefined,
+      color: draft.color?.trim() || undefined,
+    };
+    const ratingRaw = draft.rating?.trim();
+    if (ratingRaw) {
+      const rating = Number(ratingRaw);
+      if (Number.isFinite(rating)) meta.rating = rating;
+    }
+
+    const hasMeta = Object.values(meta).some((v) => v !== undefined);
+    if (!hasMeta) {
+      showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+      return;
+    }
+
+    const ok = await updateReview(id, { meta });
+    showNotification(ok ? 'success' : 'error', ok ? 'Saved' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const handleSavePendingFaqDraft = async (id: string) => {
+    const draft = faqEdits[id];
+    const answerDraft = (faqAnswers[id] || '').trim();
+
+    const meta: Record<string, unknown> = {
+      date: draft?.date?.trim() || undefined,
+      avatar: draft?.avatar?.trim() || undefined,
+      color: draft?.color?.trim() || undefined,
+    };
+
+    const hasMeta = Object.values(meta).some((v) => v !== undefined);
+    const hasAnswer = Boolean(answerDraft);
+    if (!hasMeta && !hasAnswer) {
+      showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+      return;
+    }
+
+    const ok = await updateFAQ(id, {
+      ...(hasAnswer ? { answer: answerDraft } : null),
+      ...(hasMeta ? { meta } : null),
+    });
+    showNotification(ok ? 'success' : 'error', ok ? 'Saved' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
   const handleSaveApprovedReview = async (id: string) => {
     const draft = reviewEdits[id];
     if (!draft) return;
@@ -843,6 +895,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                             <CheckCircle className="w-4 h-4 mr-1" />
                             {t('admin.console.actions.approve')}
                           </Button>
+                          <Button onClick={() => void handleSavePendingReviewMeta(review.id)} size="sm" variant="outline">
+                            Save
+                          </Button>
                           <Button onClick={() => handleRejectReview(review.id)} size="sm" variant="destructive">
                             <XCircle className="w-4 h-4 mr-1" />
                             {t('admin.console.actions.reject')}
@@ -1041,6 +1096,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
                             {t('admin.dashboard.faqs.answerPublish')}
+                          </Button>
+                          <Button onClick={() => void handleSavePendingFaqDraft(faq.id)} size="sm" variant="outline">
+                            Save
                           </Button>
                           <Button onClick={() => handleRejectFAQ(faq.id)} size="sm" variant="destructive">
                             <XCircle className="w-4 h-4 mr-1" />
