@@ -591,9 +591,8 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[1000] overflow-y-auto overscroll-contain touch-pan-y bg-black/60 backdrop-blur-sm"
+                  className="fixed inset-0 z-[1000] overscroll-contain touch-pan-y bg-black/60 backdrop-blur-sm"
                   onClick={() => setExpandedCard(null)}
-                  style={{ WebkitOverflowScrolling: 'touch' } as any}
                 >
                   {/* Content layer */}
                   <div className="min-h-full p-4 sm:p-6">
@@ -602,12 +601,13 @@ export function Services() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className={`relative isolate w-[94vw] max-w-4xl mx-auto rounded-3xl p-4 sm:p-6 overflow-hidden shadow-2xl flex flex-col my-4 sm:my-10 ${
+                      className={`relative isolate w-[94vw] max-w-4xl mx-auto rounded-3xl p-4 sm:p-6 overflow-y-auto shadow-2xl flex flex-col my-4 sm:my-10 max-h-[calc(100vh-2rem)] max-h-[calc(100svh-2rem)] ${
                         theme === 'dark'
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
                       onClick={(e) => e.stopPropagation()}
+                      style={{ WebkitOverflowScrolling: 'touch' } as any}
                       role="dialog"
                       aria-modal="true"
                     >
