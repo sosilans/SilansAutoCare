@@ -41,73 +41,6 @@ export function Reviews() {
     }
   }, []);
 
-  const reviews = [
-    {
-      name: 'Michael Johnson',
-      rating: 5,
-      date: 'October 2024',
-      text: 'Absolutely incredible work! My Tesla Model 3 looks better than the day I bought it. The ceramic coating is amazing!',
-      avatar: '👨',
-      color: 'from-cyan-400 via-blue-400 to-purple-400',
-    },
-    {
-      name: 'Sarah Martinez',
-      rating: 5,
-      date: 'November 2024',
-      text: 'Best detailing service in Sacramento! The attention to detail is unmatched. Worth every penny!',
-      avatar: '👩',
-      color: 'from-pink-400 via-rose-400 to-purple-400',
-    },
-    {
-      name: 'David Chen',
-      rating: 5,
-      date: 'November 2024',
-      text: 'Professional and passionate! They transformed my 10-year-old car. It looks brand new. Thank you!',
-      avatar: '👨‍💼',
-      color: 'from-cyan-400 via-teal-400 to-blue-400',
-    },
-    {
-      name: 'Emily Roberts',
-      rating: 5,
-      date: 'November 2024',
-      text: 'The paint correction service removed years of swirl marks. My black BMW finally has that mirror finish!',
-      avatar: '👩‍💼',
-      color: 'from-purple-400 via-pink-400 to-cyan-400',
-    },
-    {
-      name: 'James Wilson',
-      rating: 5,
-      date: 'October 2024',
-      text: 'Outstanding service! They worked on my Mercedes and the results exceeded all expectations. Highly recommend!',
-      avatar: '👨‍💻',
-      color: 'from-blue-400 via-cyan-400 to-teal-400',
-    },
-    {
-      name: 'Lisa Anderson',
-      rating: 5,
-      date: 'September 2024',
-      text: 'The interior detailing brought my car back to life! Every corner was spotless. True professionals!',
-      avatar: '👩‍🦰',
-      color: 'from-purple-400 via-violet-400 to-pink-400',
-    },
-    {
-      name: 'Robert Taylor',
-      rating: 5,
-      date: 'September 2024',
-      text: 'Exceptional quality! The team is friendly, professional, and truly cares about their work. My Audi looks stunning!',
-      avatar: '👨‍🦳',
-      color: 'from-cyan-400 via-blue-500 to-purple-500',
-    },
-    {
-      name: 'Amanda White',
-      rating: 5,
-      date: 'August 2024',
-      text: 'Best car care experience ever! They took their time and the results are incredible. Will definitely come back!',
-      avatar: '👱‍♀️',
-      color: 'from-pink-400 via-purple-400 to-indigo-400',
-    },
-  ];
-
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn || !user) {
@@ -162,16 +95,15 @@ export function Reviews() {
     });
   };
 
-  const userJoinedReviews = approvedReviews.map((r) => ({
+  const combinedReviews = approvedReviews.map((r) => ({
+    id: r.id,
     name: r.name,
-    rating: 5,
-    date: new Date(r.createdAt).toLocaleDateString(),
+    rating: r.rating ?? 5,
+    date: r.date || new Date(r.createdAt).toLocaleDateString(),
     text: r.message,
-    avatar: r.name?.[0] || '👤',
-    color: 'from-purple-400 via-pink-400 to-cyan-400',
+    avatar: r.avatar || r.name?.[0] || '👤',
+    color: r.color || 'from-purple-400 via-pink-400 to-cyan-400',
   }));
-
-  const combinedReviews = [...userJoinedReviews, ...reviews];
   const displayedReviews = showAll ? combinedReviews : combinedReviews.slice(0, 4);
 
   return (
@@ -217,7 +149,7 @@ export function Reviews() {
         <div className="grid sm:grid-cols-2 gap-6 lg:gap-8 mb-12">
           {displayedReviews.map((review, index) => (
             <motion.div
-              key={index}
+              key={review.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{
                 opacity: 1,

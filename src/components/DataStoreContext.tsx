@@ -9,6 +9,11 @@ export interface ReviewSubmission {
   message: string;
   createdAt: number;
   status: ModerationStatus;
+  rating?: number;
+  date?: string;
+  avatar?: string;
+  color?: string;
+  order?: number;
 }
 
 export interface FAQSubmission {
@@ -19,6 +24,10 @@ export interface FAQSubmission {
   answer?: string;
   createdAt: number;
   status: ModerationStatus;
+  date?: string;
+  avatar?: string;
+  color?: string;
+  order?: number;
 }
 
 export interface ContactSubmission {
@@ -38,12 +47,18 @@ interface DataStoreContextValue {
   submitReview: (name: string, email: string, message: string) => void;
   approveReview: (id: string) => Promise<boolean>;
   rejectReview: (id: string) => Promise<boolean>;
+  updateReview: (id: string, patch: { name?: string; message?: string; meta?: Record<string, unknown> }) => Promise<boolean>;
+  deleteReview: (id: string) => Promise<boolean>;
+  reorderApprovedReviews: (ids: string[]) => Promise<boolean>;
   // FAQ
   pendingFAQs: FAQSubmission[];
   approvedFAQs: FAQSubmission[];
   submitQuestion: (name: string, email: string, question: string) => void;
   approveFAQ: (id: string, answer?: string) => Promise<boolean>;
   rejectFAQ: (id: string) => Promise<boolean>;
+  updateFAQ: (id: string, patch: { name?: string; question?: string; answer?: string | null; meta?: Record<string, unknown> }) => Promise<boolean>;
+  deleteFAQ: (id: string) => Promise<boolean>;
+  reorderApprovedFAQs: (ids: string[]) => Promise<boolean>;
   // Contacts
   contactSubmissions: ContactSubmission[];
   submitContact: (name: string, email: string, message: string, phone?: string) => void;
@@ -85,7 +100,42 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+function extractMeta<T extends Record<string, any>>(row: any): T {
+  const meta = row?.meta;
+  if (meta && typeof meta === 'object' && !Array.isArray(meta)) return meta as T;
+  return {} as T;
+}
+
+function applyReviewPatchLocal(r: ReviewSubmission, patch: { name?: string; message?: string; meta?: Record<string, unknown> }) {
+  const meta = (patch.meta || {}) as any;
+  return {
+    ...r,
+    ...(patch.name !== undefined ? { name: patch.name } : null),
+    ...(patch.message !== undefined ? { message: patch.message } : null),
+    ...(typeof meta.rating === 'number' ? { rating: meta.rating } : null),
+    ...(typeof meta.date === 'string' ? { date: meta.date } : null),
+    ...(typeof meta.avatar === 'string' ? { avatar: meta.avatar } : null),
+    ...(typeof meta.color === 'string' ? { color: meta.color } : null),
+    ...(typeof meta.order === 'number' ? { order: meta.order } : null),
+  } as ReviewSubmission;
+}
+
+function applyFaqPatchLocal(f: FAQSubmission, patch: { name?: string; question?: string; answer?: string | null; meta?: Record<string, unknown> }) {
+  const meta = (patch.meta || {}) as any;
+  return {
+    ...f,
+    ...(patch.name !== undefined ? { name: patch.name } : null),
+    ...(patch.question !== undefined ? { question: patch.question } : null),
+    ...(patch.answer !== undefined ? { answer: patch.answer || undefined } : null),
+    ...(typeof meta.date === 'string' ? { date: meta.date } : null),
+    ...(typeof meta.avatar === 'string' ? { avatar: meta.avatar } : null),
+    ...(typeof meta.color === 'string' ? { color: meta.color } : null),
+    ...(typeof meta.order === 'number' ? { order: meta.order } : null),
+  } as FAQSubmission;
+}
+
 function mapReviewRow(row: any): ReviewSubmission {
+  const meta = extractMeta<any>(row);
   return {
     id: String(row.id),
     name: String(row.name || ''),
@@ -93,10 +143,16 @@ function mapReviewRow(row: any): ReviewSubmission {
     message: String(row.message || ''),
     createdAt: Date.parse(row.created_at || row.createdAt || new Date().toISOString()),
     status: (row.status || 'pending') as ModerationStatus,
+    rating: typeof meta.rating === 'number' ? meta.rating : undefined,
+    date: typeof meta.date === 'string' ? meta.date : undefined,
+    avatar: typeof meta.avatar === 'string' ? meta.avatar : undefined,
+    color: typeof meta.color === 'string' ? meta.color : undefined,
+    order: typeof meta.order === 'number' ? meta.order : undefined,
   };
 }
 
 function mapFaqRow(row: any): FAQSubmission {
+  const meta = extractMeta<any>(row);
   return {
     id: String(row.id),
     name: String(row.name || ''),
@@ -105,6 +161,10 @@ function mapFaqRow(row: any): FAQSubmission {
     answer: row.answer ? String(row.answer) : undefined,
     createdAt: Date.parse(row.created_at || row.createdAt || new Date().toISOString()),
     status: (row.status || 'pending') as ModerationStatus,
+    date: typeof meta.date === 'string' ? meta.date : undefined,
+    avatar: typeof meta.avatar === 'string' ? meta.avatar : undefined,
+    color: typeof meta.color === 'string' ? meta.color : undefined,
+    order: typeof meta.order === 'number' ? meta.order : undefined,
   };
 }
 
@@ -145,8 +205,13 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         if (cancelled) return;
-        setApprovedReviews((reviews.rows || []).map(mapReviewRow));
-        setApprovedFAQs((faqs.rows || []).map(mapFaqRow));
+        const ar = (reviews.rows || []).map(mapReviewRow);
+        ar.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+        setApprovedReviews(ar);
+
+        const af = (faqs.rows || []).map(mapFaqRow);
+        af.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+        setApprovedFAQs(af);
       } catch {
         // Fallback to localStorage.
         try {
@@ -179,14 +244,24 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     void (async () => {
       try {
         const headers = { Authorization: `Bearer ${adminAccessToken}` };
-        const [reviews, faqs, contacts] = await Promise.all([
+        const [pendingReviewsRes, pendingFaqsRes, approvedReviewsRes, approvedFaqsRes, contacts] = await Promise.all([
           apiJson<{ ok: true; rows: any[] }>('/api/admin/reviews?status=pending', { headers }),
           apiJson<{ ok: true; rows: any[] }>('/api/admin/faqs?status=pending', { headers }),
+          apiJson<{ ok: true; rows: any[] }>('/api/admin/reviews?status=approved', { headers }),
+          apiJson<{ ok: true; rows: any[] }>('/api/admin/faqs?status=approved', { headers }),
           apiJson<{ ok: true; rows: any[] }>('/api/admin/contacts', { headers }),
         ]);
         if (cancelled) return;
-        setPendingReviews((reviews.rows || []).map(mapReviewRow));
-        setPendingFAQs((faqs.rows || []).map(mapFaqRow));
+        setPendingReviews((pendingReviewsRes.rows || []).map(mapReviewRow));
+        setPendingFAQs((pendingFaqsRes.rows || []).map(mapFaqRow));
+
+        const ar = (approvedReviewsRes.rows || []).map(mapReviewRow);
+        ar.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+        setApprovedReviews(ar);
+
+        const af = (approvedFaqsRes.rows || []).map(mapFaqRow);
+        af.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9));
+        setApprovedFAQs(af);
         setContactSubmissions((contacts.rows || []).map(mapContactRow));
       } catch {
         // ignore (admin can still work in fallback/local mode)
@@ -271,6 +346,61 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function updateReview(id: string, patch: { name?: string; message?: string; meta?: Record<string, unknown> }) {
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>('/api/admin/reviews', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      setApprovedReviews((prev) => prev.map((r) => (r.id === id ? applyReviewPatchLocal(r, patch) : r)));
+      setPendingReviews((prev) => prev.map((r) => (r.id === id ? applyReviewPatchLocal(r, patch) : r)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function deleteReview(id: string) {
+    const prevApproved = approvedReviews;
+    const prevPending = pendingReviews;
+    setApprovedReviews((prev) => prev.filter((r) => r.id !== id));
+    setPendingReviews((prev) => prev.filter((r) => r.id !== id));
+
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>(`/api/admin/reviews?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminAccessToken}` },
+      });
+      return true;
+    } catch {
+      setApprovedReviews(prevApproved);
+      setPendingReviews(prevPending);
+      return false;
+    }
+  }
+
+  async function reorderApprovedReviews(ids: string[]) {
+    const prev = approvedReviews;
+    const index = new Map(ids.map((rid, i) => [rid, i]));
+    setApprovedReviews((cur) => cur.slice().sort((a, b) => (index.get(a.id) ?? 1e9) - (index.get(b.id) ?? 1e9)));
+
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>('/api/admin/reviews/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify({ ids }),
+      });
+      return true;
+    } catch {
+      setApprovedReviews(prev);
+      return false;
+    }
+  }
+
   function submitQuestion(name: string, email: string, question: string) {
     const item: FAQSubmission = {
       id: crypto.randomUUID(),
@@ -331,6 +461,61 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch {
       setPendingFAQs((prev) => [item, ...prev]);
+      return false;
+    }
+  }
+
+  async function updateFAQ(id: string, patch: { name?: string; question?: string; answer?: string | null; meta?: Record<string, unknown> }) {
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>('/api/admin/faqs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      setApprovedFAQs((prev) => prev.map((f) => (f.id === id ? applyFaqPatchLocal(f, patch) : f)));
+      setPendingFAQs((prev) => prev.map((f) => (f.id === id ? applyFaqPatchLocal(f, patch) : f)));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function deleteFAQ(id: string) {
+    const prevApproved = approvedFAQs;
+    const prevPending = pendingFAQs;
+    setApprovedFAQs((prev) => prev.filter((f) => f.id !== id));
+    setPendingFAQs((prev) => prev.filter((f) => f.id !== id));
+
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>(`/api/admin/faqs?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminAccessToken}` },
+      });
+      return true;
+    } catch {
+      setApprovedFAQs(prevApproved);
+      setPendingFAQs(prevPending);
+      return false;
+    }
+  }
+
+  async function reorderApprovedFAQs(ids: string[]) {
+    const prev = approvedFAQs;
+    const index = new Map(ids.map((fid, i) => [fid, i]));
+    setApprovedFAQs((cur) => cur.slice().sort((a, b) => (index.get(a.id) ?? 1e9) - (index.get(b.id) ?? 1e9)));
+
+    if (!adminAccessToken) return true;
+    try {
+      await apiJson<{ ok: true }>('/api/admin/faqs/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify({ ids }),
+      });
+      return true;
+    } catch {
+      setApprovedFAQs(prev);
       return false;
     }
   }
@@ -415,12 +600,19 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   }, [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
 
   const value: DataStoreContextValue = useMemo(() => ({
-    pendingReviews, approvedReviews, submitReview, approveReview, rejectReview,
-    pendingFAQs, approvedFAQs, submitQuestion, approveFAQ, rejectFAQ,
+    pendingReviews, approvedReviews, submitReview, approveReview, rejectReview, updateReview, deleteReview, reorderApprovedReviews,
+    pendingFAQs, approvedFAQs, submitQuestion, approveFAQ, rejectFAQ, updateFAQ, deleteFAQ, reorderApprovedFAQs,
     contactSubmissions, submitContact, updateContactStatus, deleteContact,
     setAdminAccessToken,
     stats,
-  }), [pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions, stats]);
+  }), [
+    pendingReviews,
+    approvedReviews,
+    pendingFAQs,
+    approvedFAQs,
+    contactSubmissions,
+    stats,
+  ]);
 
   return (
     <DataStoreContext.Provider value={value}>{children}</DataStoreContext.Provider>

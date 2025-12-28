@@ -29,73 +29,6 @@ export function FAQ() {
   const faqRef = useRef<HTMLElement>(null);
   const { submitQuestion, approvedFAQs } = useDataStore();
 
-  const faqs: FAQItem[] = [
-    {
-      name: 'Michael Johnson',
-      date: 'November 2024',
-      question: 'Do you have a power generator for detailing?',
-      answer: 'Yes, we have a generator for backup power. However, if you can provide a standard 120V outlet on your property, we offer a small discount since we can use your electricity instead.',
-      avatar: '👨',
-      color: 'from-cyan-400 via-blue-400 to-purple-400',
-    },
-    {
-      name: 'Sarah Martinez',
-      date: 'November 2024',
-      question: 'What payment methods do you accept?',
-      answer: 'We accept cash, Zelle, and Cash App. Choose the method that\'s most convenient for you when booking your service.',
-      avatar: '👩',
-      color: 'from-pink-400 via-rose-400 to-purple-400',
-    },
-    {
-      name: 'David Chen',
-      date: 'October 2024',
-      question: 'Do you only offer mobile detailing?',
-      answer: 'Yes, we specialize exclusively in mobile detailing. We come to your location — home, office, or wherever your vehicle is. No fixed studio, just convenience for you.',
-      avatar: '👨‍💼',
-      color: 'from-cyan-400 via-teal-400 to-blue-400',
-    },
-    {
-      name: 'Emily Roberts',
-      date: 'October 2024',
-      question: 'Do you have a loyalty program?',
-      answer: 'Absolutely! We offer a Maintenance Plan where if you book a wash every 3 months, you get a lower rate than a full cleaning after 3 months. It\'s better to maintain regularly than to wait and need a deep clean.',
-      avatar: '👩‍💼',
-      color: 'from-purple-400 via-pink-400 to-cyan-400',
-    },
-    {
-      name: 'James Wilson',
-      date: 'September 2024',
-      question: 'What areas do you service?',
-      answer: 'We proudly service Sacramento and the surrounding Sacramento area by arrangement. Contact us to confirm if your location is within our service zone.',
-      avatar: '👨‍💻',
-      color: 'from-blue-400 via-cyan-400 to-teal-400',
-    },
-    {
-      name: 'Lisa Anderson',
-      date: 'September 2024',
-      question: 'How long does a typical detailing session take?',
-      answer: 'It depends on the service package. A basic wash takes about 1 hour, interior deep clean 1.5-2 hours, and a full detail package can take 3-5 hours. We\'ll give you an exact time when you book.',
-      avatar: '👩‍🦰',
-      color: 'from-purple-400 via-violet-400 to-pink-400',
-    },
-    {
-      name: 'Robert Taylor',
-      date: 'August 2024',
-      question: 'Can you detail exotic or luxury vehicles?',
-      answer: 'Yes! We have experience with all vehicle types, including luxury and exotic cars. We use premium products and gentle techniques to protect high-end finishes and coatings.',
-      avatar: '👨‍🦳',
-      color: 'from-cyan-400 via-blue-500 to-purple-500',
-    },
-    {
-      name: 'Amanda White',
-      date: 'August 2024',
-      question: 'How do I book an appointment?',
-      answer: 'You can book through our website contact form, call us directly, or send an email. We recommend booking at least a few days ahead to secure your preferred time slot.',
-      avatar: '👱‍♀️',
-      color: 'from-pink-400 via-purple-400 to-indigo-400',
-    },
-  ];
-
   const handleSubmitQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoggedIn || !user) {
@@ -136,15 +69,15 @@ export function FAQ() {
     });
   };
 
-  const userFAQs = approvedFAQs.map((q) => ({
+  const combinedFAQs: (FAQItem & { id: string })[] = approvedFAQs.map((q) => ({
+    id: q.id,
     name: q.name,
-    date: new Date(q.createdAt).toLocaleDateString(),
+    date: q.date || new Date(q.createdAt).toLocaleDateString(),
     question: q.question,
     answer: q.answer || 'Thank you for your question! Our team will respond shortly.',
-    avatar: q.name?.[0] || '❓',
-    color: 'from-purple-400 via-pink-400 to-cyan-400',
+    avatar: q.avatar || q.name?.[0] || '❓',
+    color: q.color || 'from-purple-400 via-pink-400 to-cyan-400',
   }));
-  const combinedFAQs = [...userFAQs, ...faqs];
   const displayedFAQs = showAll ? combinedFAQs : combinedFAQs.slice(0, 4);
 
   return (
@@ -190,7 +123,7 @@ export function FAQ() {
         <div className="grid sm:grid-cols-2 gap-6 lg:gap-8 mb-12">
           {displayedFAQs.map((faq, index) => (
             <motion.div
-              key={index}
+              key={faq.id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{
                 opacity: 1,

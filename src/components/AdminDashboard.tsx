@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
+import { Input } from './ui/input';
 import { Alert, AlertDescription } from './ui/alert';
 import { AdminSiteAnalytics } from './AdminSiteAnalytics';
 import { AdminServicesEditor } from './AdminServicesEditor';
@@ -63,6 +64,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     contactSubmissions, updateContactStatus, deleteContact,
     stats,
     setAdminAccessToken,
+    updateReview, deleteReview, reorderApprovedReviews,
+    updateFAQ, deleteFAQ, reorderApprovedFAQs,
   } = useDataStore();
   const { isOnline, setIsOnline } = useOnlineStatus();
   const { status: availabilityStatus, setStatus: setAvailabilityStatus } = useAvailabilityStatus();
@@ -70,6 +73,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   const [selectedTab, setSelectedTab] = useState('analytics');
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
+  const [reviewEdits, setReviewEdits] = useState<Record<string, { name: string; message: string }>>({});
+  const [faqEdits, setFaqEdits] = useState<Record<string, { name: string; question: string; answer: string }>>({});
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -276,6 +281,87 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const handleRejectFAQ = async (id: string) => {
     const ok = await rejectFAQ(id);
     showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.faqRejected') : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const handleSaveApprovedReview = async (id: string) => {
+    const draft = reviewEdits[id];
+    if (!draft) return;
+    const name = draft.name.trim();
+    const message = draft.message.trim();
+    if (!name || !message) {
+      showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+      return;
+    }
+
+    const ok = await updateReview(id, { name, message });
+    if (ok) {
+      setReviewEdits((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+    showNotification(ok ? 'success' : 'error', ok ? 'Saved' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const handleDeleteAnyReview = async (id: string) => {
+    if (!confirm('Delete this review?')) return;
+    const ok = await deleteReview(id);
+    showNotification(ok ? 'success' : 'error', ok ? 'Deleted' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const moveApprovedReview = async (id: string, dir: -1 | 1) => {
+    const ids = approvedReviews.map((r) => r.id);
+    const idx = ids.indexOf(id);
+    const nextIdx = idx + dir;
+    if (idx < 0 || nextIdx < 0 || nextIdx >= ids.length) return;
+    const next = ids.slice();
+    const tmp = next[idx];
+    next[idx] = next[nextIdx];
+    next[nextIdx] = tmp;
+    const ok = await reorderApprovedReviews(next);
+    showNotification(ok ? 'success' : 'error', ok ? 'Reordered' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const handleSaveApprovedFAQ = async (id: string) => {
+    const draft = faqEdits[id];
+    if (!draft) return;
+    const name = draft.name.trim();
+    const question = draft.question.trim();
+    const answer = draft.answer.trim();
+    if (!name || !question || !answer) {
+      showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+      return;
+    }
+
+    const ok = await updateFAQ(id, { name, question, answer });
+    if (ok) {
+      setFaqEdits((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+    showNotification(ok ? 'success' : 'error', ok ? 'Saved' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const handleDeleteAnyFAQ = async (id: string) => {
+    if (!confirm('Delete this FAQ item?')) return;
+    const ok = await deleteFAQ(id);
+    showNotification(ok ? 'success' : 'error', ok ? 'Deleted' : t('admin.dashboard.notifications.actionFailed'));
+  };
+
+  const moveApprovedFAQ = async (id: string, dir: -1 | 1) => {
+    const ids = approvedFAQs.map((f) => f.id);
+    const idx = ids.indexOf(id);
+    const nextIdx = idx + dir;
+    if (idx < 0 || nextIdx < 0 || nextIdx >= ids.length) return;
+    const next = ids.slice();
+    const tmp = next[idx];
+    next[idx] = next[nextIdx];
+    next[nextIdx] = tmp;
+    const ok = await reorderApprovedFAQs(next);
+    showNotification(ok ? 'success' : 'error', ok ? 'Reordered' : t('admin.dashboard.notifications.actionFailed'));
   };
 
   const handleExportData = () => {
@@ -657,6 +743,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                             <XCircle className="w-4 h-4 mr-1" />
                             {t('admin.console.actions.reject')}
                           </Button>
+                          <Button onClick={() => void handleDeleteAnyReview(review.id)} size="sm" variant="outline">
+                            {t('admin.console.actions.remove')}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -671,20 +760,63 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                   <CardTitle>{t('admin.dashboard.reviews.approvedTitle').replace('{count}', String(approvedReviews.length))}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {approvedReviews.slice(0, 10).map(review => (
-                      <div key={review.id} className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-sm">{review.name}</p>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{review.message}</p>
+                  <div className="space-y-4">
+                    {approvedReviews.map((review, index) => {
+                      const draft = reviewEdits[review.id] || { name: review.name, message: review.message };
+                      return (
+                        <div key={review.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                              <p className="font-medium text-sm">{review.name}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void moveApprovedReview(review.id, -1)}
+                                disabled={index === 0}
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void moveApprovedReview(review.id, 1)}
+                                disabled={index === approvedReviews.length - 1}
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </Button>
+                              <Badge className="bg-green-500">
+                                <CheckCircle className="w-3 h-3" />
+                              </Badge>
+                            </div>
                           </div>
-                          <Badge className="bg-green-500">
-                            <CheckCircle className="w-3 h-3" />
-                          </Badge>
+
+                          <div className="grid gap-3">
+                            <Input
+                              value={draft.name}
+                              onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, name: e.target.value } }))}
+                              placeholder="Name"
+                            />
+                            <Textarea
+                              value={draft.message}
+                              onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, message: e.target.value } }))}
+                              rows={3}
+                              placeholder="Review"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => void handleSaveApprovedReview(review.id)}>
+                                Save
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => void handleDeleteAnyReview(review.id)}>
+                                {t('admin.console.actions.remove')}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -745,6 +877,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                             <XCircle className="w-4 h-4 mr-1" />
                             {t('admin.console.actions.reject')}
                           </Button>
+                          <Button onClick={() => void handleDeleteAnyFAQ(faq.id)} size="sm" variant="outline">
+                            {t('admin.console.actions.remove')}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -760,17 +895,68 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {approvedFAQs.slice(0, 10).map(faq => (
-                      <div key={faq.id} className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="font-medium text-sm">{faq.question}</p>
-                          <Badge className="bg-blue-500">
-                            <CheckCircle className="w-3 h-3" />
-                          </Badge>
+                    {approvedFAQs.map((faq, index) => {
+                      const draft = faqEdits[faq.id] || { name: faq.name, question: faq.question, answer: faq.answer || '' };
+                      return (
+                        <div key={faq.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                              <p className="font-medium text-sm">{faq.question}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(faq.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void moveApprovedFAQ(faq.id, -1)}
+                                disabled={index === 0}
+                              >
+                                <ArrowUp className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void moveApprovedFAQ(faq.id, 1)}
+                                disabled={index === approvedFAQs.length - 1}
+                              >
+                                <ArrowDown className="w-4 h-4" />
+                              </Button>
+                              <Badge className="bg-blue-500">
+                                <CheckCircle className="w-3 h-3" />
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-3">
+                            <Input
+                              value={draft.name}
+                              onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, name: e.target.value } }))}
+                              placeholder="Name"
+                            />
+                            <Textarea
+                              value={draft.question}
+                              onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, question: e.target.value } }))}
+                              rows={2}
+                              placeholder="Question"
+                            />
+                            <Textarea
+                              value={draft.answer}
+                              onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, answer: e.target.value } }))}
+                              rows={3}
+                              placeholder="Answer"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => void handleSaveApprovedFAQ(faq.id)}>
+                                Save
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => void handleDeleteAnyFAQ(faq.id)}>
+                                {t('admin.console.actions.remove')}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">{faq.answer}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

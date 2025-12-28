@@ -7,6 +7,227 @@ import { getSupabaseAdmin, getSupabasePublic } from './_shared/supabase';
 
 const SERVICES_OVERRIDES_KEY = 'services_overrides_v1';
 
+type SeedReview = {
+  name: string;
+  date: string;
+  rating: number;
+  text: string;
+  avatar: string;
+  color: string;
+};
+
+type SeedFaq = {
+  name: string;
+  date: string;
+  question: string;
+  answer: string;
+  avatar: string;
+  color: string;
+};
+
+const DEFAULT_SITE_REVIEWS: SeedReview[] = [
+  {
+    name: 'Michael Johnson',
+    rating: 5,
+    date: 'October 2024',
+    text: 'Absolutely incredible work! My Tesla Model 3 looks better than the day I bought it. The ceramic coating is amazing!',
+    avatar: '👨',
+    color: 'from-cyan-400 via-blue-400 to-purple-400',
+  },
+  {
+    name: 'Sarah Martinez',
+    rating: 5,
+    date: 'November 2024',
+    text: 'Best detailing service in Sacramento! The attention to detail is unmatched. Worth every penny!',
+    avatar: '👩',
+    color: 'from-pink-400 via-rose-400 to-purple-400',
+  },
+  {
+    name: 'David Chen',
+    rating: 5,
+    date: 'November 2024',
+    text: 'Professional and passionate! They transformed my 10-year-old car. It looks brand new. Thank you!',
+    avatar: '👨‍💼',
+    color: 'from-cyan-400 via-teal-400 to-blue-400',
+  },
+  {
+    name: 'Emily Roberts',
+    rating: 5,
+    date: 'November 2024',
+    text: 'The paint correction service removed years of swirl marks. My black BMW finally has that mirror finish!',
+    avatar: '👩‍💼',
+    color: 'from-purple-400 via-pink-400 to-cyan-400',
+  },
+  {
+    name: 'James Wilson',
+    rating: 5,
+    date: 'October 2024',
+    text: 'Outstanding service! They worked on my Mercedes and the results exceeded all expectations. Highly recommend!',
+    avatar: '👨‍💻',
+    color: 'from-blue-400 via-cyan-400 to-teal-400',
+  },
+  {
+    name: 'Lisa Anderson',
+    rating: 5,
+    date: 'September 2024',
+    text: 'The interior detailing brought my car back to life! Every corner was spotless. True professionals!',
+    avatar: '👩‍🦰',
+    color: 'from-purple-400 via-violet-400 to-pink-400',
+  },
+  {
+    name: 'Robert Taylor',
+    rating: 5,
+    date: 'September 2024',
+    text: 'Exceptional quality! The team is friendly, professional, and truly cares about their work. My Audi looks stunning!',
+    avatar: '👨‍🦳',
+    color: 'from-cyan-400 via-blue-500 to-purple-500',
+  },
+  {
+    name: 'Amanda White',
+    rating: 5,
+    date: 'August 2024',
+    text: 'Best car care experience ever! They took their time and the results are incredible. Will definitely come back!',
+    avatar: '👱‍♀️',
+    color: 'from-pink-400 via-purple-400 to-indigo-400',
+  },
+];
+
+const DEFAULT_SITE_FAQS: SeedFaq[] = [
+  {
+    name: 'Michael Johnson',
+    date: 'November 2024',
+    question: 'Do you have a power generator for detailing?',
+    answer:
+      'Yes, we have a generator for backup power. However, if you can provide a standard 120V outlet on your property, we offer a small discount since we can use your electricity instead.',
+    avatar: '👨',
+    color: 'from-cyan-400 via-blue-400 to-purple-400',
+  },
+  {
+    name: 'Sarah Martinez',
+    date: 'November 2024',
+    question: 'What payment methods do you accept?',
+    answer: "We accept cash, Zelle, and Cash App. Choose the method that's most convenient for you when booking your service.",
+    avatar: '👩',
+    color: 'from-pink-400 via-rose-400 to-purple-400',
+  },
+  {
+    name: 'David Chen',
+    date: 'October 2024',
+    question: 'Do you only offer mobile detailing?',
+    answer:
+      'Yes, we specialize exclusively in mobile detailing. We come to your location — home, office, or wherever your vehicle is. No fixed studio, just convenience for you.',
+    avatar: '👨‍💼',
+    color: 'from-cyan-400 via-teal-400 to-blue-400',
+  },
+  {
+    name: 'Emily Roberts',
+    date: 'October 2024',
+    question: 'Do you have a loyalty program?',
+    answer:
+      "Absolutely! We offer a Maintenance Plan where if you book a wash every 3 months, you get a lower rate than a full cleaning after 3 months. It's better to maintain regularly than to wait and need a deep clean.",
+    avatar: '👩‍💼',
+    color: 'from-purple-400 via-pink-400 to-cyan-400',
+  },
+  {
+    name: 'James Wilson',
+    date: 'September 2024',
+    question: 'What areas do you service?',
+    answer:
+      'We proudly service Sacramento and the surrounding Sacramento area by arrangement. Contact us to confirm if your location is within our service zone.',
+    avatar: '👨‍💻',
+    color: 'from-blue-400 via-cyan-400 to-teal-400',
+  },
+  {
+    name: 'Lisa Anderson',
+    date: 'September 2024',
+    question: 'How long does a typical detailing session take?',
+    answer:
+      "It depends on the service package. A basic wash takes about 1 hour, interior deep clean 1.5-2 hours, and a full detail package can take 3-5 hours. We'll give you an exact time when you book.",
+    avatar: '👩‍🦰',
+    color: 'from-purple-400 via-violet-400 to-pink-400',
+  },
+  {
+    name: 'Robert Taylor',
+    date: 'August 2024',
+    question: 'Can you detail exotic or luxury vehicles?',
+    answer:
+      'Yes! We have experience with all vehicle types, including luxury and exotic cars. We use premium products and gentle techniques to protect high-end finishes and coatings.',
+    avatar: '👨‍🦳',
+    color: 'from-cyan-400 via-blue-500 to-purple-500',
+  },
+  {
+    name: 'Amanda White',
+    date: 'August 2024',
+    question: 'How do I book an appointment?',
+    answer:
+      'You can book through our website contact form, call us directly, or send an email. We recommend booking at least a few days ahead to secure your preferred time slot.',
+    avatar: '👱‍♀️',
+    color: 'from-pink-400 via-purple-400 to-indigo-400',
+  },
+];
+
+async function ensureSeedContent(supabaseAdmin: ReturnType<typeof getSupabaseAdmin>) {
+  // Reviews seed
+  try {
+    const { count: seededReviewsCount } = await supabaseAdmin
+      .from('review_submissions')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', 'approved')
+      .contains('meta', { seed: true });
+
+    if ((seededReviewsCount || 0) === 0) {
+      await supabaseAdmin.from('review_submissions').insert(
+        DEFAULT_SITE_REVIEWS.map((r, idx) => ({
+          name: r.name,
+          email: 'seed@local',
+          message: r.text,
+          status: 'approved',
+          meta: {
+            seed: true,
+            order: idx,
+            rating: r.rating,
+            date: r.date,
+            avatar: r.avatar,
+            color: r.color,
+          },
+        })),
+      );
+    }
+  } catch {
+    // ignore seeding errors
+  }
+
+  // FAQs seed
+  try {
+    const { count: seededFaqsCount } = await supabaseAdmin
+      .from('faq_submissions')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', 'approved')
+      .contains('meta', { seed: true });
+
+    if ((seededFaqsCount || 0) === 0) {
+      await supabaseAdmin.from('faq_submissions').insert(
+        DEFAULT_SITE_FAQS.map((f, idx) => ({
+          name: f.name,
+          email: 'seed@local',
+          question: f.question,
+          answer: f.answer,
+          status: 'approved',
+          meta: {
+            seed: true,
+            order: idx,
+            date: f.date,
+            avatar: f.avatar,
+            color: f.color,
+          },
+        })),
+      );
+    }
+  } catch {
+    // ignore seeding errors
+  }
+}
+
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -101,6 +322,9 @@ export const handler: Handler = async (event) => {
     if (path.startsWith('/api/public/reviews')) {
       const supabaseAdmin = getSupabaseAdmin();
 
+      // Ensure the built-in site reviews exist in DB so admin can manage them.
+      await ensureSeedContent(supabaseAdmin);
+
       if (event.httpMethod === 'GET') {
         const status = (event.queryStringParameters?.status || 'approved').trim();
         if (!['approved'].includes(status)) {
@@ -110,7 +334,7 @@ export const handler: Handler = async (event) => {
         const limit = Math.min(200, Math.max(1, Number(event.queryStringParameters?.limit || 50) || 50));
         const { data, error } = await supabaseAdmin
           .from('review_submissions')
-          .select('id,created_at,name,message,status')
+          .select('id,created_at,name,message,status,meta')
           .eq('status', 'approved')
           .order('created_at', { ascending: false })
           .limit(limit);
@@ -119,7 +343,15 @@ export const handler: Handler = async (event) => {
           return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load reviews' }) };
         }
 
-        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+        const rows = (data || []).slice();
+        rows.sort((a: any, b: any) => {
+          const ao = typeof a?.meta?.order === 'number' ? a.meta.order : Number.POSITIVE_INFINITY;
+          const bo = typeof b?.meta?.order === 'number' ? b.meta.order : Number.POSITIVE_INFINITY;
+          if (ao !== bo) return ao - bo;
+          return String(b?.created_at || '').localeCompare(String(a?.created_at || ''));
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows }) };
       }
 
       if (event.httpMethod === 'POST') {
@@ -168,6 +400,9 @@ export const handler: Handler = async (event) => {
     if (path.startsWith('/api/public/faqs')) {
       const supabaseAdmin = getSupabaseAdmin();
 
+      // Ensure the built-in site FAQs exist in DB so admin can manage them.
+      await ensureSeedContent(supabaseAdmin);
+
       if (event.httpMethod === 'GET') {
         const status = (event.queryStringParameters?.status || 'approved').trim();
         if (!['approved'].includes(status)) {
@@ -177,7 +412,7 @@ export const handler: Handler = async (event) => {
 
         const { data, error } = await supabaseAdmin
           .from('faq_submissions')
-          .select('id,created_at,name,question,answer,status')
+          .select('id,created_at,name,question,answer,status,meta')
           .eq('status', 'approved')
           .order('created_at', { ascending: false })
           .limit(limit);
@@ -186,7 +421,15 @@ export const handler: Handler = async (event) => {
           return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load faqs' }) };
         }
 
-        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+        const rows = (data || []).slice();
+        rows.sort((a: any, b: any) => {
+          const ao = typeof a?.meta?.order === 'number' ? a.meta.order : Number.POSITIVE_INFINITY;
+          const bo = typeof b?.meta?.order === 'number' ? b.meta.order : Number.POSITIVE_INFINITY;
+          if (ao !== bo) return ao - bo;
+          return String(b?.created_at || '').localeCompare(String(a?.created_at || ''));
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows }) };
       }
 
       if (event.httpMethod === 'POST') {
@@ -463,11 +706,51 @@ export const handler: Handler = async (event) => {
       const admin = await requireAdmin(event);
       const supabaseAdmin = getSupabaseAdmin();
 
+      // Ensure defaults exist so admin sees the same content as the public site.
+      await ensureSeedContent(supabaseAdmin);
+
+      if (path === '/api/admin/reviews/reorder') {
+        if (event.httpMethod !== 'POST') {
+          return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+        }
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const ReorderSchema = z.object({ ids: z.array(z.string().min(10).max(80)).min(1).max(500) });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = ReorderSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        for (let i = 0; i < parsed.data.ids.length; i++) {
+          const id = parsed.data.ids[i];
+          const { data: existing } = await supabaseAdmin
+            .from('review_submissions')
+            .select('id,meta')
+            .eq('id', id)
+            .maybeSingle();
+          const nextMeta = { ...(existing?.meta as any), order: i };
+          await supabaseAdmin.from('review_submissions').update({ meta: nextMeta }).eq('id', id);
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'reviews_reorder',
+          target_type: 'review_submissions',
+          target_id: null,
+          diff: { count: parsed.data.ids.length },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
       if (event.httpMethod === 'GET') {
         const status = (event.queryStringParameters?.status || '').trim();
         let q = supabaseAdmin
           .from('review_submissions')
-          .select('id,created_at,name,email,message,status')
+          .select('id,created_at,name,email,message,status,meta')
           .order('created_at', { ascending: false })
           .limit(500);
         if (status) {
@@ -488,16 +771,36 @@ export const handler: Handler = async (event) => {
           return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
         }
 
-        const PatchSchema = z.object({ id: z.string().min(10).max(80), status: z.enum(['pending', 'approved', 'rejected']) });
+        const PatchSchema = z
+          .object({
+            id: z.string().min(10).max(80),
+            status: z.enum(['pending', 'approved', 'rejected']).optional(),
+            name: z.string().min(1).max(120).optional(),
+            message: z.string().min(1).max(5000).optional(),
+            meta: z.record(z.unknown()).optional(),
+          })
+          .refine((v) => Boolean(v.status || v.name || v.message || v.meta), { message: 'No changes' });
         const body = event.body ? JSON.parse(event.body) : {};
         const parsed = PatchSchema.safeParse(body);
         if (!parsed.success) {
           return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
         }
 
+        const { data: existing } = await supabaseAdmin
+          .from('review_submissions')
+          .select('id,status,name,message,meta')
+          .eq('id', parsed.data.id)
+          .maybeSingle();
+
+        const patch: any = {};
+        if (parsed.data.status) patch.status = parsed.data.status;
+        if (parsed.data.name) patch.name = parsed.data.name;
+        if (parsed.data.message) patch.message = parsed.data.message;
+        if (parsed.data.meta) patch.meta = { ...(existing?.meta as any), ...(parsed.data.meta as any) };
+
         const { data, error } = await supabaseAdmin
           .from('review_submissions')
-          .update({ status: parsed.data.status })
+          .update(patch)
           .eq('id', parsed.data.id)
           .select('id,status')
           .single();
@@ -508,10 +811,36 @@ export const handler: Handler = async (event) => {
 
         await supabaseAdmin.from('admin_audit_log').insert({
           admin_user_id: admin.profileUserId,
-          action: 'review_update_status',
+          action: 'review_update',
           target_type: 'review_submissions',
           target_id: data.id,
-          diff: { status: data.status },
+          diff: { ...patch },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      if (event.httpMethod === 'DELETE') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const id = (event.queryStringParameters?.id || '').trim();
+        if (!id) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Missing id' }) };
+        }
+
+        const { error } = await supabaseAdmin.from('review_submissions').delete().eq('id', id);
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to delete review' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'review_delete',
+          target_type: 'review_submissions',
+          target_id: id,
+          diff: {},
         });
 
         return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
@@ -524,11 +853,51 @@ export const handler: Handler = async (event) => {
       const admin = await requireAdmin(event);
       const supabaseAdmin = getSupabaseAdmin();
 
+      // Ensure defaults exist so admin sees the same content as the public site.
+      await ensureSeedContent(supabaseAdmin);
+
+      if (path === '/api/admin/faqs/reorder') {
+        if (event.httpMethod !== 'POST') {
+          return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+        }
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const ReorderSchema = z.object({ ids: z.array(z.string().min(10).max(80)).min(1).max(500) });
+        const body = event.body ? JSON.parse(event.body) : {};
+        const parsed = ReorderSchema.safeParse(body);
+        if (!parsed.success) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+        }
+
+        for (let i = 0; i < parsed.data.ids.length; i++) {
+          const id = parsed.data.ids[i];
+          const { data: existing } = await supabaseAdmin
+            .from('faq_submissions')
+            .select('id,meta')
+            .eq('id', id)
+            .maybeSingle();
+          const nextMeta = { ...(existing?.meta as any), order: i };
+          await supabaseAdmin.from('faq_submissions').update({ meta: nextMeta }).eq('id', id);
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'faqs_reorder',
+          target_type: 'faq_submissions',
+          target_id: null,
+          diff: { count: parsed.data.ids.length },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
       if (event.httpMethod === 'GET') {
         const status = (event.queryStringParameters?.status || '').trim();
         let q = supabaseAdmin
           .from('faq_submissions')
-          .select('id,created_at,name,email,question,answer,status')
+          .select('id,created_at,name,email,question,answer,status,meta')
           .order('created_at', { ascending: false })
           .limit(500);
         if (status) {
@@ -549,19 +918,34 @@ export const handler: Handler = async (event) => {
           return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
         }
 
-        const PatchSchema = z.object({
-          id: z.string().min(10).max(80),
-          status: z.enum(['pending', 'approved', 'rejected']),
-          answer: z.string().max(10_000).optional().nullable(),
-        });
+        const PatchSchema = z
+          .object({
+            id: z.string().min(10).max(80),
+            status: z.enum(['pending', 'approved', 'rejected']).optional(),
+            question: z.string().min(1).max(5000).optional(),
+            answer: z.string().max(10_000).optional().nullable(),
+            name: z.string().min(1).max(120).optional(),
+            meta: z.record(z.unknown()).optional(),
+          })
+          .refine((v) => Boolean(v.status || v.question || v.answer || v.name || v.meta), { message: 'No changes' });
         const body = event.body ? JSON.parse(event.body) : {};
         const parsed = PatchSchema.safeParse(body);
         if (!parsed.success) {
           return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
         }
 
-        const patch: any = { status: parsed.data.status };
+        const { data: existing } = await supabaseAdmin
+          .from('faq_submissions')
+          .select('id,status,name,question,answer,meta')
+          .eq('id', parsed.data.id)
+          .maybeSingle();
+
+        const patch: any = {};
+        if (parsed.data.status) patch.status = parsed.data.status;
+        if (parsed.data.question) patch.question = parsed.data.question;
         if (typeof parsed.data.answer === 'string') patch.answer = parsed.data.answer;
+        if (parsed.data.name) patch.name = parsed.data.name;
+        if (parsed.data.meta) patch.meta = { ...(existing?.meta as any), ...(parsed.data.meta as any) };
 
         const { data, error } = await supabaseAdmin
           .from('faq_submissions')
@@ -579,7 +963,33 @@ export const handler: Handler = async (event) => {
           action: 'faq_update',
           target_type: 'faq_submissions',
           target_id: data.id,
-          diff: { status: data.status },
+          diff: { ...patch },
+        });
+
+        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
+      }
+
+      if (event.httpMethod === 'DELETE') {
+        if (isRateLimited(ip, 60, 60_000)) {
+          return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+        }
+
+        const id = (event.queryStringParameters?.id || '').trim();
+        if (!id) {
+          return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Missing id' }) };
+        }
+
+        const { error } = await supabaseAdmin.from('faq_submissions').delete().eq('id', id);
+        if (error) {
+          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to delete faq' }) };
+        }
+
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: admin.profileUserId,
+          action: 'faq_delete',
+          target_type: 'faq_submissions',
+          target_id: id,
+          diff: {},
         });
 
         return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true }) };
