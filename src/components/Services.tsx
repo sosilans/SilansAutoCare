@@ -628,7 +628,10 @@ export function Services() {
                     <X className="w-6 h-6" />
                   </button>
 
-                  <div className="min-h-screen flex items-start justify-center p-4 sm:p-6">
+                  <div
+                    className="min-h-screen flex items-start justify-center p-4 sm:p-6"
+                    onClick={() => setExpandedCard(null)}
+                  >
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
