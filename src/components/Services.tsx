@@ -5,7 +5,6 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { lockScroll } from './ui/scrollLock';
 import { track } from '../analytics/client';
 import type { Lang, ServicesOverrides, ServiceTextOverride } from './servicesConfig';
 import { isServicesOverrides } from './servicesConfig';
@@ -38,9 +37,9 @@ export function Services() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const modalScrollLayerRef = useRef<HTMLDivElement | null>(null);
-  const touchStartYRef = useRef<number | null>(null);
-  const touchStartScrollTopRef = useRef<number>(0);
+  const modalCardRef = useRef<HTMLDivElement | null>(null);
+  const modalAnchorYRef = useRef<number>(0);
+  const modalMaxScrollYRef = useRef<number>(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
   const [servicesOverrides, setServicesOverrides] = useState<ServicesOverrides | null>(null);
@@ -143,12 +142,53 @@ export function Services() {
 
   useEffect(() => {
     if (expandedCard === null) return;
-    const unlock = lockScroll();
 
-    // Move focus into the modal (close button) after mount.
-    window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true } as any), 0);
+    // Fallback mode: use native page scroll for the modal (no internal overflow).
+    // Anchor the modal at the current scroll position, then clamp scrolling at the modal bottom.
+    modalAnchorYRef.current = window.scrollY || 0;
 
-    return unlock;
+    const calcMaxScrollY = () => {
+      const card = modalCardRef.current;
+      const anchorY = modalAnchorYRef.current;
+      if (!card) {
+        modalMaxScrollYRef.current = anchorY;
+        return;
+      }
+
+      const rect = card.getBoundingClientRect();
+      const scrollY = window.scrollY || 0;
+      const cardDocTop = scrollY + rect.top;
+      const cardHeight = card.offsetHeight;
+      const maxScrollY = Math.max(anchorY, Math.round(cardDocTop + cardHeight - window.innerHeight));
+      modalMaxScrollYRef.current = maxScrollY;
+    };
+
+    const clampToModalBottom = () => {
+      const maxScrollY = modalMaxScrollYRef.current;
+      const scrollY = window.scrollY || 0;
+      if (scrollY > maxScrollY) window.scrollTo(0, maxScrollY);
+    };
+
+    const onScroll = () => clampToModalBottom();
+    const onResize = () => {
+      calcMaxScrollY();
+      clampToModalBottom();
+    };
+
+    // After mount/layout.
+    window.setTimeout(() => {
+      calcMaxScrollY();
+      clampToModalBottom();
+      closeButtonRef.current?.focus({ preventScroll: true } as any);
+    }, 0);
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll as any);
+      window.removeEventListener('resize', onResize as any);
+    };
   }, [expandedCard]);
 
   const baseServices: Service[] = [
@@ -594,25 +634,21 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[1000]"
+                  className="absolute left-0 right-0 top-0 z-[2147483647] isolate transform-gpu pointer-events-none"
                 >
-                  {/* Backdrop (no scrolling) */}
+                  {/* Backdrop */}
                   <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-none"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm transform-gpu pointer-events-auto"
                     aria-hidden="true"
+                    onClick={() => setExpandedCard(null)}
                   />
 
-                  {/* Scroll layer (no backdrop-filter) */}
+                  {/* Modal content anchored to current scroll; page scroll reveals the rest */}
                   <div
-                    className="fixed inset-0 overflow-y-auto overscroll-contain touch-pan-y"
-                    style={{ WebkitOverflowScrolling: 'touch' } as any}
-                    ref={modalScrollLayerRef}
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) setExpandedCard(null);
-                    }}
+                    className="absolute left-0 right-0 z-[2147483646] pointer-events-auto"
+                    style={{ top: modalAnchorYRef.current }}
                   >
-                    {/* Content layer */}
-                    <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
+                    <div className="flex items-start justify-center p-4 sm:p-6">
                       <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -623,33 +659,8 @@ export function Services() {
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
+                      ref={modalCardRef}
                       onClick={(e) => e.stopPropagation()}
-                        onWheel={(e) => {
-                          const scroller = modalScrollLayerRef.current;
-                          if (!scroller) return;
-                          // Fallback: force scrolling the modal scroll layer.
-                          scroller.scrollTop += e.deltaY;
-                        }}
-                        onTouchStart={(e) => {
-                          const scroller = modalScrollLayerRef.current;
-                          if (!scroller) return;
-                          const touch = e.touches?.[0];
-                          if (!touch) return;
-                          touchStartYRef.current = touch.clientY;
-                          touchStartScrollTopRef.current = scroller.scrollTop;
-                        }}
-                        onTouchMove={(e) => {
-                          const scroller = modalScrollLayerRef.current;
-                          const startY = touchStartYRef.current;
-                          if (!scroller || startY === null) return;
-                          const touch = e.touches?.[0];
-                          if (!touch) return;
-                          const dy = startY - touch.clientY;
-                          scroller.scrollTop = touchStartScrollTopRef.current + dy;
-                        }}
-                        onTouchEnd={() => {
-                          touchStartYRef.current = null;
-                        }}
                       role="dialog"
                       aria-modal="true"
                     >
