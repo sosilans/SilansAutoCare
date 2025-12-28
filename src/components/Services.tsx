@@ -5,6 +5,7 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { lockScroll } from './ui/scrollLock';
 import { track } from '../analytics/client';
 import type { Lang, ServicesOverrides, ServiceTextOverride } from './servicesConfig';
 import { isServicesOverrides } from './servicesConfig';
@@ -37,9 +38,6 @@ export function Services() {
   const { theme } = useTheme();
   const { t, language } = useLanguage();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const modalCardRef = useRef<HTMLDivElement | null>(null);
-  const modalAnchorYRef = useRef<number>(0);
-  const modalMaxScrollYRef = useRef<number>(0);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
   const [servicesOverrides, setServicesOverrides] = useState<ServicesOverrides | null>(null);
@@ -143,52 +141,9 @@ export function Services() {
   useEffect(() => {
     if (expandedCard === null) return;
 
-    // Fallback mode: use native page scroll for the modal (no internal overflow).
-    // Anchor the modal at the current scroll position, then clamp scrolling at the modal bottom.
-    modalAnchorYRef.current = window.scrollY || 0;
-
-    const calcMaxScrollY = () => {
-      const card = modalCardRef.current;
-      const anchorY = modalAnchorYRef.current;
-      if (!card) {
-        modalMaxScrollYRef.current = anchorY;
-        return;
-      }
-
-      const rect = card.getBoundingClientRect();
-      const scrollY = window.scrollY || 0;
-      const cardDocTop = scrollY + rect.top;
-      const cardHeight = card.offsetHeight;
-      const maxScrollY = Math.max(anchorY, Math.round(cardDocTop + cardHeight - window.innerHeight));
-      modalMaxScrollYRef.current = maxScrollY;
-    };
-
-    const clampToModalBottom = () => {
-      const maxScrollY = modalMaxScrollYRef.current;
-      const scrollY = window.scrollY || 0;
-      if (scrollY > maxScrollY) window.scrollTo(0, maxScrollY);
-    };
-
-    const onScroll = () => clampToModalBottom();
-    const onResize = () => {
-      calcMaxScrollY();
-      clampToModalBottom();
-    };
-
-    // After mount/layout.
-    window.setTimeout(() => {
-      calcMaxScrollY();
-      clampToModalBottom();
-      closeButtonRef.current?.focus({ preventScroll: true } as any);
-    }, 0);
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize);
-
-    return () => {
-      window.removeEventListener('scroll', onScroll as any);
-      window.removeEventListener('resize', onResize as any);
-    };
+    const unlock = lockScroll();
+    window.setTimeout(() => closeButtonRef.current?.focus({ preventScroll: true } as any), 0);
+    return unlock;
   }, [expandedCard]);
 
   const baseServices: Service[] = [
@@ -634,22 +589,39 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute left-0 right-0 top-0 z-[2147483647] isolate transform-gpu pointer-events-none"
+                  className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm overflow-y-auto overscroll-contain"
+                  style={{ WebkitOverflowScrolling: 'touch' } as any}
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setExpandedCard(null);
+                  }}
                 >
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm transform-gpu pointer-events-auto"
-                    aria-hidden="true"
-                    onClick={() => setExpandedCard(null)}
-                  />
-
-                  {/* Modal content anchored to current scroll; page scroll reveals the rest */}
-                  <div
-                    className="absolute left-0 right-0 z-[2147483646] pointer-events-auto"
-                    style={{ top: modalAnchorYRef.current }}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedCard(null);
+                    }}
+                    ref={closeButtonRef}
+                    type="button"
+                    style={
+                      {
+                        '--safe-top': '0.75rem',
+                        '--safe-right': '0.75rem',
+                        '--safe-top-sm': '1.25rem',
+                        '--safe-right-sm': '1.25rem'
+                      } as any
+                    }
+                    className={`fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors z-[1010] touch-manipulation ${
+                      theme === 'dark'
+                        ? 'bg-white/10 hover:bg-white/20 text-white'
+                        : 'bg-black/10 hover:bg-black/20 text-white'
+                    }`}
+                    aria-label={t('common.close')}
                   >
-                    <div className="flex items-start justify-center p-4 sm:p-6">
-                      <motion.div
+                    <X className="w-6 h-6" />
+                  </button>
+
+                  <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
@@ -659,33 +631,10 @@ export function Services() {
                           ? 'bg-slate-900 border border-purple-500/30 vhs-noise'
                           : 'bg-white border border-purple-100'
                       }`}
-                      ref={modalCardRef}
                       onClick={(e) => e.stopPropagation()}
                       role="dialog"
                       aria-modal="true"
                     >
-                {/* Close Button */}
-                <button
-                  onClick={() => setExpandedCard(null)}
-                  ref={closeButtonRef}
-                  style={
-                    {
-                      '--safe-top': '0.75rem',
-                      '--safe-right': '0.75rem',
-                      '--safe-top-sm': '1.25rem',
-                      '--safe-right-sm': '1.25rem'
-                    } as any
-                  }
-                  className={`absolute safe-abs-tr z-20 inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
-                    theme === 'dark'
-                      ? 'hover:bg-purple-500/20 text-purple-300'
-                      : 'hover:bg-gray-100 text-gray-600'
-                  }`}
-                  aria-label={t('common.close')}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
                 {/* Modal Header */}
                 <div className="mb-4 pr-10">
                   <h2
@@ -711,17 +660,17 @@ export function Services() {
                   {/* Service Details */}
                   {services.find((s) => s.id === expandedCard)?.details && (
                     <div className="grid gap-6 lg:grid-cols-2">
-                    {/* What You Get */}
-                    <div className="lg:col-span-1">
-                      <h3
-                        className={`text-lg font-bold mb-3 ${
-                          theme === 'dark'
-                            ? 'text-purple-300'
-                            : 'text-purple-600'
-                        }`}
-                      >
-                        ✨ {t('services.modal.whatYouGet')}
-                      </h3>
+                      {/* What You Get */}
+                      <div className="lg:col-span-1">
+                        <h3
+                          className={`text-lg font-bold mb-3 ${
+                            theme === 'dark'
+                              ? 'text-purple-300'
+                              : 'text-purple-600'
+                          }`}
+                        >
+                          ✨ {t('services.modal.whatYouGet')}
+                        </h3>
                       <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
                         {services
                           .find((s) => s.id === expandedCard)
@@ -859,8 +808,8 @@ export function Services() {
                       </ul>
                     </div>
 
-                  </div>
-                )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Modal Footer (always visible) */}
@@ -889,8 +838,7 @@ export function Services() {
                     {t('services.modal.disclaimer')}
                   </p>
                 </div>
-                      </motion.div>
-                    </div>
+                    </motion.div>
                   </div>
                 </motion.div>
               )}

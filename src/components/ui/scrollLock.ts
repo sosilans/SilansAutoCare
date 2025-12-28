@@ -3,6 +3,11 @@ type ScrollLockSnapshot = {
   htmlScrollBehavior: string;
   bodyScrollBehavior: string;
   bodyOverflow: string;
+  bodyPosition: string;
+  bodyTop: string;
+  bodyLeft: string;
+  bodyRight: string;
+  bodyWidth: string;
   bodyPaddingRight: string;
   bodyModalScrollY: string;
 };
@@ -29,6 +34,11 @@ export function lockScroll(): () => void {
       htmlScrollBehavior: html.style.scrollBehavior,
       bodyScrollBehavior: body.style.scrollBehavior,
       bodyOverflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyTop: body.style.top,
+      bodyLeft: body.style.left,
+      bodyRight: body.style.right,
+      bodyWidth: body.style.width,
       bodyPaddingRight: body.style.paddingRight,
       bodyModalScrollY: body.style.getPropertyValue("--modal-scroll-y"),
     };
@@ -40,9 +50,13 @@ export function lockScroll(): () => void {
 
     body.classList.add("modal-open");
 
-    // Keep background fixed by disabling body scroll only.
-    // This is the most compatible approach with portaled modals.
+    // iOS-friendly: freeze background by fixing body at the current scroll position.
     body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
   }
 
   return () => {
@@ -61,6 +75,11 @@ export function lockScroll(): () => void {
 
     if (restore) {
       body.style.overflow = restore.bodyOverflow;
+      body.style.position = restore.bodyPosition;
+      body.style.top = restore.bodyTop;
+      body.style.left = restore.bodyLeft;
+      body.style.right = restore.bodyRight;
+      body.style.width = restore.bodyWidth;
       body.style.paddingRight = restore.bodyPaddingRight;
       body.style.setProperty("--modal-scroll-y", restore.bodyModalScrollY);
 
@@ -72,6 +91,11 @@ export function lockScroll(): () => void {
       body.style.scrollBehavior = restore.bodyScrollBehavior;
     } else {
       body.style.overflow = "";
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.width = "";
       body.style.paddingRight = "";
       body.style.removeProperty("--modal-scroll-y");
     }

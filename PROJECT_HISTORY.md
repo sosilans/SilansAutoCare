@@ -218,6 +218,24 @@ User Form Submit
 - Avoid changing design tokens/colors beyond existing Tailwind classes (project constraint).
 - Repo contains a `backup-*` folder and a separate copy project; changes should target `src/` (not the backup).
 
+## Services Modal Deep Fix (Dec 2025) — iOS scroll + layering
+
+### Problem
+- On iPhone/iOS Safari, the Services modal could appear **under** cards/header, and the **background** could scroll instead of the modal.
+
+### Final approach (proven pattern)
+- Use the same modal structure as `Portfolio` (fullscreen fixed overlay scroller):
+  - `fixed inset-0` overlay with `overflow-y-auto`, `overscroll-contain`, and `WebkitOverflowScrolling: 'touch'`.
+  - Close button is `fixed` and always on top.
+- Lock background scrolling while the modal is open via `lockScroll()`.
+
+### Files updated
+- `src/components/Services.tsx` — replaced the old “page-scroll clamp” fallback with a fullscreen overlay scroller modal.
+- `src/components/ui/scrollLock.ts` — iOS-friendly body freeze (`position: fixed; top: -scrollY`) and full restore on unlock.
+
+### QA checklist
+- On iPhone: modal is always above cards/header, modal content scrolls to the bottom CTA, background does not scroll, close works (X + backdrop).
+
 ## Analytics System (Dec 2025) — Auto-Metrics + Heatmap
 
 ### Summary
@@ -237,7 +255,7 @@ A lightweight, GDPR-safe analytics system was added (no cookies; anonymized; bat
 - `netlify/functions/analytics-ingest.ts` — ingest endpoint (rate limit; strips sensitive keys; inserts into Postgres `AnalyticsEvents`)
 - `netlify/functions/analytics-query.ts` — query endpoint for aggregates + heatmap points
 - `netlify/functions/_shared/postgres.ts` — Postgres connector (reads `ANALYTICS_DATABASE_URL`/`DATABASE_URL`)
-- `src/components/AdminSiteAnalytics.tsx` — admin charts + heatmap overlay (Recharts)
+- `src/components/AdminSiteAnalytics.tsx` — admin charts + heatmap overlay
 - `docs/ANALYTICS_SETUP.md` — DB schema + env var instructions
 
 ### Files Updated (Instrumentation / Routing)
