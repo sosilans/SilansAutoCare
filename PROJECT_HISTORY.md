@@ -218,6 +218,59 @@ User Form Submit
 - Avoid changing design tokens/colors beyond existing Tailwind classes (project constraint).
 - Repo contains a `backup-*` folder and a separate copy project; changes should target `src/` (not the backup).
 
+## Analytics System (Dec 2025) — Auto-Metrics + Heatmap
+
+### Summary
+A lightweight, GDPR-safe analytics system was added (no cookies; anonymized; batched `sendBeacon`/`fetch(keepalive)`; passive scroll/touch listeners). It captures:
+- Click heatmap events (x,y), viewport, scroll position
+- Session start + referrer + UTM params + first-visit landing page
+- Scroll depth (max %)
+- Time spent per section + section transitions
+- Service card clicks + service modal opens
+- Hero CTA clicks
+- Review form opens + submissions
+- Contact form submissions (anonymized)
+- Language switch usage
+
+### Files Added
+- `src/analytics/client.ts` — client-side tracker (sessionId via localStorage; batching; section observer; global click capture)
+- `netlify/functions/analytics-ingest.ts` — ingest endpoint (rate limit; strips sensitive keys; inserts into Postgres `AnalyticsEvents`)
+- `netlify/functions/analytics-query.ts` — query endpoint for aggregates + heatmap points
+- `netlify/functions/_shared/postgres.ts` — Postgres connector (reads `ANALYTICS_DATABASE_URL`/`DATABASE_URL`)
+- `src/components/AdminSiteAnalytics.tsx` — admin charts + heatmap overlay (Recharts)
+- `docs/ANALYTICS_SETUP.md` — DB schema + env var instructions
+
+### Files Updated (Instrumentation / Routing)
+- `src/App.tsx` — initializes analytics on public site and supports `/admin/*` routes
+- `src/components/Services.tsx` — `service_card_click` and `service_modal_open`
+- `src/components/Hero.tsx` — `cta_click` for hero buttons
+- `src/components/Reviews.tsx` — `review_form_open` + `review_submit`
+- `src/components/Contact.tsx` — `contact_submit` (does NOT include form values)
+- `src/components/LanguageContext.tsx` — `language_switch`
+- `src/components/AdminDashboard.tsx` — embeds `AdminSiteAnalytics` in Analytics tab
+- `src/components/AdminPanel.tsx` — admin button routes to `/admin/analytics`
+- `package.json` — added dependency `postgres` for Netlify Functions
+
+### DB / Netlify Configuration Required
+Create Postgres table:
+- `AnalyticsEvents(id bigserial, created_at timestamptz, type text, metadata jsonb)`
+
+Set Netlify env var:
+- `ANALYTICS_DATABASE_URL` (recommended) or `DATABASE_URL`
+
+See `docs/ANALYTICS_SETUP.md` for SQL + examples.
+
+### Admin UI
+Admin analytics is available at:
+- `/admin/analytics`
+
+It renders inside the existing Admin “Analytics” tab and shows:
+- Most opened services
+- Scroll depth trend
+- Per-section engagement
+- UTM campaign performance
+- Heatmap overlay (normalized by viewport)
+
 ## Development Commands
 
 ```powershell
