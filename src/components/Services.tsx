@@ -595,19 +595,21 @@ export function Services() {
                 >
                   {/* Backdrop (no scrolling) */}
                   <div
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-none"
                     aria-hidden="true"
                   />
 
                   {/* Scroll layer (no backdrop-filter) */}
                   <div
-                    className="absolute inset-0 overflow-y-auto overscroll-contain touch-pan-y"
+                    className="fixed inset-0 overflow-y-auto overscroll-contain touch-pan-y"
                     style={{ WebkitOverflowScrolling: 'touch' } as any}
-                    onClick={() => setExpandedCard(null)}
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) setExpandedCard(null);
+                    }}
                   >
-                  {/* Content layer */}
-                  <div className="min-h-full p-4 sm:p-6 pointer-events-none">
-                    <motion.div
+                    {/* Content layer */}
+                    <div className="min-h-full flex items-start justify-center p-4 sm:p-6">
+                      <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
@@ -618,7 +620,6 @@ export function Services() {
                           : 'bg-white border border-purple-100'
                       }`}
                       onClick={(e) => e.stopPropagation()}
-                      style={{ pointerEvents: 'auto' } as any}
                       role="dialog"
                       aria-modal="true"
                     >
@@ -847,8 +848,8 @@ export function Services() {
                     {t('services.modal.disclaimer')}
                   </p>
                 </div>
-                    </motion.div>
-                  </div>
+                      </motion.div>
+                    </div>
                   </div>
                 </motion.div>
               )}
