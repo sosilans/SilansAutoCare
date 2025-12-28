@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useTheme } from './ThemeContext';
+import { useAnimation } from './AnimationContext';
 import { useDataStore } from './DataStoreContext';
 import { useAuth } from './AuthContext';
 import { useOnlineStatus } from './OnlineStatusContext';
@@ -12,7 +13,7 @@ import {
   CheckCircle, XCircle, Eye, EyeOff, BarChart3, 
   Mail, Phone, Calendar, ArrowUp, ArrowDown, Activity,
   Package, Image as ImageIcon, Settings as SettingsIcon,
-  Download, Home, PieChart, LineChart
+  Download, Home, PieChart, LineChart, Sun, Moon, Sparkles
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -49,7 +50,8 @@ async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, adminAccessToken }: AdminDashboardProps = {}) {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
+  const { reduceMotion, toggleReduceMotion } = useAnimation();
   const { t } = useLanguage();
   const { isAdmin: authIsAdmin, user, users, removeUser } = useAuth();
   const isAdmin = isAdminOverride ?? authIsAdmin;
@@ -106,7 +108,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+      <div className="flex items-center justify-center min-h-screen">
         <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -295,10 +297,10 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   };
 
   return (
-    <div className={`min-h-screen p-4 md:p-8 ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+    <div className="min-h-screen p-4 md:p-8">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
               {t('admin.dashboard.title')}
@@ -310,14 +312,33 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               Build {(__BUILD_COMMIT__ || '').slice(0, 7)} • {__BUILD_TIME__}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3 md:justify-end">
             <Button
               onClick={() => window.location.href = '/'}
               variant="outline"
               className="flex items-center gap-2"
             >
               <Home className="w-4 h-4" />
-              {t('admin.dashboard.backToSite')}
+              <span className="hidden sm:inline">{t('admin.dashboard.backToSite')}</span>
+            </Button>
+
+            <Button
+              onClick={toggleTheme}
+              variant="outline"
+              className="flex items-center gap-2"
+              aria-label={t('header.aria.toggleTheme')}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              <span className="hidden sm:inline">{theme === 'dark' ? t('theme.lightMode') : t('theme.darkMode')}</span>
+            </Button>
+
+            <Button
+              onClick={toggleReduceMotion}
+              variant={reduceMotion ? 'destructive' : 'outline'}
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">{reduceMotion ? t('admin.dashboard.settings.animationsOff') : t('admin.dashboard.settings.animationsOn')}</span>
             </Button>
 
             <Button

@@ -15,6 +15,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './components/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { ThemeProvider, useTheme } from './components/ThemeContext';
+import { AnimationProvider } from './components/AnimationContext';
 import { LanguageProvider, useLanguage } from './components/LanguageContext';
 import { OnlineStatusProvider } from './components/OnlineStatusContext';
 import { AvailabilityStatusProvider } from './components/AvailabilityStatusContext';
@@ -126,20 +127,22 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <LanguageProvider>
-        <OnlineStatusProvider>
-          <AvailabilityStatusProvider>
-            <MaintenanceModeProvider>
-              <AuthProvider>
-                <DataStoreProvider>
-                  <AuthModal />
-                  <AppContent />
-                </DataStoreProvider>
-              </AuthProvider>
-            </MaintenanceModeProvider>
-          </AvailabilityStatusProvider>
-        </OnlineStatusProvider>
-      </LanguageProvider>
+      <AnimationProvider>
+        <LanguageProvider>
+          <OnlineStatusProvider>
+            <AvailabilityStatusProvider>
+              <MaintenanceModeProvider>
+                <AuthProvider>
+                  <DataStoreProvider>
+                    <AuthModal />
+                    <AppContent />
+                  </DataStoreProvider>
+                </AuthProvider>
+              </MaintenanceModeProvider>
+            </AvailabilityStatusProvider>
+          </OnlineStatusProvider>
+        </LanguageProvider>
+      </AnimationProvider>
     </ThemeProvider>
   );
 }

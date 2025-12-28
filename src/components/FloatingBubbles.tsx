@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTheme } from './ThemeContext';
+import { useAnimation } from './AnimationContext';
 
 interface Bubble {
   id: number;
@@ -14,8 +15,13 @@ interface Bubble {
 export function FloatingBubbles() {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const { theme } = useTheme();
+  const { reduceMotion } = useAnimation();
 
   useEffect(() => {
+    if (reduceMotion) {
+      setBubbles([]);
+      return;
+    }
     // Create initial bubbles
     const initialBubbles: Bubble[] = Array.from({ length: 15 }, (_, i) => ({
       id: i,
@@ -42,7 +48,9 @@ export function FloatingBubbles() {
     }, 2000); // New bubble every 2 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [reduceMotion]);
+
+  if (reduceMotion) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

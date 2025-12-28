@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, ReactNode } from 'react';
+import { useAnimation } from './AnimationContext';
 
 interface BubbleEffectProps {
   children: ReactNode;
@@ -9,11 +10,13 @@ interface BubbleEffectProps {
 }
 
 export function BubbleEffect({ children, className = '', intensity = 'medium', variant = 'bright' }: BubbleEffectProps) {
+  const { reduceMotion } = useAnimation();
   const [bubbles, setBubbles] = useState<Array<{id: number, x: number, y: number, angle: number, initialDistance: number, color: string, size: number, delay: number}>>([]);
 
   const bubbleCount = intensity === 'low' ? 5 : intensity === 'medium' ? 8 : 12;
 
   const handleMouseEnter = () => {
+    if (reduceMotion) return;
     // Цвета в зависимости от варианта
     let colors: string[];
     let opacityMultiplier: number;

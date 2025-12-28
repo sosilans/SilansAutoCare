@@ -7,6 +7,7 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useAvailabilityStatus } from './AvailabilityStatusContext';
 import { useAuth } from './AuthContext';
+import { useAnimation } from './AnimationContext';
 import { track } from '../analytics/client';
 
 export function Hero() {
@@ -14,6 +15,7 @@ export function Hero() {
   const { t } = useLanguage();
   const { status } = useAvailabilityStatus();
   const { user, openAuthModal } = useAuth();
+  const { reduceMotion } = useAnimation();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [useImageFallback, setUseImageFallback] = useState(false);
@@ -59,15 +61,21 @@ export function Hero() {
 
   // Auto-scroll carousel
   useEffect(() => {
+    if (reduceMotion) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % videoCarousel.length);
     }, 3500); // Change slide every 3.5 seconds
 
     return () => clearInterval(interval);
-  }, [videoCarousel.length]);
+  }, [videoCarousel.length, reduceMotion]);
 
   // Generate particles on slide change
   useEffect(() => {
+    if (reduceMotion) {
+      setParticles([]);
+      setFloatingBubbles([]);
+      return;
+    }
     // Голубые и фиолетовые оттенки
     const colors = [
       '#8b5cf6', '#a78bfa', '#c4b5fd', // фиолетовые
@@ -107,7 +115,7 @@ export function Hero() {
     }, 2500);
     
     return () => clearTimeout(timeout);
-  }, [currentSlide]);
+  }, [currentSlide, reduceMotion]);
 
   // Scroll to portfolio on click
   const handleCarouselClick = () => {
@@ -178,38 +186,39 @@ export function Hero() {
       <div className="vhs-scanlines absolute inset-0 pointer-events-none"></div>
 
       {/* Floating bubbles that rise to the top */}
-      {floatingBubbles.map((bubble) => (
-        <motion.div
-          key={bubble.id}
-          initial={{ 
-            opacity: 1,
-            left: `${bubble.x}%`,
-            top: `${bubble.startY}%`,
-            scale: 1
-          }}
-          animate={{ 
-            opacity: 0,
-            top: '-10%', // всплывают к самому верху сайта
-            scale: 1.2
-          }}
-          transition={{ 
-            duration: 2,
-            ease: "easeOut"
-          }}
-          className="absolute pointer-events-none z-50"
-        >
-          <div 
-            className="rounded-full"
-            style={{ 
-              backgroundColor: bubble.color, 
-              width: `${bubble.size}px`, 
-              height: `${bubble.size}px`,
+      {!reduceMotion &&
+        floatingBubbles.map((bubble) => (
+          <motion.div
+            key={bubble.id}
+            initial={{
               opacity: 1,
-              boxShadow: `0 0 10px ${bubble.color}`
+              left: `${bubble.x}%`,
+              top: `${bubble.startY}%`,
+              scale: 1,
             }}
-          />
-        </motion.div>
-      ))}
+            animate={{
+              opacity: 0,
+              top: '-10%', // всплывают к самому верху сайта
+              scale: 1.2,
+            }}
+            transition={{
+              duration: 2,
+              ease: 'easeOut',
+            }}
+            className="absolute pointer-events-none z-50"
+          >
+            <div
+              className="rounded-full"
+              style={{
+                backgroundColor: bubble.color,
+                width: `${bubble.size}px`,
+                height: `${bubble.size}px`,
+                opacity: 1,
+                boxShadow: `0 0 10px ${bubble.color}`,
+              }}
+            />
+          </motion.div>
+        ))}
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
@@ -310,40 +319,41 @@ export function Hero() {
             className="relative scale-85"
           >
             {/* Transition particles - outside overflow container */}
-            {particles.map((particle) => (
-              <motion.div
-                key={particle.id}
-                initial={{ 
-                  opacity: 0.8,
-                  scale: 1,
-                  left: `${particle.x}%`,
-                  top: `${particle.y}%`
-                }}
-                animate={{ 
-                  opacity: 0,
-                  scale: 0.3,
-                  left: `${particle.x + (Math.random() - 0.5) * 40}%`,
-                  top: `${particle.y + (Math.random() - 0.5) * 40}%`
-                }}
-                transition={{ 
-                  duration: 0.7,
-                  ease: "easeOut"
-                }}
-                className="absolute pointer-events-none z-50"
-              >
-                {particle.type === 'bubble' ? (
-                  <div 
-                    className="w-6 h-6 rounded-full"
-                    style={{ backgroundColor: particle.color, opacity: 0.6 }}
-                  />
-                ) : (
-                  <Star 
-                    className="w-6 h-6" 
-                    style={{ color: particle.color, fill: particle.color, opacity: 0.6 }}
-                  />
-                )}
-              </motion.div>
-            ))}
+            {!reduceMotion &&
+              particles.map((particle) => (
+                <motion.div
+                  key={particle.id}
+                  initial={{
+                    opacity: 0.8,
+                    scale: 1,
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                  }}
+                  animate={{
+                    opacity: 0,
+                    scale: 0.3,
+                    left: `${particle.x + (Math.random() - 0.5) * 40}%`,
+                    top: `${particle.y + (Math.random() - 0.5) * 40}%`,
+                  }}
+                  transition={{
+                    duration: 0.7,
+                    ease: 'easeOut',
+                  }}
+                  className="absolute pointer-events-none z-50"
+                >
+                  {particle.type === 'bubble' ? (
+                    <div
+                      className="w-6 h-6 rounded-full"
+                      style={{ backgroundColor: particle.color, opacity: 0.6 }}
+                    />
+                  ) : (
+                    <Star
+                      className="w-6 h-6"
+                      style={{ color: particle.color, fill: particle.color, opacity: 0.6 }}
+                    />
+                  )}
+                </motion.div>
+              ))}
             
             <div 
               className="relative rounded-3xl overflow-hidden cartoon-shadow vhs-border vhs-noise cursor-pointer group aspect-[3/4]"

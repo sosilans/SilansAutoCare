@@ -35,6 +35,24 @@ function linesToText(lines?: string[]): string {
   return (lines || []).join('\n');
 }
 
+type DraftField = 'whatYouGet' | 'toolsUsed' | 'importantNotes' | 'whyChooseUs';
+
+function draftKey(id: number, lang: Lang, field: DraftField): string {
+  return `${id}|${lang}|${field}`;
+}
+
+function parseDraftKey(key: string): { id: number; lang: Lang; field: DraftField } | null {
+  const parts = key.split('|');
+  if (parts.length !== 3) return null;
+  const id = Number(parts[0]);
+  const lang = parts[1] as Lang;
+  const field = parts[2] as DraftField;
+  if (!Number.isFinite(id)) return null;
+  if (!['en', 'es', 'ru'].includes(lang)) return null;
+  if (!['whatYouGet', 'toolsUsed', 'importantNotes', 'whyChooseUs'].includes(field)) return null;
+  return { id, lang, field };
+}
+
 function getServiceTitleKey(serviceKey: ServiceKey) {
   return `services.cards.${serviceKey}.title`;
 }
@@ -129,6 +147,7 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [overrides, setOverrides] = useState<ServicesOverrides>(() => emptyServicesOverrides());
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!adminAccessToken) return;
@@ -153,6 +172,11 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
   useEffect(() => {
     setActiveLang(language);
   }, [language]);
+
+  // Prevent drafts from leaking across languages.
+  useEffect(() => {
+    setDrafts({});
+  }, [activeLang]);
 
   const byId = useMemo(() => {
     const map = new Map<number, ServiceOverride>();
@@ -215,6 +239,38 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
   const handleSave = async () => {
     if (!adminAccessToken) return;
     setIsSaving(true);
+
+    // If user clicks Save while focused in a textarea, flush drafts first.
+    const overridesToSave: ServicesOverrides = (() => {
+      const entries = Object.entries(drafts);
+      if (entries.length === 0) return overrides;
+
+      const next: ServicesOverrides = {
+        ...overrides,
+        services: overrides.services.map((s) => ({ ...s, text: s.text ? { ...s.text } : undefined })),
+      };
+
+      for (const [k, v] of entries) {
+        const parsed = parseDraftKey(k);
+        if (!parsed) continue;
+        const svc = next.services.find((s) => s.id === parsed.id);
+        if (!svc) continue;
+        const nextText: any = { ...(svc.text || {}) };
+        const prevLang = (nextText[parsed.lang] || {}) as ServiceTextOverride;
+        const prevDetails = { ...(prevLang.details || {}) };
+        (prevDetails as any)[parsed.field] = normalizeLines(v);
+        nextText[parsed.lang] = { ...prevLang, details: prevDetails };
+        svc.text = nextText;
+      }
+
+      return next;
+    })();
+
+    if (overridesToSave !== overrides) {
+      setOverrides(overridesToSave);
+      setDrafts({});
+    }
+
     try {
       await apiJson(`/api/admin/services`, {
         method: 'PUT',
@@ -222,7 +278,7 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
           'Content-Type': 'application/json',
           Authorization: `Bearer ${adminAccessToken}`,
         },
-        body: JSON.stringify(overrides),
+        body: JSON.stringify(overridesToSave),
       });
       onNotify('success', t('admin.services.saved'));
     } catch {
@@ -285,6 +341,28 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
             const effective = mergeText(base, current.text?.[activeLang]);
 
             const details = effective.details || {};
+
+            const listDraftValue = (field: DraftField, fallbackLines?: string[]) => {
+              const k = draftKey(svc.id, activeLang, field);
+              return drafts[k] ?? linesToText(fallbackLines);
+            };
+
+            const setListDraftValue = (field: DraftField, value: string) => {
+              const k = draftKey(svc.id, activeLang, field);
+              setDrafts((prev) => ({ ...prev, [k]: value }));
+            };
+
+            const commitListDraftValue = (field: DraftField) => {
+              const k = draftKey(svc.id, activeLang, field);
+              const value = drafts[k];
+              if (value === undefined) return;
+              updateDetailsLines(svc.id, activeLang, field, normalizeLines(value));
+              setDrafts((prev) => {
+                const next = { ...prev };
+                delete next[k];
+                return next;
+              });
+            };
 
             return (
               <AccordionItem key={svc.id} value={String(svc.id)}>
@@ -372,8 +450,9 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
                       <div>
                         <div className="text-xs text-muted-foreground mb-1">{t('admin.services.whatYouGet')}</div>
                         <Textarea
-                          value={linesToText(details.whatYouGet)}
-                          onChange={(e) => updateDetailsLines(svc.id, activeLang, 'whatYouGet', normalizeLines(e.target.value))}
+                          value={listDraftValue('whatYouGet', details.whatYouGet)}
+                          onChange={(e) => setListDraftValue('whatYouGet', e.target.value)}
+                          onBlur={() => commitListDraftValue('whatYouGet')}
                           rows={6}
                         />
                         <div className="text-xs text-muted-foreground mt-1">{t('admin.services.onePerLine')}</div>
@@ -382,8 +461,9 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
                       <div>
                         <div className="text-xs text-muted-foreground mb-1">{t('admin.services.toolsUsed')}</div>
                         <Textarea
-                          value={linesToText(details.toolsUsed)}
-                          onChange={(e) => updateDetailsLines(svc.id, activeLang, 'toolsUsed', normalizeLines(e.target.value))}
+                          value={listDraftValue('toolsUsed', details.toolsUsed)}
+                          onChange={(e) => setListDraftValue('toolsUsed', e.target.value)}
+                          onBlur={() => commitListDraftValue('toolsUsed')}
                           rows={5}
                         />
                       </div>
@@ -391,8 +471,9 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
                       <div>
                         <div className="text-xs text-muted-foreground mb-1">{t('admin.services.importantNotes')}</div>
                         <Textarea
-                          value={linesToText(details.importantNotes)}
-                          onChange={(e) => updateDetailsLines(svc.id, activeLang, 'importantNotes', normalizeLines(e.target.value))}
+                          value={listDraftValue('importantNotes', details.importantNotes)}
+                          onChange={(e) => setListDraftValue('importantNotes', e.target.value)}
+                          onBlur={() => commitListDraftValue('importantNotes')}
                           rows={5}
                         />
                       </div>
@@ -400,8 +481,9 @@ export function AdminServicesEditor({ adminAccessToken, theme, onNotify }: Props
                       <div>
                         <div className="text-xs text-muted-foreground mb-1">{t('admin.services.whyChooseUs')}</div>
                         <Textarea
-                          value={linesToText(details.whyChooseUs)}
-                          onChange={(e) => updateDetailsLines(svc.id, activeLang, 'whyChooseUs', normalizeLines(e.target.value))}
+                          value={listDraftValue('whyChooseUs', details.whyChooseUs)}
+                          onChange={(e) => setListDraftValue('whyChooseUs', e.target.value)}
+                          onBlur={() => commitListDraftValue('whyChooseUs')}
                           rows={5}
                         />
                       </div>
