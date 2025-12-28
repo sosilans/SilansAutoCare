@@ -261,6 +261,32 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   const handleApproveReview = async (id: string) => {
     const ok = await approveReview(id);
+
+    if (ok) {
+      const draft = reviewEdits[id];
+      if (draft) {
+        const meta: Record<string, unknown> = {
+          date: draft.date?.trim() || undefined,
+          avatar: draft.avatar?.trim() || undefined,
+          color: draft.color?.trim() || undefined,
+        };
+        const ratingRaw = draft.rating?.trim();
+        if (ratingRaw) {
+          const rating = Number(ratingRaw);
+          if (Number.isFinite(rating)) meta.rating = rating;
+        }
+
+        const hasMeta = Object.values(meta).some((v) => v !== undefined);
+        if (hasMeta) {
+          const metaOk = await updateReview(id, { meta });
+          if (!metaOk) {
+            showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+            return;
+          }
+        }
+      }
+    }
+
     showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.reviewApproved') : t('admin.dashboard.notifications.actionFailed'));
   };
 
@@ -276,7 +302,27 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
       return;
     }
     const ok = await approveFAQ(id, answer);
-    if (ok) setFaqAnswers(prev => ({ ...prev, [id]: '' }));
+
+    if (ok) {
+      setFaqAnswers(prev => ({ ...prev, [id]: '' }));
+      const draft = faqEdits[id];
+      if (draft) {
+        const meta: Record<string, unknown> = {
+          date: draft.date?.trim() || undefined,
+          avatar: draft.avatar?.trim() || undefined,
+          color: draft.color?.trim() || undefined,
+        };
+        const hasMeta = Object.values(meta).some((v) => v !== undefined);
+        if (hasMeta) {
+          const metaOk = await updateFAQ(id, { meta });
+          if (!metaOk) {
+            showNotification('error', t('admin.dashboard.notifications.actionFailed'));
+            return;
+          }
+        }
+      }
+    }
+
     showNotification(ok ? 'success' : 'error', ok ? t('admin.dashboard.notifications.faqAnswered') : t('admin.dashboard.notifications.actionFailed'));
   };
 
@@ -753,6 +799,45 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                         <p className={`mb-3 ${theme === 'dark' ? 'text-purple-200/80' : 'text-gray-700'}`}>
                           {review.message}
                         </p>
+
+                        {(() => {
+                          const draft =
+                            reviewEdits[review.id] ||
+                            {
+                              name: review.name,
+                              message: review.message,
+                              date: review.date || '',
+                              avatar: review.avatar || '',
+                              color: review.color || '',
+                              rating: typeof review.rating === 'number' ? String(review.rating) : '',
+                            };
+                          return (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                              <Input
+                                value={draft.date}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, date: e.target.value } }))}
+                                placeholder="Date (e.g., November 2024)"
+                              />
+                              <Input
+                                value={draft.rating}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, rating: e.target.value } }))}
+                                placeholder="Rating (1-5)"
+                                inputMode="numeric"
+                              />
+                              <Input
+                                value={draft.avatar}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, avatar: e.target.value } }))}
+                                placeholder="Avatar (emoji or text)"
+                              />
+                              <Input
+                                value={draft.color}
+                                onChange={(e) => setReviewEdits((prev) => ({ ...prev, [review.id]: { ...draft, color: e.target.value } }))}
+                                placeholder="Color classes (e.g., from-cyan-400 via-blue-400 to-purple-400)"
+                              />
+                            </div>
+                          );
+                        })()}
+
                         <div className="flex gap-2">
                           <Button onClick={() => handleApproveReview(review.id)} size="sm" className="bg-green-500">
                             <CheckCircle className="w-4 h-4 mr-1" />
@@ -914,6 +999,39 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                           className="mb-3"
                           rows={3}
                         />
+
+                        {(() => {
+                          const draft =
+                            faqEdits[faq.id] ||
+                            {
+                              name: faq.name,
+                              question: faq.question,
+                              answer: faqAnswers[faq.id] || '',
+                              date: faq.date || '',
+                              avatar: faq.avatar || '',
+                              color: faq.color || '',
+                            };
+                          return (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                              <Input
+                                value={draft.date}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, date: e.target.value } }))}
+                                placeholder="Date (e.g., November 2024)"
+                              />
+                              <Input
+                                value={draft.avatar}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, avatar: e.target.value } }))}
+                                placeholder="Avatar (emoji or text)"
+                              />
+                              <Input
+                                value={draft.color}
+                                onChange={(e) => setFaqEdits((prev) => ({ ...prev, [faq.id]: { ...draft, color: e.target.value } }))}
+                                placeholder="Color classes (e.g., from-cyan-400 via-blue-400 to-purple-400)"
+                              />
+                            </div>
+                          );
+                        })()}
+
                         <div className="flex gap-2">
                           <Button 
                             onClick={() => handleAnswerFAQ(faq.id)} 
