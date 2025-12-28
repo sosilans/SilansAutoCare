@@ -620,8 +620,8 @@ export function Services() {
                     }
                     className={`fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
                       theme === 'dark'
-                        ? 'bg-white/10 hover:bg-white/20 text-white'
-                        : 'bg-black/10 hover:bg-black/20 text-white'
+                        ? 'bg-white/15 hover:bg-white/25 text-white border border-white/20 shadow-sm'
+                        : 'bg-white/90 hover:bg-white text-gray-900 border border-gray-200 shadow-sm'
                     }`}
                     aria-label={t('common.close')}
                   >
