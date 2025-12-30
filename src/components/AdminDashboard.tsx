@@ -115,12 +115,12 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+      <div className="flex items-center justify-center min-h-screen vhs-noise vhs-scanlines">
+        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30 vhs-glow-dark vhs-border' : 'vhs-glow-light vhs-border'}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-              <p className={theme === 'dark' ? 'text-purple-200' : 'text-gray-700'}>{t('admin.dashboard.loading')}</p>
+              <p className={`vhs-text ${theme === 'dark' ? 'vhs-text-dark' : 'vhs-text-light'}`}>{t('admin.dashboard.loading')}</p>
             </div>
           </CardContent>
         </Card>
@@ -130,10 +130,10 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   if (!isAdmin) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
-        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-red-500/30' : ''}>
+      <div className={`flex items-center justify-center min-h-screen vhs-noise vhs-scanlines ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <Card className={theme === 'dark' ? 'bg-slate-800/50 border-red-500/30 vhs-glow-dark vhs-border' : 'vhs-glow-light vhs-border'}>
           <CardContent className="pt-6">
-            <p className="text-red-500">{t('admin.dashboard.accessDenied')}</p>
+            <p className="text-red-500 vhs-text chromatic-aberration" data-text={t('admin.dashboard.accessDenied')}>{t('admin.dashboard.accessDenied')}</p>
             <Button onClick={() => window.location.href = '/'} className="mt-4" variant="outline">
               <Home className="w-4 h-4 mr-2" />
               {t('admin.dashboard.backToHome')}
@@ -150,30 +150,6 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   };
 
   const persistSiteOnline = async (nextOnline: boolean) => {
-    if (!adminAccessToken) return;
-    await apiJson<{ ok: true }>(`/api/admin/settings`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminAccessToken}`,
-      },
-      body: JSON.stringify({ key: 'site_online', value: nextOnline }),
-    });
-  };
-
-  const persistAvailabilityStatus = async (nextStatus: 'available' | 'unavailable') => {
-    if (!adminAccessToken) return;
-    await apiJson<{ ok: true }>(`/api/admin/settings`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminAccessToken}`,
-      },
-      body: JSON.stringify({ key: 'availability_status', value: nextStatus }),
-    });
-  };
-
-  const persistMaintenanceMode = async (nextValue: boolean) => {
     if (!adminAccessToken) return;
     await apiJson<{ ok: true }>(`/api/admin/settings`, {
       method: 'PUT',
@@ -500,18 +476,87 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      {/* Header */}
+    <div className={`min-h-screen p-4 md:p-8 vhs-noise vhs-scanlines ${theme === 'dark' ? 'bg-slate-950' : 'bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50'}`}>
+      {/* Moderation Tab */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Ожидают модерации</h2>
+        {(pendingReviews.length === 0 && pendingFAQs.length === 0) && (
+          <div className="text-gray-500">Нет элементов для модерации.</div>
+        )}
+        <div className="space-y-4">
+          {pendingReviews.map((r) => (
+            <div key={r.id} className="p-4 rounded-lg border vhs-border bg-white/80 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div>
+                <div className="font-semibold text-lg text-yellow-700">Отзыв</div>
+                <div className="font-bold">{r.name}</div>
+                <div className="text-gray-700 mb-1">{r.message}</div>
+                <div className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()}</div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="success" onClick={() => handleApproveReview(r.id)}>Одобрить</Button>
+                <Button size="sm" variant="destructive" onClick={() => handleRejectReview(r.id)}>Отклонить</Button>
+              </div>
+            </div>
+          ))}
+          {pendingFAQs.map((f) => (
+            <div key={f.id} className="p-4 rounded-lg border vhs-border bg-white/80 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div>
+                <div className="font-semibold text-lg text-blue-700">FAQ</div>
+                <div className="font-bold">{f.name}</div>
+                <div className="text-gray-700 mb-1">{f.question}</div>
+                <div className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleString()}</div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="success" onClick={() => handleAnswerFAQ(f.id)}>Одобрить</Button>
+                <Button size="sm" variant="destructive" onClick={() => handleRejectFAQ(f.id)}>Отклонить</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live Data Tab */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Живые данные (Supabase)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-semibold text-lg mb-2 text-yellow-700">Все отзывы</h3>
+            <div className="space-y-2">
+              {allReviews.length === 0 && <div className="text-gray-400">Нет отзывов.</div>}
+              {allReviews.map((r) => (
+                <div key={r.id} className="p-3 rounded border vhs-border bg-white/70">
+                  <div className="font-bold">{r.name}</div>
+                  <div className="text-gray-700">{r.message}</div>
+                  <div className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()} | Статус: <span className={r.status === 'approved' ? 'text-green-600' : r.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}>{r.status}</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg mb-2 text-blue-700">Все FAQ</h3>
+            <div className="space-y-2">
+              {allFAQs.length === 0 && <div className="text-gray-400">Нет FAQ.</div>}
+              {allFAQs.map((f) => (
+                <div key={f.id} className="p-3 rounded border vhs-border bg-white/70">
+                  <div className="font-bold">{f.name}</div>
+                  <div className="text-gray-700">{f.question}</div>
+                  <div className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleString()} | Статус: <span className={f.status === 'approved' ? 'text-green-600' : f.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}>{f.status}</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-purple-100' : 'text-gray-900'}`}>
+            <h1 className={`text-3xl font-bold mb-2 vhs-text ${theme === 'dark' ? 'vhs-text-dark' : 'vhs-text-light'}`}>
               {t('admin.dashboard.title')}
             </h1>
-            <p className={theme === 'dark' ? 'text-purple-300/70' : 'text-gray-600'}>
+            <p className={theme === 'dark' ? 'text-purple-300/80 vhs-glow-dark' : 'text-gray-700 vhs-glow-light'}>
               {t('admin.dashboard.welcome').replace('{name}', effectiveName)}
             </p>
-            <p className={theme === 'dark' ? 'text-purple-300/50 text-xs mt-1' : 'text-gray-500 text-xs mt-1'}>
+            <p className={theme === 'dark' ? 'text-purple-300/60 text-xs mt-1' : 'text-gray-500 text-xs mt-1'}>
               Build {(__BUILD_COMMIT__ || '').slice(0, 7)} • {__BUILD_TIME__}
             </p>
           </div>
@@ -528,7 +573,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             <Button
               onClick={toggleTheme}
               variant="outline"
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 vhs-border ${theme === 'dark' ? 'vhs-border-animated' : ''}`}
               aria-label={t('header.aria.toggleTheme')}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -592,7 +637,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             exit={{ opacity: 0 }}
             className="mb-4"
           >
-            <Alert className={notification.type === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}>
+            <Alert className={`vhs-border ${notification.type === 'success' ? 'border-green-500 bg-green-50 vhs-glow-light' : 'border-red-500 bg-red-50 vhs-glow-dark'}`}>
               <AlertDescription className={notification.type === 'success' ? 'text-green-800' : 'text-red-800'}>
                 {notification.message}
               </AlertDescription>
@@ -602,7 +647,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+          <Card className={`vhs-border vhs-glow ${theme === 'dark' ? 'bg-slate-800/60 border-purple-500/50 vhs-glow-dark' : 'bg-white/90 border-purple-200 vhs-glow-light'}`}> 
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">{t('admin.dashboard.stats.totalReviews')}</CardTitle>
               <Star className="w-4 h-4 text-yellow-500" />
@@ -615,7 +660,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             </CardContent>
           </Card>
 
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+          <Card className={`vhs-border vhs-glow ${theme === 'dark' ? 'bg-slate-800/60 border-purple-500/50 vhs-glow-dark' : 'bg-white/90 border-purple-200 vhs-glow-light'}`}> 
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">{t('admin.dashboard.stats.faqs')}</CardTitle>
               <HelpCircle className="w-4 h-4 text-blue-500" />
@@ -628,7 +673,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             </CardContent>
           </Card>
 
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+          <Card className={`vhs-border vhs-glow ${theme === 'dark' ? 'bg-slate-800/60 border-purple-500/50 vhs-glow-dark' : 'bg-white/90 border-purple-200 vhs-glow-light'}`}> 
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">{t('admin.dashboard.stats.contactRequests')}</CardTitle>
               <Mail className="w-4 h-4 text-green-500" />
@@ -641,7 +686,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
             </CardContent>
           </Card>
 
-          <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+          <Card className={`vhs-border vhs-glow ${theme === 'dark' ? 'bg-slate-800/60 border-purple-500/50 vhs-glow-dark' : 'bg-white/90 border-purple-200 vhs-glow-light'}`}> 
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">{t('admin.dashboard.stats.registeredUsers')}</CardTitle>
               <Users className="w-4 h-4 text-purple-500" />
@@ -656,13 +701,13 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4" unmount={false}>
           <TabsList className={`grid w-full grid-cols-2 md:grid-cols-6 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
-            <TabsTrigger value="analytics">
+            <TabsTrigger value="analytics" onClick={() => setSelectedTab('analytics')}>
               <BarChart3 className="w-4 h-4 mr-2" />
               {t('admin.dashboard.tabs.analytics')}
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="relative">
+            <TabsTrigger value="reviews" className="relative" onClick={() => setSelectedTab('reviews')}>
               {t('admin.dashboard.tabs.reviews')}
               {analytics.pendingReviews > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -670,7 +715,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="faqs" className="relative">
+            <TabsTrigger value="faqs" className="relative" onClick={() => setSelectedTab('faqs')}>
               {t('admin.dashboard.tabs.faqs')}
               {analytics.pendingFAQs > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -678,7 +723,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="relative">
+            <TabsTrigger value="contacts" className="relative" onClick={() => setSelectedTab('contacts')}>
               {t('admin.dashboard.tabs.contacts')}
               {analytics.newContacts > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -686,8 +731,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="users">{t('admin.dashboard.tabs.users')}</TabsTrigger>
-            <TabsTrigger value="settings">
+            <TabsTrigger value="users" onClick={() => setSelectedTab('users')}>{t('admin.dashboard.tabs.users')}</TabsTrigger>
+            <TabsTrigger value="settings" onClick={() => setSelectedTab('settings')}>
               <SettingsIcon className="w-4 h-4 mr-2" />
               {t('admin.dashboard.tabs.settings')}
             </TabsTrigger>

@@ -1,4 +1,5 @@
 import type { Handler, HandlerEvent } from '@netlify/functions';
+import { getSupabaseAdmin, getSupabasePublic } from './_shared/supabase';
 import { getSql } from './_shared/postgres';
 import { requireAdmin } from './_shared/adminAuth';
 
@@ -7,6 +8,52 @@ const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+function getBearerToken(headers: Record<string, any>): string | null {
+  const raw = headers?.authorization || headers?.Authorization;
+  if (!raw || typeof raw !== 'string') return null;
+  const m = raw.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1].trim() : null;
+}
+
+async function requireAdmin(event: HandlerEvent) {
+  const token = getBearerToken(event.headers as any);
+  if (!token) {
+    const err: any = new Error('Missing Authorization Bearer token');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const supabasePublic = getSupabasePublic();
+  const { data: authData, error: authError } = await supabasePublic.auth.getUser(token);
+  if (authError || !authData?.user?.email) {
+    const err: any = new Error('Invalid or expired token');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const email = authData.user.email.trim().toLowerCase();
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from('users')
+    .select('id,email,role,is_active')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    const err: any = new Error('Admin profile not found');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (profile.role !== 'admin' || profile.is_active !== true) {
+    const err: any = new Error('Forbidden');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  return { id: profile.id, email: profile.email };
+}
 
 const requestCache = new Map<string, number[]>();
 const RATE_LIMIT = 30;
@@ -72,7 +119,21 @@ const handler: Handler = async (event: HandlerEvent) => {
     // Admin-only: protects analytics & heatmap endpoints from public access.
     await requireAdmin(event);
 
-    const sql = getSql();
+    // Admin-only endpoint.
+    await requireAdmin(event);
+
+    // Prefer Supabase RPC (API) if configured.
+    let supabaseAdmin: ReturnType<typeof getSupabaseAdmin> | null = null;
+    try {
+      supabaseAdmin = getSupabaseAdmin();
+    } catch {
+      supabaseAdmin = null;
+    }
+
+    const hasDirectPostgres = Boolean(
+      process.env.ANALYTICS_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL,
+    );
+    const sql = hasDirectPostgres ? getSql() : null;
     const params = event.queryStringParameters || {};
     const metric = params.metric || 'service_opens';
     const days = intParam(params.days || null, 7, 1, 90);
@@ -81,17 +142,39 @@ const handler: Handler = async (event: HandlerEvent) => {
     // IMPORTANT: All responses are anonymized aggregates or click points (no PII stored).
 
     if (metric === 'service_opens') {
-      const rows = await sql`
-        select
-          coalesce((metadata->'service'->>'title'), 'unknown') as label,
-          count(*)::int as count
-        from "AnalyticsEvents"
-        where "type" = 'service_modal_open'
-          and "created_at" >= now() - (${days}::text || ' days')::interval
-        group by 1
-        order by 2 desc
-        limit 20
-      `;
+      let rows: any;
+      if (supabaseAdmin) {
+        const { data, error } = await supabaseAdmin.rpc('analytics_service_opens', { days });
+        if (!error) {
+          rows = data || [];
+        } else if (sql) {
+          rows = await (sql as any)`
+            select
+              coalesce((metadata->'service'->>'title'), 'unknown') as label,
+              count(*)::int as count
+            from "AnalyticsEvents"
+            where "type" = 'service_modal_open'
+              and "created_at" >= now() - (${days}::text || ' days')::interval
+            group by 1
+            order by 2 desc
+            limit 20
+          `;
+        } else {
+          throw error;
+        }
+      } else {
+        rows = await (sql as any)`
+          select
+            coalesce((metadata->'service'->>'title'), 'unknown') as label,
+            count(*)::int as count
+          from "AnalyticsEvents"
+          where "type" = 'service_modal_open'
+            and "created_at" >= now() - (${days}::text || ' days')::interval
+          group by 1
+          order by 2 desc
+          limit 20
+        `;
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -100,18 +183,41 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'utm') {
-      const rows = await sql`
-        select
-          coalesce(metadata->'utm'->>'utm_campaign', '(none)') as campaign,
-          coalesce(metadata->'utm'->>'utm_source', '(none)') as source,
-          count(*)::int as sessions
-        from "AnalyticsEvents"
-        where "type" = 'session_start'
-          and "created_at" >= now() - (${days}::text || ' days')::interval
-        group by 1,2
-        order by 3 desc
-        limit 50
-      `;
+      let rows: any;
+      if (supabaseAdmin) {
+        const { data, error } = await supabaseAdmin.rpc('analytics_utm', { days });
+        if (!error) {
+          rows = data || [];
+        } else if (sql) {
+          rows = await (sql as any)`
+            select
+              coalesce(metadata->'utm'->>'utm_campaign', '(none)') as campaign,
+              coalesce(metadata->'utm'->>'utm_source', '(none)') as source,
+              count(*)::int as sessions
+            from "AnalyticsEvents"
+            where "type" = 'session_start'
+              and "created_at" >= now() - (${days}::text || ' days')::interval
+            group by 1,2
+            order by 3 desc
+            limit 50
+          `;
+        } else {
+          throw error;
+        }
+      } else {
+        rows = await (sql as any)`
+          select
+            coalesce(metadata->'utm'->>'utm_campaign', '(none)') as campaign,
+            coalesce(metadata->'utm'->>'utm_source', '(none)') as source,
+            count(*)::int as sessions
+          from "AnalyticsEvents"
+          where "type" = 'session_start'
+            and "created_at" >= now() - (${days}::text || ' days')::interval
+          group by 1,2
+          order by 3 desc
+          limit 50
+        `;
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -120,17 +226,39 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'scroll_depth') {
-      const rows = await sql`
-        select
-          date_trunc('day', "created_at")::date as day,
-          avg( (metadata->'scroll'->>'depthPct')::int )::float as avgDepthPct
-        from "AnalyticsEvents"
-        where "type" = 'scroll_depth'
-          and (metadata->'scroll'->>'depthPct') is not null
-          and "created_at" >= now() - (${days}::text || ' days')::interval
-        group by 1
-        order by 1 asc
-      `;
+      let rows: any;
+      if (supabaseAdmin) {
+        const { data, error } = await supabaseAdmin.rpc('analytics_scroll_depth', { days });
+        if (!error) {
+          rows = data || [];
+        } else if (sql) {
+          rows = await (sql as any)`
+            select
+              date_trunc('day', "created_at")::date as day,
+              avg( (metadata->'scroll'->>'depthPct')::int )::float as avgDepthPct
+            from "AnalyticsEvents"
+            where "type" = 'scroll_depth'
+              and (metadata->'scroll'->>'depthPct') is not null
+              and "created_at" >= now() - (${days}::text || ' days')::interval
+            group by 1
+            order by 1 asc
+          `;
+        } else {
+          throw error;
+        }
+      } else {
+        rows = await (sql as any)`
+          select
+            date_trunc('day', "created_at")::date as day,
+            avg( (metadata->'scroll'->>'depthPct')::int )::float as avgDepthPct
+          from "AnalyticsEvents"
+          where "type" = 'scroll_depth'
+            and (metadata->'scroll'->>'depthPct') is not null
+            and "created_at" >= now() - (${days}::text || ' days')::interval
+          group by 1
+          order by 1 asc
+        `;
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -139,17 +267,39 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'section_engagement') {
-      const rows = await sql`
-        select
-          coalesce(metadata->>'sectionId', 'unknown') as sectionId,
-          sum( (metadata->>'durationMs')::bigint )::bigint as totalDurationMs
-        from "AnalyticsEvents"
-        where "type" = 'section_time'
-          and (metadata->>'durationMs') is not null
-          and "created_at" >= now() - (${days}::text || ' days')::interval
-        group by 1
-        order by 2 desc
-      `;
+      let rows: any;
+      if (supabaseAdmin) {
+        const { data, error } = await supabaseAdmin.rpc('analytics_section_engagement', { days });
+        if (!error) {
+          rows = data || [];
+        } else if (sql) {
+          rows = await (sql as any)`
+            select
+              coalesce(metadata->>'sectionId', 'unknown') as sectionId,
+              sum( (metadata->>'durationMs')::bigint )::bigint as totalDurationMs
+            from "AnalyticsEvents"
+            where "type" = 'section_time'
+              and (metadata->>'durationMs') is not null
+              and "created_at" >= now() - (${days}::text || ' days')::interval
+            group by 1
+            order by 2 desc
+          `;
+        } else {
+          throw error;
+        }
+      } else {
+        rows = await (sql as any)`
+          select
+            coalesce(metadata->>'sectionId', 'unknown') as sectionId,
+            sum( (metadata->>'durationMs')::bigint )::bigint as totalDurationMs
+          from "AnalyticsEvents"
+          where "type" = 'section_time'
+            and (metadata->>'durationMs') is not null
+            and "created_at" >= now() - (${days}::text || ' days')::interval
+          group by 1
+          order by 2 desc
+        `;
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -159,23 +309,51 @@ const handler: Handler = async (event: HandlerEvent) => {
 
     if (metric === 'heatmap') {
       const limit = intParam(params.limit || null, 2000, 100, 10000);
-      const rows = await sql`
-        select
-          (metadata->'click'->>'x')::int as x,
-          (metadata->'click'->>'y')::int as y,
-          (metadata->'viewport'->>'w')::int as vw,
-          (metadata->'viewport'->>'h')::int as vh,
-          coalesce(metadata->>'elementId', '') as elementId,
-          coalesce(metadata->>'elementLabel', '') as elementLabel
-        from "AnalyticsEvents"
-        where "type" = 'click'
-          and coalesce(metadata->>'page', '') = ${page}
-          and (metadata->'click'->>'x') is not null
-          and (metadata->'click'->>'y') is not null
-          and "created_at" >= now() - (${days}::text || ' days')::interval
-        order by "created_at" desc
-        limit ${limit}
-      `;
+      let rows: any;
+      if (supabaseAdmin) {
+        const { data, error } = await supabaseAdmin.rpc('analytics_heatmap', { days, page, lim: limit });
+        if (!error) {
+          rows = data || [];
+        } else if (sql) {
+          rows = await (sql as any)`
+            select
+              (metadata->'click'->>'x')::int as x,
+              (metadata->'click'->>'y')::int as y,
+              (metadata->'viewport'->>'w')::int as vw,
+              (metadata->'viewport'->>'h')::int as vh,
+              coalesce(metadata->>'elementId', '') as elementId,
+              coalesce(metadata->>'elementLabel', '') as elementLabel
+            from "AnalyticsEvents"
+            where "type" = 'click'
+              and coalesce(metadata->>'page', '') = ${page}
+              and (metadata->'click'->>'x') is not null
+              and (metadata->'click'->>'y') is not null
+              and "created_at" >= now() - (${days}::text || ' days')::interval
+            order by "created_at" desc
+            limit ${limit}
+          `;
+        } else {
+          throw error;
+        }
+      } else {
+        rows = await (sql as any)`
+          select
+            (metadata->'click'->>'x')::int as x,
+            (metadata->'click'->>'y')::int as y,
+            (metadata->'viewport'->>'w')::int as vw,
+            (metadata->'viewport'->>'h')::int as vh,
+            coalesce(metadata->>'elementId', '') as elementId,
+            coalesce(metadata->>'elementLabel', '') as elementLabel
+          from "AnalyticsEvents"
+          where "type" = 'click'
+            and coalesce(metadata->>'page', '') = ${page}
+            and (metadata->'click'->>'x') is not null
+            and (metadata->'click'->>'y') is not null
+            and "created_at" >= now() - (${days}::text || ' days')::interval
+          order by "created_at" desc
+          limit ${limit}
+        `;
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, page, rows }),
@@ -190,9 +368,10 @@ const handler: Handler = async (event: HandlerEvent) => {
     };
   } catch (err: any) {
     console.error('analytics-query error', err);
+    const status = typeof err?.statusCode === 'number' ? err.statusCode : 500;
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal error', details: err?.message || String(err) }),
+      statusCode: status,
+      body: JSON.stringify({ error: status === 401 || status === 403 ? err?.message || 'Forbidden' : 'Internal error', details: err?.message || String(err) }),
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     };
   }

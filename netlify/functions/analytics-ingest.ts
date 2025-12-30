@@ -1,4 +1,5 @@
 import type { Handler, HandlerEvent } from '@netlify/functions';
+import { getSupabaseAdmin } from './_shared/supabase';
 import { getSql } from './_shared/postgres';
 
 type IncomingEvent = {
@@ -117,7 +118,18 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     const limited = events.slice(0, 100);
-    const sql = getSql();
+    // Prefer Supabase API (service role) if configured; fallback to direct Postgres.
+    let supabase: ReturnType<typeof getSupabaseAdmin> | null = null;
+    try {
+      supabase = getSupabaseAdmin();
+    } catch {
+      supabase = null;
+    }
+
+    const hasDirectPostgres = Boolean(
+      process.env.ANALYTICS_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL,
+    );
+    const sql = supabase || !hasDirectPostgres ? null : getSql();
 
     let inserted = 0;
 
@@ -131,9 +143,32 @@ const handler: Handler = async (event: HandlerEvent) => {
       const page = typeof cleaned.page === 'string' ? cleaned.page : undefined;
       if (!sessionId || !page) continue;
 
-      await sql`
+      if (supabase) {
+        const { error } = await supabase
+          .from('AnalyticsEvents')
+          .insert({
+            type: e.type.slice(0, 80),
+            metadata: cleaned,
+          });
+        if (!error) {
+          inserted++;
+          continue;
+        }
+
+        // If Supabase insert fails, try direct Postgres (if configured) before dropping.
+        if (sql) {
+          await (sql as any)`
+            insert into "AnalyticsEvents" ("type", "metadata", "created_at")
+            values (${e.type.slice(0, 80)}, ${(sql as any).json(cleaned as any)}, now())
+          `;
+          inserted++;
+        }
+        continue;
+      }
+
+      await (sql as any)`
         insert into "AnalyticsEvents" ("type", "metadata", "created_at")
-        values (${e.type.slice(0, 80)}, ${sql.json(cleaned as any)}, now())
+        values (${e.type.slice(0, 80)}, ${(sql as any).json(cleaned as any)}, now())
       `;
       inserted++;
     }

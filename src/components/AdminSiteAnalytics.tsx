@@ -26,7 +26,16 @@ type ServiceOpenRow = { label: string; count: number };
 type UtmRow = { campaign: string; source: string; sessions: number };
 type ScrollDepthRow = { day: string; avgDepthPct: number };
 type SectionEngagementRow = { sectionid?: string; sectionId?: string; totaldurationms?: string; totalDurationMs?: string };
-type HeatmapRow = { x: number; y: number; vw: number; vh: number; elementId: string; elementLabel: string };
+type HeatmapRow = {
+  x: number;
+  y: number;
+  vw: number;
+  vh: number;
+  elementId?: string;
+  elementLabel?: string;
+  elementid?: string;
+  elementlabel?: string;
+};
 
 function msToMinutes(ms: number) {
   return Math.round((ms / 60000) * 10) / 10;

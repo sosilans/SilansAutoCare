@@ -14,6 +14,16 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Build Vite project",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"group": "build"
 		}
 	]
 }
