@@ -615,6 +615,128 @@ export const handler: Handler = async (event) => {
       return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
+      // Admin: audit log listing and insertion
+      if (path.startsWith('/api/admin/audit')) {
+        const admin = await requireAdmin(event);
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (event.httpMethod === 'GET') {
+          const limit = Math.min(2000, Math.max(1, Number(event.queryStringParameters?.limit || 500) || 500));
+          const { data, error } = await supabaseAdmin
+            .from('admin_audit_log')
+            .select('id,admin_user_id,action,target_type,target_id,diff,created_at')
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+          if (error) {
+            return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load audit log' }) };
+          }
+
+          return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+        }
+
+        if (event.httpMethod === 'POST') {
+          if (isRateLimited(ip, 60, 60_000)) {
+            return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+          }
+
+          const PostSchema = z.object({
+            action: z.string().min(1).max(200),
+            target_type: z.string().max(200).optional().nullable(),
+            target_id: z.string().min(1).max(128).optional().nullable(),
+            diff: z.record(z.unknown()).optional(),
+          });
+          const body = event.body ? JSON.parse(event.body) : {};
+          const parsed = PostSchema.safeParse(body);
+          if (!parsed.success) {
+            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+          }
+
+          const { data, error } = await supabaseAdmin
+            .from('admin_audit_log')
+            .insert({
+              admin_user_id: admin.profileUserId,
+              action: parsed.data.action,
+              target_type: parsed.data.target_type ?? null,
+              target_id: parsed.data.target_id ?? null,
+              diff: parsed.data.diff ?? {},
+            })
+            .select('id')
+            .single();
+
+          if (error || !data) {
+            return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to save audit entry' }) };
+          }
+
+          return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, id: data.id }) };
+        }
+
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+
+      // Admin: manage user list and role/status updates
+      if (path.startsWith('/api/admin/users')) {
+        const admin = await requireAdmin(event);
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (event.httpMethod === 'GET') {
+          const role = (event.queryStringParameters?.role || '').trim();
+          let q = supabaseAdmin
+            .from('users')
+            .select('id,email,role,is_active,created_at,updated_at,last_login_at')
+            .order('created_at', { ascending: false })
+            .limit(1000);
+          if (role) q = q.eq('role', role as any);
+          const { data, error } = await q;
+          if (error) {
+            return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load users' }) };
+          }
+          return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+        }
+
+        if (event.httpMethod === 'PATCH') {
+          if (isRateLimited(ip, 30, 60_000)) {
+            return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+          }
+
+          const PatchSchema = z
+            .object({ id: z.string().min(1).max(80).optional(), email: z.string().email().optional(), role: z.enum(['admin', 'user']).optional(), is_active: z.boolean().optional() })
+            .refine((v) => Boolean(v.id || v.email), { message: 'Missing id or email' });
+          const body = event.body ? JSON.parse(event.body) : {};
+          const parsed = PatchSchema.safeParse(body);
+          if (!parsed.success) {
+            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+          }
+
+          const update: any = {};
+          if (typeof parsed.data.role === 'string') update.role = parsed.data.role;
+          if (typeof parsed.data.is_active === 'boolean') update.is_active = parsed.data.is_active;
+
+          let res;
+          if (parsed.data.id) {
+            res = await supabaseAdmin.from('users').update(update).eq('id', parsed.data.id).select('id,email,role,is_active').single();
+          } else {
+            res = await supabaseAdmin.from('users').update(update).eq('email', parsed.data.email?.toLowerCase()).select('id,email,role,is_active').single();
+          }
+
+          if (res.error || !res.data) {
+            return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to update user' }) };
+          }
+
+          await supabaseAdmin.from('admin_audit_log').insert({
+            admin_user_id: admin.profileUserId,
+            action: 'user_update',
+            target_type: 'users',
+            target_id: res.data.id,
+            diff: { ...(update || {}) },
+          });
+
+          return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, user: res.data }) };
+        }
+
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+
     if (path.startsWith('/api/admin/contacts')) {
       const admin = await requireAdmin(event);
       const supabaseAdmin = getSupabaseAdmin();

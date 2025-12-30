@@ -16,6 +16,7 @@ import {
   Download, Home, PieChart, LineChart, Sun, Moon, Sparkles
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { ConfirmModal } from './ui/ConfirmModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -54,7 +55,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const { theme, toggleTheme } = useTheme();
   const { reduceMotion, toggleReduceMotion } = useAnimation();
   const { t } = useLanguage();
-  const { isAdmin: authIsAdmin, user, users, removeUser } = useAuth();
+  const { isAdmin: authIsAdmin, user, users, removeUser, setUserRole } = useAuth();
   const isAdmin = isAdminOverride ?? authIsAdmin;
   const effectiveName = adminDisplayName ?? user?.name ?? '';
   const effectiveEmail = adminEmail ?? user?.email ?? '';
@@ -66,12 +67,15 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     setAdminAccessToken,
     updateReview, deleteReview, reorderApprovedReviews,
     updateFAQ, deleteFAQ, reorderApprovedFAQs,
+    auditLog, logAudit, exportAudit,
   } = useDataStore();
   const { isOnline, setIsOnline } = useOnlineStatus();
   const { status: availabilityStatus, setStatus: setAvailabilityStatus } = useAvailabilityStatus();
   const { isMaintenanceMode, setIsMaintenanceMode } = useMaintenanceMode();
 
   const [selectedTab, setSelectedTab] = useState('analytics');
+  const [userFilter, setUserFilter] = useState('');
+  const [showOnlyAdmins, setShowOnlyAdmins] = useState(false);
   const [faqAnswers, setFaqAnswers] = useState<Record<string, string>>({});
   const [reviewEdits, setReviewEdits] = useState<
     Record<string, { name: string; message: string; date: string; avatar: string; color: string; rating: string }>
@@ -79,6 +83,264 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const [faqEdits, setFaqEdits] = useState<Record<string, { name: string; question: string; answer: string; date: string; avatar: string; color: string }>>({});
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminTokenInput, setAdminTokenInput] = useState('');
+  const [selectedReviewIds, setSelectedReviewIds] = useState<Record<string, boolean>>({});
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    title?: string;
+    message?: string;
+    confirmLabel?: string;
+    onConfirm?: (() => Promise<void>) | (() => void);
+  }>({ open: false });
+
+  const openConfirm = (opts: { title?: string; message?: string; confirmLabel?: string; onConfirm?: (() => Promise<void>) | (() => void) }) => {
+    setConfirmState({ open: true, title: opts.title, message: opts.message, confirmLabel: opts.confirmLabel || 'Confirm', onConfirm: opts.onConfirm });
+  };
+
+  const confirmClose = () => setConfirmState({ open: false });
+
+  const toggleSelectReview = (id: string) => setSelectedReviewIds((p) => ({ ...p, [id]: !p[id] }));
+  const selectAllPending = () => setSelectedReviewIds(Object.fromEntries(pendingReviews.map((r) => [r.id, true])));
+  const clearSelection = () => setSelectedReviewIds({});
+
+  const bulkApproveSelected = async () => {
+    const ids = Object.keys(selectedReviewIds).filter((id) => selectedReviewIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No reviews selected');
+    openConfirm({
+      title: 'Approve reviews',
+      message: `Approve ${ids.length} selected reviews?`,
+      confirmLabel: 'Approve',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await approveReview(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('review_approve', 'review_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Approved ${success}/${ids.length}`);
+        clearSelection();
+      },
+    });
+  };
+
+  const bulkRejectSelected = async () => {
+    const ids = Object.keys(selectedReviewIds).filter((id) => selectedReviewIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No reviews selected');
+    openConfirm({
+      title: 'Reject reviews',
+      message: `Reject ${ids.length} selected reviews?`,
+      confirmLabel: 'Reject',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await rejectReview(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('review_reject', 'review_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Rejected ${success}/${ids.length}`);
+        clearSelection();
+      },
+    });
+  };
+
+  const bulkDeleteSelected = async () => {
+    const ids = Object.keys(selectedReviewIds).filter((id) => selectedReviewIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No reviews selected');
+    openConfirm({
+      title: 'Delete reviews',
+      message: `Delete ${ids.length} selected reviews? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await deleteReview(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('review_delete', 'review_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Deleted ${success}/${ids.length}`);
+        clearSelection();
+      },
+    });
+  };
+
+  // FAQ selection & bulk actions
+  const [selectedFaqIds, setSelectedFaqIds] = useState<Record<string, boolean>>({});
+  const toggleSelectFaq = (id: string) => setSelectedFaqIds((p) => ({ ...p, [id]: !p[id] }));
+  const selectAllPendingFaqs = () => setSelectedFaqIds(Object.fromEntries(pendingFAQs.map((f) => [f.id, true])));
+  const clearFaqSelection = () => setSelectedFaqIds({});
+
+  const bulkApproveSelectedFaqs = async () => {
+    const ids = Object.keys(selectedFaqIds).filter((id) => selectedFaqIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No FAQs selected');
+    openConfirm({
+      title: 'Answer & approve FAQs',
+      message: `Answer and approve ${ids.length} selected questions?`,
+      confirmLabel: 'Answer & Approve',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const answer = (faqAnswers[id] || '').trim();
+            if (!answer) continue;
+            const ok = await approveFAQ(id, answer);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('faq_answer_publish', 'faq_submissions', id, { answerLength: answer.length });
+            }
+          } catch {}
+        }
+        showNotification('success', `Answered ${success}/${ids.length}`);
+        clearFaqSelection();
+      },
+    });
+  };
+
+  const bulkRejectSelectedFaqs = async () => {
+    const ids = Object.keys(selectedFaqIds).filter((id) => selectedFaqIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No FAQs selected');
+    openConfirm({
+      title: 'Reject FAQs',
+      message: `Reject ${ids.length} selected questions?`,
+      confirmLabel: 'Reject',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await rejectFAQ(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('faq_reject', 'faq_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Rejected ${success}/${ids.length}`);
+        clearFaqSelection();
+      },
+    });
+  };
+
+  const bulkDeleteSelectedFaqs = async () => {
+    const ids = Object.keys(selectedFaqIds).filter((id) => selectedFaqIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No FAQs selected');
+    openConfirm({
+      title: 'Delete FAQs',
+      message: `Delete ${ids.length} selected questions? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await deleteFAQ(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('faq_delete', 'faq_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Deleted ${success}/${ids.length}`);
+        clearFaqSelection();
+      },
+    });
+  };
+
+  // Contacts selection & bulk actions
+  const [selectedContactIds, setSelectedContactIds] = useState<Record<string, boolean>>({});
+  const toggleSelectContact = (id: string) => setSelectedContactIds((p) => ({ ...p, [id]: !p[id] }));
+  const selectAllContacts = () => setSelectedContactIds(Object.fromEntries(contactSubmissions.map((c) => [c.id, true])));
+  const clearContactSelection = () => setSelectedContactIds({});
+
+  const bulkMarkContacted = async () => {
+    const ids = Object.keys(selectedContactIds).filter((id) => selectedContactIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No contacts selected');
+    openConfirm({
+      title: 'Mark contacted',
+      message: `Mark ${ids.length} selected contacts as contacted?`,
+      confirmLabel: 'Mark contacted',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await updateContactStatus(id, 'contacted');
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('contact_update_status', 'contact_submissions', id, { status: 'contacted' });
+            }
+          } catch {}
+        }
+        showNotification('success', `Updated ${success}/${ids.length}`);
+        clearContactSelection();
+      },
+    });
+  };
+
+  const bulkMarkResolved = async () => {
+    const ids = Object.keys(selectedContactIds).filter((id) => selectedContactIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No contacts selected');
+    openConfirm({
+      title: 'Mark resolved',
+      message: `Mark ${ids.length} selected contacts as resolved?`,
+      confirmLabel: 'Mark resolved',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await updateContactStatus(id, 'resolved');
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('contact_update_status', 'contact_submissions', id, { status: 'resolved' });
+            }
+          } catch {}
+        }
+        showNotification('success', `Updated ${success}/${ids.length}`);
+        clearContactSelection();
+      },
+    });
+  };
+
+  const bulkDeleteSelectedContacts = async () => {
+    const ids = Object.keys(selectedContactIds).filter((id) => selectedContactIds[id]);
+    if (ids.length === 0) return showNotification('error', 'No contacts selected');
+    openConfirm({
+      title: 'Delete contacts',
+      message: `Delete ${ids.length} selected contacts? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        confirmClose();
+        let success = 0;
+        for (const id of ids) {
+          try {
+            const ok = await deleteContact(id);
+            if (ok) {
+              success++;
+              if (logAudit) logAudit('contact_delete', 'contact_submissions', id, {});
+            }
+          } catch {}
+        }
+        showNotification('success', `Deleted ${success}/${ids.length}`);
+        clearContactSelection();
+      },
+    });
+  };
 
   // Calculate analytics (must be defined before any early returns to keep hook order stable).
   const analytics = useMemo(() => {
@@ -147,6 +409,24 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleChangeUserRole = async (email: string | undefined, nextRole: 'admin' | 'user') => {
+    if (!email) return showNotification('error', 'No user email');
+    try {
+      if (adminAccessToken) {
+        await apiJson('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+          body: JSON.stringify({ email, role: nextRole }),
+        });
+      }
+      setUserRole(email, nextRole);
+      showNotification('success', `Role updated: ${email} → ${nextRole}`);
+      if (logAudit) logAudit('change_user_role', 'user', email, { role: nextRole });
+    } catch (e: any) {
+      showNotification('error', e?.message || 'Failed to update role');
+    }
   };
 
   const persistSiteOnline = async (nextOnline: boolean) => {
@@ -477,44 +757,6 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
   return (
     <div className={`min-h-screen p-4 md:p-8 vhs-noise vhs-scanlines ${theme === 'dark' ? 'bg-slate-950' : 'bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50'}`}>
-      {/* Moderation Tab */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Ожидают модерации</h2>
-        {(pendingReviews.length === 0 && pendingFAQs.length === 0) && (
-          <div className="text-gray-500">Нет элементов для модерации.</div>
-        )}
-        <div className="space-y-4">
-          {pendingReviews.map((r) => (
-            <div key={r.id} className="p-4 rounded-lg border vhs-border bg-white/80 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <div>
-                <div className="font-semibold text-lg text-yellow-700">Отзыв</div>
-                <div className="font-bold">{r.name}</div>
-                <div className="text-gray-700 mb-1">{r.message}</div>
-                <div className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()}</div>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="success" onClick={() => handleApproveReview(r.id)}>Одобрить</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleRejectReview(r.id)}>Отклонить</Button>
-              </div>
-            </div>
-          ))}
-          {pendingFAQs.map((f) => (
-            <div key={f.id} className="p-4 rounded-lg border vhs-border bg-white/80 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <div>
-                <div className="font-semibold text-lg text-blue-700">FAQ</div>
-                <div className="font-bold">{f.name}</div>
-                <div className="text-gray-700 mb-1">{f.question}</div>
-                <div className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleString()}</div>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="success" onClick={() => handleAnswerFAQ(f.id)}>Одобрить</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleRejectFAQ(f.id)}>Отклонить</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Live Data Tab */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Живые данные (Supabase)</h2>
@@ -732,6 +974,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               )}
             </TabsTrigger>
             <TabsTrigger value="users" onClick={() => setSelectedTab('users')}>{t('admin.dashboard.tabs.users')}</TabsTrigger>
+            <TabsTrigger value="audit" onClick={() => setSelectedTab('audit')}>
+              Audit
+            </TabsTrigger>
             <TabsTrigger value="settings" onClick={() => setSelectedTab('settings')}>
               <SettingsIcon className="w-4 h-4 mr-2" />
               {t('admin.dashboard.tabs.settings')}
@@ -882,8 +1127,23 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" aria-label="Select all pending reviews" onChange={(e) => (e.target.checked ? selectAllPending() : clearSelection())} />
+                        <span className="text-sm text-muted-foreground">Select all</span>
+                        <Button size="sm" onClick={bulkApproveSelected} className="ml-3 bg-green-500">Approve selected</Button>
+                        <Button size="sm" onClick={bulkRejectSelected} variant="outline" className="ml-2">Reject selected</Button>
+                        <Button size="sm" onClick={bulkDeleteSelected} variant="destructive" className="ml-2">Delete selected</Button>
+                      </div>
+                      <div>
+                        <Button size="sm" onClick={clearSelection} variant="ghost">Clear</Button>
+                      </div>
+                    </div>
                     {pendingReviews.map(review => (
                       <div key={review.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'}`}>
+                        <div className="absolute -translate-y-2 -translate-x-2">
+                          <input type="checkbox" checked={!!selectedReviewIds[review.id]} onChange={() => toggleSelectReview(review.id)} />
+                        </div>
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="font-semibold">{review.name}</p>
@@ -1078,8 +1338,23 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" aria-label="Select all pending faqs" onChange={(e) => (e.target.checked ? selectAllPendingFaqs() : clearFaqSelection())} />
+                        <span className="text-sm text-muted-foreground">Select all</span>
+                        <Button size="sm" onClick={bulkApproveSelectedFaqs} className="ml-3 bg-blue-500">Answer & Approve</Button>
+                        <Button size="sm" onClick={bulkRejectSelectedFaqs} variant="outline" className="ml-2">Reject selected</Button>
+                        <Button size="sm" onClick={bulkDeleteSelectedFaqs} variant="destructive" className="ml-2">Delete selected</Button>
+                      </div>
+                      <div>
+                        <Button size="sm" onClick={clearFaqSelection} variant="ghost">Clear</Button>
+                      </div>
+                    </div>
                     {pendingFAQs.map(faq => (
                       <div key={faq.id} className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'}`}>
+                        <div className="absolute -translate-y-2 -translate-x-2">
+                          <input type="checkbox" checked={!!selectedFaqIds[faq.id]} onChange={() => toggleSelectFaq(faq.id)} />
+                        </div>
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="font-semibold">{faq.name}</p>
@@ -1271,6 +1546,18 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               <CardContent>
                 {contactSubmissions.length > 0 ? (
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" aria-label="Select all contacts" onChange={(e) => (e.target.checked ? selectAllContacts() : clearContactSelection())} />
+                        <span className="text-sm text-muted-foreground">Select all</span>
+                        <Button size="sm" onClick={bulkMarkContacted} className="ml-3">Mark contacted</Button>
+                        <Button size="sm" onClick={bulkMarkResolved} variant="outline" className="ml-2">Mark resolved</Button>
+                        <Button size="sm" onClick={bulkDeleteSelectedContacts} variant="destructive" className="ml-2">Delete selected</Button>
+                      </div>
+                      <div>
+                        <Button size="sm" onClick={clearContactSelection} variant="ghost">Clear</Button>
+                      </div>
+                    </div>
                     {contactSubmissions.map(contact => (
                       <div 
                         key={contact.id} 
@@ -1278,6 +1565,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                           theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-white border-gray-200'
                         } ${contact.status === 'new' ? 'border-l-4 border-l-blue-500' : ''}`}
                       >
+                        <div className="absolute -translate-y-2 -translate-x-2">
+                          <input type="checkbox" checked={!!selectedContactIds[contact.id]} onChange={() => toggleSelectContact(contact.id)} />
+                        </div>
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -1372,37 +1662,93 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
           <TabsContent value="users" className="space-y-4">
             <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
               <CardHeader>
-                <CardTitle>{t('admin.dashboard.users.title').replace('{count}', String(users.length))}</CardTitle>
-                <CardDescription>{t('admin.dashboard.users.description')}</CardDescription>
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <CardTitle>{t('admin.dashboard.users.title').replace('{count}', String(users.length))}</CardTitle>
+                    <CardDescription>{t('admin.dashboard.users.description')}</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      placeholder="Search users..."
+                      value={userFilter}
+                      onChange={(e) => setUserFilter(e.target.value)}
+                      className="px-2 py-1 border rounded"
+                    />
+                    <label className="flex items-center gap-1 text-sm">
+                      <input type="checkbox" checked={showOnlyAdmins} onChange={(e) => setShowOnlyAdmins(e.target.checked)} />
+                      <span>Admins only</span>
+                    </label>
+                    <Button onClick={() => {
+                      const payload = JSON.stringify(users, null, 2);
+                      const blob = new Blob([payload], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `users-${Date.now()}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      showNotification('success', 'Exported users');
+                    }} variant="outline">Export</Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {users.length > 0 ? (
+                {users && users.length > 0 ? (
                   <div className="space-y-2">
-                    {users.map(usr => (
+                    {users
+                      .filter(u => !showOnlyAdmins || u.role === 'admin')
+                      .filter(u => {
+                        const f = userFilter.trim().toLowerCase();
+                        if (!f) return true;
+                        return (u.name || '').toLowerCase().includes(f) || (u.email || '').toLowerCase().includes(f);
+                      })
+                      .map(usr => (
                       <div 
-                        key={usr.email} 
+                        key={usr.email || usr.name}
                         className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700/30' : 'bg-gray-50'}`}
                       >
                         <div>
                           <p className="font-medium">{usr.name}</p>
-                          <p className="text-xs text-muted-foreground">{usr.email}</p>
+                          <p className="text-xs text-muted-foreground">{usr.email || '—'}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant={usr.role === 'admin' ? 'default' : 'secondary'}>
                             {usr.role === 'admin' ? t('admin.dashboard.roles.admin') : t('admin.dashboard.roles.user')}
                           </Badge>
                           {usr.role !== 'admin' && usr.email !== user?.email && (
+                            <>
+                              <Button
+                                onClick={() => void handleChangeUserRole(usr.email, 'admin')}
+                                size="sm"
+                                variant="outline"
+                              >
+                                Promote
+                              </Button>
+                              <Button
+                                onClick={() => openConfirm({
+                                  title: 'Delete user',
+                                  message: `Delete user ${usr.name}?`,
+                                  confirmLabel: 'Delete',
+                                  onConfirm: async () => {
+                                    confirmClose();
+                                    removeUser(usr.email || '');
+                                    showNotification('success', 'User deleted');
+                                  },
+                                })}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                          {usr.role === 'admin' && usr.email !== user?.email && (
                             <Button
-                              onClick={() => {
-                                if (confirm(t('admin.dashboard.confirm.deleteUser').replace('{name}', usr.name))) {
-                                  removeUser(usr.email || '');
-                                  showNotification('success', t('admin.dashboard.notifications.userDeleted'));
-                                }
-                              }}
+                              onClick={() => void handleChangeUserRole(usr.email, 'user')}
                               size="sm"
-                              variant="ghost"
+                              variant="destructive"
                             >
-                              <XCircle className="w-4 h-4" />
+                              Demote
                             </Button>
                           )}
                         </div>
@@ -1493,6 +1839,22 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                     <p>{t('admin.dashboard.settings.lastActivity')} {new Date().toLocaleString()}</p>
                   </div>
                 </div>
+
+                <div className="p-4 rounded-lg border">
+                  <p className="font-medium mb-2">Admin access token</p>
+                  <p className="text-sm text-muted-foreground mb-2">Вставьте server access token (Bearer) чтобы загрузить очереди модерации с сервера.</p>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 px-3 py-2 border rounded"
+                      placeholder="Paste admin access token here"
+                      value={adminTokenInput}
+                      onChange={(e) => setAdminTokenInput(e.target.value)}
+                    />
+                    <Button onClick={() => { setAdminAccessToken(adminTokenInput.trim() || undefined); showNotification('success', 'Token saved'); setAdminTokenInput(''); }}>
+                      Save
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -1504,7 +1866,49 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               />
             </div>
           </TabsContent>
+
+          {/* Audit Tab */}
+          <TabsContent value="audit" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audit log</CardTitle>
+                <CardDescription>Recent admin actions</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-end mb-3">
+                  <Button onClick={() => { exportAudit(); showNotification('success', 'Audit exported'); }} variant="outline">Export</Button>
+                </div>
+                {auditLog && auditLog.length > 0 ? (
+                  <div className="space-y-2">
+                    {auditLog.map((a) => (
+                      <div key={a.id} className="p-2 rounded border bg-gray-50 text-sm">
+                        <div className="font-medium">{a.action} — {a.targetType} {a.targetId || ''}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(a.createdAt).toLocaleString()} — {a.actor}</div>
+                        <div className="text-xs mt-1">{JSON.stringify(a.details)}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center">No audit entries.</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+        <ConfirmModal
+          open={confirmState.open}
+          title={confirmState.title}
+          message={confirmState.message}
+          confirmLabel={confirmState.confirmLabel}
+          onConfirm={async () => {
+            try {
+              if (confirmState.onConfirm) await confirmState.onConfirm();
+            } finally {
+              confirmClose();
+            }
+          }}
+          onCancel={() => confirmClose()}
+        />
       </div>
     </div>
   );

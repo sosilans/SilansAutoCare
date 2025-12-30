@@ -3,6 +3,10 @@
   publish = "build"
   functions = "netlify/functions"
 
+[dev]
+  # Vite dev server runs on 3001 in this workspace; ensure Netlify Dev targets it
+  targetPort = 3001
+
 [build.environment]
   NODE_VERSION = "20"
 

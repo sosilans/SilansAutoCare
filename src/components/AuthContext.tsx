@@ -18,6 +18,7 @@ interface AuthContextValue {
   logout: () => void;
   users: AuthUser[];
   removeUser: (email: string) => void;
+  setUserRole: (email: string, role: Role) => void;
   // Modal controls
   authOpen: boolean;
   authMode: AuthMode;
@@ -137,6 +138,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
+  function setUserRole(email: string, role: Role) {
+    const emailLower = (email || '').toLowerCase();
+    setUsers(prev => prev.map(u => ((u.email || '').toLowerCase() === emailLower ? { ...u, role } : u)));
+    if (user && (user.email || '').toLowerCase() === emailLower) {
+      setUser((prev) => prev ? { ...prev, role } : prev);
+    }
+  }
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
     isAdmin,
@@ -149,6 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUsers(next);
       if (user && (user.email || '').toLowerCase() === email.toLowerCase()) setUser(null);
     },
+    setUserRole,
     authOpen,
     authMode,
     openAuthModal,

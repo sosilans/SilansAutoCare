@@ -66,6 +66,10 @@ interface DataStoreContextValue {
   deleteContact: (id: string) => Promise<boolean>;
 
   setAdminAccessToken: (token?: string) => void;
+  // Audit
+  auditLog: Array<{ id: string; action: string; targetType?: string; targetId?: string; actor?: string; details?: Record<string, unknown>; createdAt: number }>;
+  logAudit: (action: string, targetType?: string, targetId?: string, details?: Record<string, unknown>) => void;
+  exportAudit: () => void;
   // Stats
   stats: {
     reviews: { pending: number; approved: number; total: number };
@@ -81,6 +85,7 @@ const LS_REVIEWS_APPROVED = 'cd_approved_reviews';
 const LS_FAQS_PENDING = 'cd_pending_faqs';
 const LS_FAQS_APPROVED = 'cd_approved_faqs';
 const LS_CONTACTS = 'cd_contact_submissions';
+const LS_AUDIT = 'cd_audit_log';
 
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -193,6 +198,37 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     setAdminAccessTokenState(token);
   };
 
+  const [auditLog, setAuditLog] = useState<Array<{ id: string; action: string; targetType?: string; targetId?: string; actor?: string; details?: Record<string, unknown>; createdAt: number }>>([]);
+
+  useEffect(() => { try { const raw = localStorage.getItem(LS_AUDIT); if (raw) setAuditLog(JSON.parse(raw)); } catch {} }, []);
+  useEffect(() => { try { localStorage.setItem(LS_AUDIT, JSON.stringify(auditLog)); } catch {} }, [auditLog]);
+
+  async function logAudit(action: string, targetType?: string, targetId?: string, details?: Record<string, unknown>) {
+    const entry = { id: crypto.randomUUID(), action, targetType, targetId, actor: adminAccessToken ? 'admin' : 'local', details: details || {}, createdAt: Date.now() };
+    setAuditLog(prev => [entry, ...prev]);
+    if (!adminAccessToken) return;
+    try {
+      await apiJson<{ ok: true }>('/api/admin/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify(entry),
+      });
+    } catch {
+      // best-effort
+    }
+  }
+
+  function exportAudit() {
+    const payload = JSON.stringify(auditLog, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -287,6 +323,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
       status: 'pending',
     };
     setPendingReviews(prev => [item, ...prev]);
+    void logAudit?.('submit_review', 'review', item.id, { name, email });
 
     // Try server submit (best-effort).
     void apiJson<{ ok: true; id: string; created_at: string }>('/api/public/reviews', {
@@ -308,6 +345,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     // optimistic
     setPendingReviews((prev) => prev.filter((i) => i.id !== id));
     setApprovedReviews((a) => [{ ...item, status: 'approved' }, ...a]);
+    void logAudit?.('approve_review', 'review', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -331,6 +369,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     if (!item) return false;
 
     setPendingReviews((prev) => prev.filter((i) => i.id !== id));
+    void logAudit?.('reject_review', 'review', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -367,6 +406,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     const prevPending = pendingReviews;
     setApprovedReviews((prev) => prev.filter((r) => r.id !== id));
     setPendingReviews((prev) => prev.filter((r) => r.id !== id));
+    void logAudit?.('delete_review', 'review', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -409,6 +449,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
       status: 'pending',
     };
     setPendingFAQs(prev => [item, ...prev]);
+    void logAudit?.('submit_faq', 'faq', item.id, { name, email });
 
     void apiJson<{ ok: true; id: string; created_at: string }>('/api/public/faqs', {
       method: 'POST',
@@ -429,6 +470,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     const approved = { ...item, answer: answer || item.answer || '', status: 'approved' as const };
     setPendingFAQs((prev) => prev.filter((i) => i.id !== id));
     setApprovedFAQs((a) => [approved, ...a]);
+    void logAudit?.('approve_faq', 'faq', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -450,6 +492,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     if (!item) return false;
 
     setPendingFAQs((prev) => prev.filter((i) => i.id !== id));
+    void logAudit?.('reject_faq', 'faq', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -486,6 +529,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     const prevPending = pendingFAQs;
     setApprovedFAQs((prev) => prev.filter((f) => f.id !== id));
     setPendingFAQs((prev) => prev.filter((f) => f.id !== id));
+    void logAudit?.('delete_faq', 'faq', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -529,6 +573,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
       status: 'new',
     };
     setContactSubmissions(prev => [item, ...prev]);
+    void logAudit?.('submit_contact', 'contact', item.id, { name, email, phone });
 
     void apiJson<{ ok: true; id: string; created_at: string }>('/api/public/contact', {
       method: 'POST',
@@ -547,6 +592,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     if (!prevItem) return false;
 
     setContactSubmissions((prev) => prev.map((item) => (item.id === id ? { ...item, status } : item)));
+    void logAudit?.('update_contact_status', 'contact', id, { status });
 
     if (!adminAccessToken) return true;
     try {
@@ -567,6 +613,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     if (!prevItem) return false;
 
     setContactSubmissions((prev) => prev.filter((i) => i.id !== id));
+    void logAudit?.('delete_contact', 'contact', id);
 
     if (!adminAccessToken) return true;
     try {
@@ -604,6 +651,9 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     pendingFAQs, approvedFAQs, submitQuestion, approveFAQ, rejectFAQ, updateFAQ, deleteFAQ, reorderApprovedFAQs,
     contactSubmissions, submitContact, updateContactStatus, deleteContact,
     setAdminAccessToken,
+    auditLog,
+    logAudit,
+    exportAudit,
     stats,
   }), [
     pendingReviews,
@@ -611,6 +661,7 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
     pendingFAQs,
     approvedFAQs,
     contactSubmissions,
+    auditLog,
     stats,
   ]);
 
