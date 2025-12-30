@@ -522,8 +522,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
           <div>
             <h3 className="font-semibold text-lg mb-2 text-yellow-700">Все отзывы</h3>
             <div className="space-y-2">
-              {allReviews.length === 0 && <div className="text-gray-400">Нет отзывов.</div>}
-              {allReviews.map((r) => (
+              {approvedReviews.length === 0 && <div className="text-gray-400">Нет отзывов.</div>}
+              {approvedReviews.map((r) => (
                 <div key={r.id} className="p-3 rounded border vhs-border bg-white/70">
                   <div className="font-bold">{r.name}</div>
                   <div className="text-gray-700">{r.message}</div>
@@ -535,8 +535,8 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
           <div>
             <h3 className="font-semibold text-lg mb-2 text-blue-700">Все FAQ</h3>
             <div className="space-y-2">
-              {allFAQs.length === 0 && <div className="text-gray-400">Нет FAQ.</div>}
-              {allFAQs.map((f) => (
+              {approvedFAQs.length === 0 && <div className="text-gray-400">Нет FAQ.</div>}
+              {approvedFAQs.map((f) => (
                 <div key={f.id} className="p-3 rounded border vhs-border bg-white/70">
                   <div className="font-bold">{f.name}</div>
                   <div className="text-gray-700">{f.question}</div>
