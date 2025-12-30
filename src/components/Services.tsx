@@ -589,44 +589,22 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-                  style={
-                    {
-                      zIndex: 2147483647,
-                      overflowY: 'auto',
-                      WebkitOverflowScrolling: 'touch',
-                      overscrollBehavior: 'contain',
-                    } as any
-                  }
+                  className="fixed inset-0"
+                    style={
+                      {
+                        zIndex: 2147483647,
+                        overflowY: 'auto',
+                        WebkitOverflowScrolling: 'touch',
+                        overscrollBehavior: 'contain',
+                        backgroundColor: theme === 'dark' ? 'rgba(3,7,18,0.86)' : 'rgba(0,0,0,0.6)',
+                        backdropFilter: theme === 'dark' ? 'blur(10px)' : 'blur(6px)',
+                      } as any
+                    }
                   onClick={(e) => {
                     if (e.target === e.currentTarget) setExpandedCard(null);
                   }}
                 >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedCard(null);
-                    }}
-                    ref={closeButtonRef}
-                    type="button"
-                    style={
-                      {
-                        zIndex: 2147483648,
-                        '--safe-top': '0.75rem',
-                        '--safe-right': '0.75rem',
-                        '--safe-top-sm': '1.25rem',
-                        '--safe-right-sm': '1.25rem'
-                      } as any
-                    }
-                    className={`fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
-                      theme === 'dark'
-                        ? 'bg-white/15 hover:bg-white/25 text-white border border-white/20 shadow-sm'
-                        : 'bg-white/90 hover:bg-white text-gray-900 border border-gray-200 shadow-sm'
-                    }`}
-                    aria-label={t('common.close')}
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+                  {/* overlay-level close removed; close button moved into modal card for correct positioning */}
 
                   <div
                     className="min-h-screen flex items-start justify-center p-4 sm:p-6"
@@ -646,6 +624,25 @@ export function Services() {
                       role="dialog"
                       aria-modal="true"
                     >
+                      {/* Close button inside modal card (top-right of card) */}
+                      <button
+                        onClick={() => setExpandedCard(null)}
+                        ref={closeButtonRef}
+                        type="button"
+                        aria-label={t('common.close')}
+                        style={{
+                          top: 'calc(0.75rem + env(safe-area-inset-top))',
+                          right: 'calc(0.75rem + env(safe-area-inset-right))',
+                          zIndex: 2147483648,
+                        } as any}
+                        className={`absolute inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors touch-manipulation ${
+                          theme === 'dark'
+                            ? 'bg-white/15 hover:bg-white/25 text-white border border-white/20 shadow-sm'
+                            : 'bg-white/90 hover:bg-white text-gray-900 border border-gray-200 shadow-sm'
+                        }`}
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
                 {/* Modal Header */}
                 <div className="mb-4 pr-10">
                   <h2

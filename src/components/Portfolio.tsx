@@ -330,40 +330,32 @@ export function Portfolio() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/95"
-                onClick={() => setSelectedItem(null)}
-                style={
-                  {
-                    zIndex: 2147483647,
-                    overflowY: 'auto',
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain',
-                  } as any
-                }
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedItem(null);
-                  }}
-                  type="button"
+                className="fixed inset-0"
+                  onClick={() => setSelectedItem(null)}
                   style={
                     {
-                      zIndex: 2147483648,
-                      '--safe-top': '1.25rem',
-                      '--safe-right': '1.25rem',
-                      '--safe-top-sm': '1.5rem',
-                      '--safe-right-sm': '1.5rem'
+                      zIndex: 2147483647,
+                      overflowY: 'auto',
+                      WebkitOverflowScrolling: 'touch',
+                      overscrollBehavior: 'contain',
+                      backgroundColor: theme === 'dark' ? 'rgba(3,7,18,0.86)' : 'rgba(0,0,0,0.95)',
+                      backdropFilter: theme === 'dark' ? 'blur(10px)' : 'blur(6px)',
                     } as any
                   }
-                  className="fixed safe-abs-tr inline-flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full transition-colors touch-manipulation"
-                  aria-label={t('common.close')}
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
+              >
+                {/* outer fixed close removed; add inside card for proper positioning */}
 
                 <div className="min-h-screen flex items-start sm:items-center justify-center p-4">
-                  <div className="max-w-7xl w-full grid md:grid-cols-2 gap-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="max-w-7xl w-full grid md:grid-cols-2 gap-4 relative" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setSelectedItem(null)}
+                      type="button"
+                      aria-label={t('common.close')}
+                      style={{ top: 'calc(1rem + env(safe-area-inset-top))', right: 'calc(1rem + env(safe-area-inset-right))', zIndex: 2147483648 } as any}
+                      className="absolute inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors touch-manipulation border"
+                    >
+                      <X className="w-6 h-6 text-white" />
+                    </button>
             {/* Before Image */}
             <motion.div
               initial={{ x: -50, opacity: 0 }}

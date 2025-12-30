@@ -41,8 +41,14 @@ export function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[1000]"
             onClick={onClose}
+            style={
+              {
+                backgroundColor: theme === 'dark' ? 'rgba(3,7,18,0.86)' : 'rgba(0,0,0,0.5)',
+                backdropFilter: theme === 'dark' ? 'blur(10px)' : 'blur(6px)'
+              } as any
+            }
           />
           
           {/* Modal */}
