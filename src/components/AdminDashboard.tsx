@@ -16,6 +16,7 @@ import {
   Download, Home, PieChart, LineChart, Sun, Moon, Sparkles
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Switch } from './ui/switch';
 import { ConfirmModal } from './ui/ConfirmModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -755,11 +756,121 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     showNotification('success', t('admin.dashboard.notifications.dataExported'));
   };
 
+  // Live Supabase controls/component (separate function so hooks are legal)
+  function LiveSupabaseControls() {
+    const supabaseAvailable = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+    const [loadingLive, setLoadingLive] = useState(false);
+    const [realtimeEnabled, setRealtimeEnabled] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+    const [liveReviews, setLiveReviews] = useState<typeof approvedReviews>(approvedReviews);
+    const [liveFaqs, setLiveFaqs] = useState<typeof approvedFAQs>(approvedFAQs);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+    useEffect(() => {
+      setLiveReviews(approvedReviews);
+    }, [approvedReviews]);
+    useEffect(() => {
+      setLiveFaqs(approvedFAQs);
+    }, [approvedFAQs]);
+
+    useEffect(() => {
+      let pollId: number | null = null;
+      const unsubHandles: any[] = [];
+
+      async function fetchLiveOnce() {
+        setLoadingLive(true);
+        setErrorMsg(null);
+        try {
+          if (supabaseAvailable) {
+            const { getSupabaseBrowser } = await import('../supabaseBrowser');
+            const sb = getSupabaseBrowser();
+            const [{ data: rData, error: rErr }, { data: fData, error: fErr }] = await Promise.all([
+              sb.from('review_submissions').select('*').order('created_at', { ascending: false }).limit(500),
+              sb.from('faq_submissions').select('*').order('created_at', { ascending: false }).limit(500),
+            ] as any);
+            if (rErr) throw rErr;
+            if (fErr) throw fErr;
+            setLiveReviews((rData || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
+            setLiveFaqs((fData || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
+            setLastUpdated(Date.now());
+          } else {
+            // Fallback to admin API if no public supabase client configured
+            const headers: any = {};
+            if (adminAccessToken) headers.Authorization = `Bearer ${adminAccessToken}`;
+            const [rRes, fRes] = await Promise.all([
+              fetch('/api/admin/reviews?status=approved&limit=500', { headers }),
+              fetch('/api/admin/faqs?status=approved&limit=500', { headers }),
+            ]);
+            const rBody = await rRes.json();
+            const fBody = await fRes.json();
+            if (!rRes.ok) throw new Error(rBody?.error || 'Failed to load reviews');
+            if (!fRes.ok) throw new Error(fBody?.error || 'Failed to load faqs');
+            setLiveReviews((rBody.rows || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
+            setLiveFaqs((fBody.rows || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
+            setLastUpdated(Date.now());
+          }
+        } catch (err: any) {
+          setErrorMsg(String(err?.message || err));
+        } finally {
+          setLoadingLive(false);
+        }
+      }
+
+      async function enableRealtime() {
+        if (!supabaseAvailable) return;
+        try {
+          const { getSupabaseBrowser } = await import('../supabaseBrowser');
+          const sb = getSupabaseBrowser();
+          const rev = sb.channel('realtime-admin-live')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'review_submissions' }, () => {
+              void fetchLiveOnce();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'faq_submissions' }, () => {
+              void fetchLiveOnce();
+            })
+            .subscribe();
+          unsubHandles.push(rev);
+        } catch (e: any) {
+          console.error('realtime subscribe failed', e);
+        }
+      }
+
+      // If realtime enabled, subscribe; otherwise poll every 10s when loaded
+      if (realtimeEnabled) {
+        void enableRealtime();
+      } else {
+        // start immediate fetch and polling
+        void fetchLiveOnce();
+        pollId = window.setInterval(() => void fetchLiveOnce(), 10_000);
+      }
+
+      return () => {
+        if (pollId) window.clearInterval(pollId);
+        for (const h of unsubHandles) {
+          try { h.unsubscribe(); } catch {};
+        }
+      };
+    }, [realtimeEnabled]);
+
+    return (
+      <div className="mb-4 flex items-center gap-4">
+        <Button onClick={() => void (setRealtimeEnabled(false), (async () => { /* fetchLiveOnce is inside effect scope; just toggle to trigger effect */ })())} disabled={loadingLive}>{loadingLive ? 'Загрузка…' : 'Загрузить живые данные'}</Button>
+        <div className="flex items-center gap-2">
+          <Switch checked={realtimeEnabled} onCheckedChange={(v) => setRealtimeEnabled(Boolean(v))} />
+          <div className="text-sm">Realtime</div>
+        </div>
+        <div className="text-sm text-gray-500 ml-auto">{lastUpdated ? `Обновлено: ${new Date(lastUpdated).toLocaleTimeString()}` : 'Не загружено'}</div>
+        {errorMsg && <div className="text-sm text-red-500 ml-4">{errorMsg}</div>}
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen p-4 md:p-8 vhs-noise vhs-scanlines ${theme === 'dark' ? 'bg-slate-950' : 'bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50'}`}>
       {/* Live Data Tab */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Живые данные (Supabase)</h2>
+        <LiveSupabaseControls />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h3 className="font-semibold text-lg mb-2 text-yellow-700">Все отзывы</h3>
@@ -789,6 +900,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
           </div>
         </div>
       </div>
+      
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>

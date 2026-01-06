@@ -142,11 +142,33 @@ const handler: Handler = async (event: HandlerEvent) => {
     // IMPORTANT: All responses are anonymized aggregates or click points (no PII stored).
 
     if (metric === 'service_opens') {
-      let rows: any;
-      if (supabaseAdmin) {
-        const { data, error } = await supabaseAdmin.rpc('analytics_service_opens', { days });
-        if (!error) {
-          rows = data || [];
+      let rows: any = [];
+      try {
+        if (supabaseAdmin) {
+          const { data, error } = await supabaseAdmin.rpc('analytics_service_opens', { days });
+          if (!error) {
+            rows = data || [];
+          } else if (sql) {
+            try {
+              rows = await (sql as any)`
+                select
+                  coalesce((metadata->'service'->>'title'), 'unknown') as label,
+                  count(*)::int as count
+                from "AnalyticsEvents"
+                where "type" = 'service_modal_open'
+                  and "created_at" >= now() - (${days}::text || ' days')::interval
+                group by 1
+                order by 2 desc
+                limit 20
+              `;
+            } catch (sqlErr) {
+              console.error('analytics-query: service_opens - sql fallback failed', sqlErr);
+              rows = [];
+            }
+          } else {
+            console.error('analytics-query: service_opens - rpc failed and no sql fallback', error);
+            rows = [];
+          }
         } else if (sql) {
           rows = await (sql as any)`
             select
@@ -159,22 +181,12 @@ const handler: Handler = async (event: HandlerEvent) => {
             order by 2 desc
             limit 20
           `;
-        } else {
-          throw error;
         }
-      } else {
-        rows = await (sql as any)`
-          select
-            coalesce((metadata->'service'->>'title'), 'unknown') as label,
-            count(*)::int as count
-          from "AnalyticsEvents"
-          where "type" = 'service_modal_open'
-            and "created_at" >= now() - (${days}::text || ' days')::interval
-          group by 1
-          order by 2 desc
-          limit 20
-        `;
+      } catch (e) {
+        console.error('analytics-query: service_opens - unexpected error', e);
+        rows = [];
       }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -183,11 +195,33 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'utm') {
-      let rows: any;
-      if (supabaseAdmin) {
-        const { data, error } = await supabaseAdmin.rpc('analytics_utm', { days });
-        if (!error) {
-          rows = data || [];
+      let rows: any = [];
+      try {
+        if (supabaseAdmin) {
+          const { data, error } = await supabaseAdmin.rpc('analytics_utm', { days });
+          if (!error) rows = data || [];
+          else if (sql) {
+            try {
+              rows = await (sql as any)`
+                select
+                  coalesce(metadata->'utm'->>'utm_campaign', '(none)') as campaign,
+                  coalesce(metadata->'utm'->>'utm_source', '(none)') as source,
+                  count(*)::int as sessions
+                from "AnalyticsEvents"
+                where "type" = 'session_start'
+                  and "created_at" >= now() - (${days}::text || ' days')::interval
+                group by 1,2
+                order by 3 desc
+                limit 50
+              `;
+            } catch (sqlErr) {
+              console.error('analytics-query: utm - sql fallback failed', sqlErr);
+              rows = [];
+            }
+          } else {
+            console.error('analytics-query: utm - rpc failed and no sql fallback', error);
+            rows = [];
+          }
         } else if (sql) {
           rows = await (sql as any)`
             select
@@ -201,23 +235,12 @@ const handler: Handler = async (event: HandlerEvent) => {
             order by 3 desc
             limit 50
           `;
-        } else {
-          throw error;
         }
-      } else {
-        rows = await (sql as any)`
-          select
-            coalesce(metadata->'utm'->>'utm_campaign', '(none)') as campaign,
-            coalesce(metadata->'utm'->>'utm_source', '(none)') as source,
-            count(*)::int as sessions
-          from "AnalyticsEvents"
-          where "type" = 'session_start'
-            and "created_at" >= now() - (${days}::text || ' days')::interval
-          group by 1,2
-          order by 3 desc
-          limit 50
-        `;
+      } catch (e) {
+        console.error('analytics-query: utm - unexpected error', e);
+        rows = [];
       }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -226,11 +249,32 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'scroll_depth') {
-      let rows: any;
-      if (supabaseAdmin) {
-        const { data, error } = await supabaseAdmin.rpc('analytics_scroll_depth', { days });
-        if (!error) {
-          rows = data || [];
+      let rows: any = [];
+      try {
+        if (supabaseAdmin) {
+          const { data, error } = await supabaseAdmin.rpc('analytics_scroll_depth', { days });
+          if (!error) rows = data || [];
+          else if (sql) {
+            try {
+              rows = await (sql as any)`
+                select
+                  date_trunc('day', "created_at")::date as day,
+                  avg( (metadata->'scroll'->>'depthPct')::int )::float as avgDepthPct
+                from "AnalyticsEvents"
+                where "type" = 'scroll_depth'
+                  and (metadata->'scroll'->>'depthPct') is not null
+                  and "created_at" >= now() - (${days}::text || ' days')::interval
+                group by 1
+                order by 1 asc
+              `;
+            } catch (sqlErr) {
+              console.error('analytics-query: scroll_depth - sql fallback failed', sqlErr);
+              rows = [];
+            }
+          } else {
+            console.error('analytics-query: scroll_depth - rpc failed and no sql fallback', error);
+            rows = [];
+          }
         } else if (sql) {
           rows = await (sql as any)`
             select
@@ -243,22 +287,12 @@ const handler: Handler = async (event: HandlerEvent) => {
             group by 1
             order by 1 asc
           `;
-        } else {
-          throw error;
         }
-      } else {
-        rows = await (sql as any)`
-          select
-            date_trunc('day', "created_at")::date as day,
-            avg( (metadata->'scroll'->>'depthPct')::int )::float as avgDepthPct
-          from "AnalyticsEvents"
-          where "type" = 'scroll_depth'
-            and (metadata->'scroll'->>'depthPct') is not null
-            and "created_at" >= now() - (${days}::text || ' days')::interval
-          group by 1
-          order by 1 asc
-        `;
+      } catch (e) {
+        console.error('analytics-query: scroll_depth - unexpected error', e);
+        rows = [];
       }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -267,11 +301,32 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     if (metric === 'section_engagement') {
-      let rows: any;
-      if (supabaseAdmin) {
-        const { data, error } = await supabaseAdmin.rpc('analytics_section_engagement', { days });
-        if (!error) {
-          rows = data || [];
+      let rows: any = [];
+      try {
+        if (supabaseAdmin) {
+          const { data, error } = await supabaseAdmin.rpc('analytics_section_engagement', { days });
+          if (!error) rows = data || [];
+          else if (sql) {
+            try {
+              rows = await (sql as any)`
+                select
+                  coalesce(metadata->>'sectionId', 'unknown') as sectionId,
+                  sum( (metadata->>'durationMs')::bigint )::bigint as totalDurationMs
+                from "AnalyticsEvents"
+                where "type" = 'section_time'
+                  and (metadata->>'durationMs') is not null
+                  and "created_at" >= now() - (${days}::text || ' days')::interval
+                group by 1
+                order by 2 desc
+              `;
+            } catch (sqlErr) {
+              console.error('analytics-query: section_engagement - sql fallback failed', sqlErr);
+              rows = [];
+            }
+          } else {
+            console.error('analytics-query: section_engagement - rpc failed and no sql fallback', error);
+            rows = [];
+          }
         } else if (sql) {
           rows = await (sql as any)`
             select
@@ -284,22 +339,12 @@ const handler: Handler = async (event: HandlerEvent) => {
             group by 1
             order by 2 desc
           `;
-        } else {
-          throw error;
         }
-      } else {
-        rows = await (sql as any)`
-          select
-            coalesce(metadata->>'sectionId', 'unknown') as sectionId,
-            sum( (metadata->>'durationMs')::bigint )::bigint as totalDurationMs
-          from "AnalyticsEvents"
-          where "type" = 'section_time'
-            and (metadata->>'durationMs') is not null
-            and "created_at" >= now() - (${days}::text || ' days')::interval
-          group by 1
-          order by 2 desc
-        `;
+      } catch (e) {
+        console.error('analytics-query: section_engagement - unexpected error', e);
+        rows = [];
       }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, rows }),
@@ -309,11 +354,38 @@ const handler: Handler = async (event: HandlerEvent) => {
 
     if (metric === 'heatmap') {
       const limit = intParam(params.limit || null, 2000, 100, 10000);
-      let rows: any;
-      if (supabaseAdmin) {
-        const { data, error } = await supabaseAdmin.rpc('analytics_heatmap', { days, page, lim: limit });
-        if (!error) {
-          rows = data || [];
+      let rows: any = [];
+      try {
+        if (supabaseAdmin) {
+          const { data, error } = await supabaseAdmin.rpc('analytics_heatmap', { days, page, lim: limit });
+          if (!error) rows = data || [];
+          else if (sql) {
+            try {
+              rows = await (sql as any)`
+                select
+                  (metadata->'click'->>'x')::int as x,
+                  (metadata->'click'->>'y')::int as y,
+                  (metadata->'viewport'->>'w')::int as vw,
+                  (metadata->'viewport'->>'h')::int as vh,
+                  coalesce(metadata->>'elementId', '') as elementId,
+                  coalesce(metadata->>'elementLabel', '') as elementLabel
+                from "AnalyticsEvents"
+                where "type" = 'click'
+                  and coalesce(metadata->>'page', '') = ${page}
+                  and (metadata->'click'->>'x') is not null
+                  and (metadata->'click'->>'y') is not null
+                  and "created_at" >= now() - (${days}::text || ' days')::interval
+                order by "created_at" desc
+                limit ${limit}
+              `;
+            } catch (sqlErr) {
+              console.error('analytics-query: heatmap - sql fallback failed', sqlErr);
+              rows = [];
+            }
+          } else {
+            console.error('analytics-query: heatmap - rpc failed and no sql fallback', error);
+            rows = [];
+          }
         } else if (sql) {
           rows = await (sql as any)`
             select
@@ -332,28 +404,12 @@ const handler: Handler = async (event: HandlerEvent) => {
             order by "created_at" desc
             limit ${limit}
           `;
-        } else {
-          throw error;
         }
-      } else {
-        rows = await (sql as any)`
-          select
-            (metadata->'click'->>'x')::int as x,
-            (metadata->'click'->>'y')::int as y,
-            (metadata->'viewport'->>'w')::int as vw,
-            (metadata->'viewport'->>'h')::int as vh,
-            coalesce(metadata->>'elementId', '') as elementId,
-            coalesce(metadata->>'elementLabel', '') as elementLabel
-          from "AnalyticsEvents"
-          where "type" = 'click'
-            and coalesce(metadata->>'page', '') = ${page}
-            and (metadata->'click'->>'x') is not null
-            and (metadata->'click'->>'y') is not null
-            and "created_at" >= now() - (${days}::text || ' days')::interval
-          order by "created_at" desc
-          limit ${limit}
-        `;
+      } catch (e) {
+        console.error('analytics-query: heatmap - unexpected error', e);
+        rows = [];
       }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ metric, days, page, rows }),

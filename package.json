@@ -68,6 +68,7 @@
       "scripts": {
             "dev": "vite",
             "build": "vite build",
+            "check-env": "node scripts/check_netlify_env.js",
             "test": "vitest",
             "preview": "vite preview --port 4173"
       },

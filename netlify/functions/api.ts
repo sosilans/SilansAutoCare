@@ -743,22 +743,39 @@ export const handler: Handler = async (event) => {
 
       if (event.httpMethod === 'GET') {
         const status = (event.queryStringParameters?.status || '').trim();
-        let q = supabaseAdmin
-          .from('contact_submissions')
-          .select('id,created_at,name,email,phone,message,status')
-          .order('created_at', { ascending: false })
-          .limit(500);
-        if (status) {
-          if (!['new', 'contacted', 'resolved'].includes(status)) {
-            return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid status' }) };
+        // Try the full select first (includes message). If that fails for
+        // some reason (large payloads, schema quirks), fall back to a
+        // lighter-weight select without the message body so the admin UI
+        // can still list contacts.
+        const buildQuery = (includeMessage: boolean) => {
+          const cols = includeMessage
+            ? 'id,created_at,name,email,phone,message,status'
+            : 'id,created_at,name,email,phone,status';
+          let q = supabaseAdmin.from('contact_submissions').select(cols).order('created_at', { ascending: false }).limit(500);
+          if (status) q = q.eq('status', status as any);
+          return q;
+        };
+
+        try {
+          const { data, error } = await buildQuery(true);
+          if (error) throw error;
+          return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
+        } catch (err: any) {
+          // Log the original error for diagnostics and attempt a lighter query.
+          console.error('admin: failed to load contacts (full):', err?.message || err);
+          try {
+            const { data: rows, error: err2 } = await buildQuery(false);
+            if (err2) {
+              console.error('admin: fallback contacts query also failed:', err2.message || err2);
+              return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load contacts' }) };
+            }
+            // Return partial rows (no message field) so the UI can still render a list.
+            return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: rows || [], partial: true }) };
+          } catch (err3: any) {
+            console.error('admin: unexpected error fetching contacts:', err3?.message || err3);
+            return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load contacts' }) };
           }
-          q = q.eq('status', status as any);
         }
-        const { data, error } = await q;
-        if (error) {
-          return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to load contacts' }) };
-        }
-        return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, rows: data || [] }) };
       }
 
       if (event.httpMethod === 'PATCH') {

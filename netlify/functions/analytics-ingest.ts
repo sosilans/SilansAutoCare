@@ -144,33 +144,52 @@ const handler: Handler = async (event: HandlerEvent) => {
       if (!sessionId || !page) continue;
 
       if (supabase) {
-        const { error } = await supabase
-          .from('AnalyticsEvents')
-          .insert({
-            type: e.type.slice(0, 80),
-            metadata: cleaned,
-          });
-        if (!error) {
-          inserted++;
-          continue;
+        try {
+          const { error } = await supabase
+            .from('AnalyticsEvents')
+            .insert({
+              type: e.type.slice(0, 80),
+              metadata: cleaned,
+            });
+          if (!error) {
+            inserted++;
+            continue;
+          }
+          console.error('analytics-ingest: supabase insert error', error);
+        } catch (rpcErr) {
+          console.error('analytics-ingest: supabase insert threw', rpcErr);
         }
 
         // If Supabase insert fails, try direct Postgres (if configured) before dropping.
         if (sql) {
+          try {
+            await (sql as any)`
+              insert into "AnalyticsEvents" ("type", "metadata", "created_at")
+              values (${e.type.slice(0, 80)}, ${(sql as any).json(cleaned as any)}, now())
+            `;
+            inserted++;
+            continue;
+          } catch (sqlErr) {
+            console.error('analytics-ingest: sql fallback failed', sqlErr);
+          }
+        }
+
+        // drop this event if both attempts failed
+        continue;
+      }
+
+      if (sql) {
+        try {
           await (sql as any)`
             insert into "AnalyticsEvents" ("type", "metadata", "created_at")
             values (${e.type.slice(0, 80)}, ${(sql as any).json(cleaned as any)}, now())
           `;
           inserted++;
+        } catch (sqlErr) {
+          console.error('analytics-ingest: direct sql insert failed', sqlErr);
+          // skip this event on failure
         }
-        continue;
       }
-
-      await (sql as any)`
-        insert into "AnalyticsEvents" ("type", "metadata", "created_at")
-        values (${e.type.slice(0, 80)}, ${(sql as any).json(cleaned as any)}, now())
-      `;
-      inserted++;
     }
 
     return {
