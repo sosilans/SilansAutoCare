@@ -212,7 +212,7 @@ export function Portfolio() {
         </motion.div>
 
         <div ref={galleryTopRef} />
-        <div className="grid sm:grid-cols-2 gap-8">
+        <div className="grid sm:grid-cols-2 gap-8 pb-8">
           {displayedItems.map((item, index) => (
             <motion.div
               key={index}
@@ -277,7 +277,7 @@ export function Portfolio() {
         {!showAll && (
           <div className="flex flex-col items-center gap-4 mt-14 sm:mt-16">
             <button
-              className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300"
+              className="vhs-gradient px-6 py-3 text-white rounded-full cartoon-shadow-sm vhs-glow flex items-center gap-2 hover:scale-105 transition-transform duration-300 relative z-20"
               onClick={handleShowMore}
             >
               <span>{t('portfolio.showMore')}</span>
