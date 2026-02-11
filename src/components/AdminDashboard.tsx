@@ -34,6 +34,9 @@ type AdminDashboardProps = {
   adminAccessToken?: string;
 };
 
+type HealthCheckStatus = 'idle' | 'ok' | 'error' | 'unauthorized';
+type HealthCheckItem = { key: string; label: string; status: HealthCheckStatus; message?: string };
+
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
   const text = await res.text();
@@ -86,6 +89,25 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const [isLoading, setIsLoading] = useState(true);
   const [adminTokenInput, setAdminTokenInput] = useState('');
   const [selectedReviewIds, setSelectedReviewIds] = useState<Record<string, boolean>>({});
+  const supabaseAvailable = useMemo(() => Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY), []);
+  const [liveActive, setLiveActive] = useState(false);
+  const [liveRealtime, setLiveRealtime] = useState(false);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [liveLastUpdated, setLiveLastUpdated] = useState<number | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [liveReviews, setLiveReviews] = useState<typeof approvedReviews>([]);
+  const [liveFaqs, setLiveFaqs] = useState<typeof approvedFAQs>([]);
+  const [liveRefreshKey, setLiveRefreshKey] = useState(0);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthLastChecked, setHealthLastChecked] = useState<number | null>(null);
+  const [healthChecks, setHealthChecks] = useState<HealthCheckItem[]>([
+    { key: 'admin_me', label: 'Admin auth (/api/admin/me)', status: 'idle' },
+    { key: 'reviews', label: 'Reviews queue (/api/admin/reviews)', status: 'idle' },
+    { key: 'faqs', label: 'FAQ queue (/api/admin/faqs)', status: 'idle' },
+    { key: 'contacts', label: 'Contacts (/api/admin/contacts)', status: 'idle' },
+    { key: 'settings', label: 'Settings (/api/admin/settings)', status: 'idle' },
+    { key: 'analytics', label: 'Analytics (/.netlify/functions/analytics-query)', status: 'idle' },
+  ]);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
     title?: string;
@@ -376,6 +398,144 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     if (adminAccessToken) setAdminAccessToken(adminAccessToken);
   }, [adminAccessToken, setAdminAccessToken]);
 
+  const saveAdminToken = () => {
+    const value = adminTokenInput.trim();
+    setAdminAccessToken(value || undefined);
+    showNotification('success', value ? 'Token saved' : 'Token cleared');
+    setAdminTokenInput('');
+  };
+
+  const clearAdminToken = () => {
+    setAdminAccessToken(undefined);
+    showNotification('success', 'Token cleared');
+  };
+
+  const setHealth = (key: string, patch: Partial<HealthCheckItem>) => {
+    setHealthChecks((prev) => prev.map((item) => (item.key === key ? { ...item, ...patch } : item)));
+  };
+
+  const runHealthChecks = async () => {
+    setHealthLoading(true);
+    setHealthChecks((prev) => prev.map((item) => ({ ...item, status: 'idle', message: undefined })));
+
+    if (!adminAccessToken) {
+      setHealthChecks((prev) => prev.map((item) => ({ ...item, status: 'unauthorized', message: 'Missing admin token' })));
+      setHealthLoading(false);
+      return;
+    }
+
+    const headers = { Authorization: `Bearer ${adminAccessToken}` };
+    const checks: Array<{ key: string; url: string }> = [
+      { key: 'admin_me', url: '/api/admin/me' },
+      { key: 'reviews', url: '/api/admin/reviews?status=pending&limit=1' },
+      { key: 'faqs', url: '/api/admin/faqs?status=pending&limit=1' },
+      { key: 'contacts', url: '/api/admin/contacts?limit=1' },
+      { key: 'settings', url: '/api/admin/settings?key=site_online' },
+      { key: 'analytics', url: '/.netlify/functions/analytics-query?metric=service_opens&days=7' },
+    ];
+
+    await Promise.all(
+      checks.map(async ({ key, url }) => {
+        try {
+          const res = await fetch(url, { headers });
+          const text = await res.text();
+          let body: any = null;
+          try { body = text ? JSON.parse(text) : null; } catch { body = { error: text }; }
+          if (res.ok) {
+            setHealth(key, { status: 'ok' });
+          } else if (res.status === 401 || res.status === 403) {
+            setHealth(key, { status: 'unauthorized', message: body?.error || 'Unauthorized' });
+          } else {
+            setHealth(key, { status: 'error', message: body?.error || `HTTP ${res.status}` });
+          }
+        } catch (e: any) {
+          setHealth(key, { status: 'error', message: e?.message || 'Network error' });
+        }
+      })
+    );
+
+    setHealthLastChecked(Date.now());
+    setHealthLoading(false);
+  };
+
+  useEffect(() => {
+    if (!liveActive) return;
+    let pollId: number | null = null;
+    const unsubHandles: Array<{ unsubscribe?: () => void }> = [];
+
+    const fetchLiveOnce = async () => {
+      setLiveLoading(true);
+      setLiveError(null);
+      try {
+        if (supabaseAvailable) {
+          const { getSupabaseBrowser } = await import('../supabaseBrowser');
+          const sb = getSupabaseBrowser();
+          const [{ data: rData, error: rErr }, { data: fData, error: fErr }] = await Promise.all([
+            sb.from('review_submissions').select('*').order('created_at', { ascending: false }).limit(500),
+            sb.from('faq_submissions').select('*').order('created_at', { ascending: false }).limit(500),
+          ] as any);
+          if (rErr) throw rErr;
+          if (fErr) throw fErr;
+          setLiveReviews((rData || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
+          setLiveFaqs((fData || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
+          setLiveLastUpdated(Date.now());
+        } else {
+          if (!adminAccessToken) throw new Error('Нужен admin access token для загрузки данных.');
+          const headers: any = { Authorization: `Bearer ${adminAccessToken}` };
+          const [rRes, fRes] = await Promise.all([
+            fetch('/api/admin/reviews?status=approved&limit=500', { headers }),
+            fetch('/api/admin/faqs?status=approved&limit=500', { headers }),
+          ]);
+          const rBody = await rRes.json();
+          const fBody = await fRes.json();
+          if (!rRes.ok) throw new Error(rBody?.error || 'Failed to load reviews');
+          if (!fRes.ok) throw new Error(fBody?.error || 'Failed to load faqs');
+          setLiveReviews((rBody.rows || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
+          setLiveFaqs((fBody.rows || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
+          setLiveLastUpdated(Date.now());
+        }
+      } catch (err: any) {
+        setLiveError(String(err?.message || err));
+      } finally {
+        setLiveLoading(false);
+      }
+    };
+
+    const enableRealtime = async () => {
+      if (!supabaseAvailable) return;
+      try {
+        const { getSupabaseBrowser } = await import('../supabaseBrowser');
+        const sb = getSupabaseBrowser();
+        const rev = sb.channel('realtime-admin-live')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'review_submissions' }, () => {
+            void fetchLiveOnce();
+          })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'faq_submissions' }, () => {
+            void fetchLiveOnce();
+          })
+          .subscribe();
+        unsubHandles.push(rev as any);
+      } catch (e: any) {
+        setLiveError(String(e?.message || e));
+      }
+    };
+
+    void fetchLiveOnce();
+
+    if (liveRealtime) {
+      void enableRealtime();
+    } else {
+      pollId = window.setInterval(() => void fetchLiveOnce(), 15000);
+    }
+
+    return () => {
+      if (pollId) window.clearInterval(pollId);
+      for (const h of unsubHandles) {
+        try { h.unsubscribe?.(); } catch {}
+      }
+    };
+  }, [adminAccessToken, liveActive, liveRealtime, liveRefreshKey, supabaseAvailable]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen vhs-noise vhs-scanlines">
@@ -431,6 +591,30 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   };
 
   const persistSiteOnline = async (nextOnline: boolean) => {
+    if (!adminAccessToken) return;
+    await apiJson<{ ok: true }>(`/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAccessToken}`,
+      },
+      body: JSON.stringify({ key: 'site_online', value: nextOnline }),
+    });
+  };
+
+  const persistAvailabilityStatus = async (nextStatus: 'available' | 'unavailable') => {
+    if (!adminAccessToken) return;
+    await apiJson<{ ok: true }>(`/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminAccessToken}`,
+      },
+      body: JSON.stringify({ key: 'availability_status', value: nextStatus }),
+    });
+  };
+
+  const persistMaintenanceMode = async (nextValue: boolean) => {
     if (!adminAccessToken) return;
     await apiJson<{ ok: true }>(`/api/admin/settings`, {
       method: 'PUT',
@@ -756,150 +940,71 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     showNotification('success', t('admin.dashboard.notifications.dataExported'));
   };
 
-  // Live Supabase controls/component (separate function so hooks are legal)
-  function LiveSupabaseControls() {
-    const supabaseAvailable = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
-    const [loadingLive, setLoadingLive] = useState(false);
-    const [realtimeEnabled, setRealtimeEnabled] = useState(false);
-    const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-    const [liveReviews, setLiveReviews] = useState<typeof approvedReviews>(approvedReviews);
-    const [liveFaqs, setLiveFaqs] = useState<typeof approvedFAQs>(approvedFAQs);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-    useEffect(() => {
-      setLiveReviews(approvedReviews);
-    }, [approvedReviews]);
-    useEffect(() => {
-      setLiveFaqs(approvedFAQs);
-    }, [approvedFAQs]);
-
-    useEffect(() => {
-      let pollId: number | null = null;
-      const unsubHandles: any[] = [];
-
-      async function fetchLiveOnce() {
-        setLoadingLive(true);
-        setErrorMsg(null);
-        try {
-          if (supabaseAvailable) {
-            const { getSupabaseBrowser } = await import('../supabaseBrowser');
-            const sb = getSupabaseBrowser();
-            const [{ data: rData, error: rErr }, { data: fData, error: fErr }] = await Promise.all([
-              sb.from('review_submissions').select('*').order('created_at', { ascending: false }).limit(500),
-              sb.from('faq_submissions').select('*').order('created_at', { ascending: false }).limit(500),
-            ] as any);
-            if (rErr) throw rErr;
-            if (fErr) throw fErr;
-            setLiveReviews((rData || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
-            setLiveFaqs((fData || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
-            setLastUpdated(Date.now());
-          } else {
-            // Fallback to admin API if no public supabase client configured
-            const headers: any = {};
-            if (adminAccessToken) headers.Authorization = `Bearer ${adminAccessToken}`;
-            const [rRes, fRes] = await Promise.all([
-              fetch('/api/admin/reviews?status=approved&limit=500', { headers }),
-              fetch('/api/admin/faqs?status=approved&limit=500', { headers }),
-            ]);
-            const rBody = await rRes.json();
-            const fBody = await fRes.json();
-            if (!rRes.ok) throw new Error(rBody?.error || 'Failed to load reviews');
-            if (!fRes.ok) throw new Error(fBody?.error || 'Failed to load faqs');
-            setLiveReviews((rBody.rows || []).map((r: any) => ({ id: r.id, name: r.name, message: r.message, status: r.status, createdAt: new Date(r.created_at).getTime() })));
-            setLiveFaqs((fBody.rows || []).map((f: any) => ({ id: f.id, name: f.name, question: f.question, status: f.status, createdAt: new Date(f.created_at).getTime() })));
-            setLastUpdated(Date.now());
-          }
-        } catch (err: any) {
-          setErrorMsg(String(err?.message || err));
-        } finally {
-          setLoadingLive(false);
-        }
-      }
-
-      async function enableRealtime() {
-        if (!supabaseAvailable) return;
-        try {
-          const { getSupabaseBrowser } = await import('../supabaseBrowser');
-          const sb = getSupabaseBrowser();
-          const rev = sb.channel('realtime-admin-live')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'review_submissions' }, () => {
-              void fetchLiveOnce();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'faq_submissions' }, () => {
-              void fetchLiveOnce();
-            })
-            .subscribe();
-          unsubHandles.push(rev);
-        } catch (e: any) {
-          console.error('realtime subscribe failed', e);
-        }
-      }
-
-      // If realtime enabled, subscribe; otherwise poll every 10s when loaded
-      if (realtimeEnabled) {
-        void enableRealtime();
-      } else {
-        // start immediate fetch and polling
-        void fetchLiveOnce();
-        pollId = window.setInterval(() => void fetchLiveOnce(), 10_000);
-      }
-
-      return () => {
-        if (pollId) window.clearInterval(pollId);
-        for (const h of unsubHandles) {
-          try { h.unsubscribe(); } catch {};
-        }
-      };
-    }, [realtimeEnabled]);
+  function LiveSupabasePanel({ mode }: { mode: 'reviews' | 'faqs' }) {
+    const items = mode === 'reviews' ? liveReviews : liveFaqs;
+    const emptyLabel = mode === 'reviews' ? 'Нет отзывов.' : 'Нет FAQ.';
+    const subtitle = supabaseAvailable ? 'Источник: Supabase Realtime' : 'Источник: Admin API';
 
     return (
-      <div className="mb-4 flex items-center gap-4">
-        <Button onClick={() => void (setRealtimeEnabled(false), (async () => { /* fetchLiveOnce is inside effect scope; just toggle to trigger effect */ })())} disabled={loadingLive}>{loadingLive ? 'Загрузка…' : 'Загрузить живые данные'}</Button>
-        <div className="flex items-center gap-2">
-          <Switch checked={realtimeEnabled} onCheckedChange={(v) => setRealtimeEnabled(Boolean(v))} />
-          <div className="text-sm">Realtime</div>
-        </div>
-        <div className="text-sm text-gray-500 ml-auto">{lastUpdated ? `Обновлено: ${new Date(lastUpdated).toLocaleTimeString()}` : 'Не загружено'}</div>
-        {errorMsg && <div className="text-sm text-red-500 ml-4">{errorMsg}</div>}
-      </div>
+      <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+        <CardHeader>
+          <CardTitle>Живые данные (Supabase)</CardTitle>
+          <CardDescription>{subtitle}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              onClick={() => {
+                if (!liveActive) setLiveActive(true);
+                setLiveRefreshKey((k) => k + 1);
+              }}
+              disabled={liveLoading}
+            >
+              {liveLoading ? 'Загрузка…' : liveActive ? 'Обновить' : 'Загрузить живые данные'}
+            </Button>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={liveRealtime}
+                onCheckedChange={(v) => {
+                  setLiveRealtime(Boolean(v));
+                  if (!liveActive) setLiveActive(true);
+                }}
+              />
+              <div className="text-sm">Realtime</div>
+            </div>
+            <div className="text-xs text-muted-foreground ml-auto">
+              {liveLastUpdated ? `Обновлено: ${new Date(liveLastUpdated).toLocaleTimeString()}` : 'Не загружено'}
+            </div>
+          </div>
+          {liveError && <div className="mt-2 text-sm text-red-500">{liveError}</div>}
+          {!liveActive && (
+            <div className="mt-3 text-sm text-muted-foreground">Нажмите «Загрузить живые данные», чтобы увидеть актуальные записи.</div>
+          )}
+          {liveActive && (
+            <div className="mt-4 space-y-2">
+              {items.length === 0 && <div className="text-muted-foreground text-sm">{emptyLabel}</div>}
+              {items.map((item) => (
+                <div key={item.id} className={`p-3 rounded border ${theme === 'dark' ? 'bg-slate-700/30 border-slate-600' : 'bg-white border-gray-200'}`}>
+                  <div className="font-semibold">{item.name}</div>
+                  {'message' in item ? (
+                    <div className="text-sm text-muted-foreground">{item.message}</div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">{item.question}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {new Date(item.createdAt).toLocaleString()} | Статус: {item.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className={`min-h-screen p-4 md:p-8 vhs-noise vhs-scanlines ${theme === 'dark' ? 'bg-slate-950' : 'bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50'}`}>
-      {/* Live Data Tab */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 vhs-text vhs-glow-light">Живые данные (Supabase)</h2>
-        <LiveSupabaseControls />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-semibold text-lg mb-2 text-yellow-700">Все отзывы</h3>
-            <div className="space-y-2">
-              {approvedReviews.length === 0 && <div className="text-gray-400">Нет отзывов.</div>}
-              {approvedReviews.map((r) => (
-                <div key={r.id} className="p-3 rounded border vhs-border bg-white/70">
-                  <div className="font-bold">{r.name}</div>
-                  <div className="text-gray-700">{r.message}</div>
-                  <div className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleString()} | Статус: <span className={r.status === 'approved' ? 'text-green-600' : r.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}>{r.status}</span></div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg mb-2 text-blue-700">Все FAQ</h3>
-            <div className="space-y-2">
-              {approvedFAQs.length === 0 && <div className="text-gray-400">Нет FAQ.</div>}
-              {approvedFAQs.map((f) => (
-                <div key={f.id} className="p-3 rounded border vhs-border bg-white/70">
-                  <div className="font-bold">{f.name}</div>
-                  <div className="text-gray-700">{f.question}</div>
-                  <div className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleString()} | Статус: <span className={f.status === 'approved' ? 'text-green-600' : f.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}>{f.status}</span></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
       
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
@@ -997,6 +1102,14 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               </AlertDescription>
             </Alert>
           </motion.div>
+        )}
+
+        {!adminAccessToken && (
+          <Alert className={theme === 'dark' ? 'border-yellow-500/40 bg-yellow-950/40' : 'border-yellow-200 bg-yellow-50'}>
+            <AlertDescription>
+              Серверный доступ не настроен. Действия будут работать только локально, без сохранения на сервере.
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Stats Overview */}
@@ -1097,6 +1210,66 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4">
+            <Card className={theme === 'dark' ? 'bg-slate-800/50 border-purple-500/30' : ''}>
+              <CardHeader>
+                <CardTitle>Server Access</CardTitle>
+                <CardDescription>Проверка доступности админ‑эндпойнтов и аналитики.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant={adminAccessToken ? 'default' : 'secondary'}>
+                    {adminAccessToken ? 'Connected' : 'No token'}
+                  </Badge>
+                  <div className="text-xs text-muted-foreground">
+                    {healthLastChecked ? `Последняя проверка: ${new Date(healthLastChecked).toLocaleTimeString()}` : 'Проверка не выполнялась'}
+                  </div>
+                  <Button onClick={() => void runHealthChecks()} variant="outline" disabled={healthLoading}>
+                    {healthLoading ? 'Проверка…' : 'Проверить сервер'}
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    value={adminTokenInput}
+                    onChange={(e) => setAdminTokenInput(e.target.value)}
+                    placeholder="Вставьте admin access token"
+                    className="flex-1 min-w-[240px]"
+                  />
+                  <Button onClick={saveAdminToken}>Сохранить</Button>
+                  <Button onClick={clearAdminToken} variant="outline">Очистить</Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {healthChecks.map((item) => {
+                    const statusClass =
+                      item.status === 'ok'
+                        ? 'bg-green-500'
+                        : item.status === 'error'
+                          ? 'bg-red-500'
+                          : item.status === 'unauthorized'
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-400';
+                    const statusLabel =
+                      item.status === 'ok'
+                        ? 'OK'
+                        : item.status === 'error'
+                          ? 'Error'
+                          : item.status === 'unauthorized'
+                            ? 'Unauthorized'
+                            : 'Idle';
+                    return (
+                      <div key={item.key} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-block h-2 w-2 rounded-full ${statusClass}`} />
+                          <span>{item.label}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{item.message || statusLabel}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
             <AdminSiteAnalytics accessToken={adminAccessToken} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Activity Chart */}
@@ -1231,6 +1404,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
           {/* Reviews Tab */}
           <TabsContent value="reviews" className="space-y-4">
+            <LiveSupabasePanel mode="reviews" />
             {pendingReviews.length > 0 && (
               <Card className={theme === 'dark' ? 'bg-slate-800/50 border-yellow-500/50' : 'bg-yellow-50 border-yellow-200'}>
                 <CardHeader>
@@ -1442,6 +1616,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
 
           {/* FAQs Tab */}
           <TabsContent value="faqs" className="space-y-4">
+            <LiveSupabasePanel mode="faqs" />
             {pendingFAQs.length > 0 && (
               <Card className={theme === 'dark' ? 'bg-slate-800/50 border-blue-500/50' : 'bg-blue-50 border-blue-200'}>
                 <CardHeader>
@@ -1962,7 +2137,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                       value={adminTokenInput}
                       onChange={(e) => setAdminTokenInput(e.target.value)}
                     />
-                    <Button onClick={() => { setAdminAccessToken(adminTokenInput.trim() || undefined); showNotification('success', 'Token saved'); setAdminTokenInput(''); }}>
+                    <Button onClick={saveAdminToken}>
                       Save
                     </Button>
                   </div>

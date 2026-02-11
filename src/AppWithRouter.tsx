@@ -32,7 +32,7 @@ function AppContent() {
   }, []);
 
   // Admin page
-  if (currentPath === '/admin') {
+  if (currentPath === '/admin' || currentPath.startsWith('/admin/')) {
     return (
       <div 
         className={`min-h-screen transition-colors duration-500 ${
