@@ -1168,43 +1168,45 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
-            <TabsTrigger value="analytics">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className={`grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 h-auto p-2 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
+            <TabsTrigger value="analytics" className="min-h-[44px]">
               <BarChart3 className="w-4 h-4 mr-2" />
-              {t('admin.dashboard.tabs.analytics')}
+              <span className="truncate">{t('admin.dashboard.tabs.analytics')}</span>
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="relative">
-              {t('admin.dashboard.tabs.reviews')}
+            <TabsTrigger value="reviews" className="relative min-h-[44px]">
+              <span className="truncate">{t('admin.dashboard.tabs.reviews')}</span>
               {analytics.pendingReviews > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs flex-shrink-0">
                   {analytics.pendingReviews}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="faqs" className="relative">
-              {t('admin.dashboard.tabs.faqs')}
+            <TabsTrigger value="faqs" className="relative min-h-[44px]">
+              <span className="truncate">{t('admin.dashboard.tabs.faqs')}</span>
               {analytics.pendingFAQs > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs flex-shrink-0">
                   {analytics.pendingFAQs}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="relative">
-              {t('admin.dashboard.tabs.contacts')}
+            <TabsTrigger value="contacts" className="relative min-h-[44px]">
+              <span className="truncate">{t('admin.dashboard.tabs.contacts')}</span>
               {analytics.newContacts > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
+                <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs flex-shrink-0">
                   {analytics.newContacts}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="users">{t('admin.dashboard.tabs.users')}</TabsTrigger>
-            <TabsTrigger value="audit">
-              Audit
+            <TabsTrigger value="users" className="min-h-[44px]">
+              <span className="truncate">{t('admin.dashboard.tabs.users')}</span>
             </TabsTrigger>
-            <TabsTrigger value="settings">
+            <TabsTrigger value="audit" className="min-h-[44px]">
+              <span className="truncate">Audit</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="min-h-[44px]">
               <SettingsIcon className="w-4 h-4 mr-2" />
-              {t('admin.dashboard.tabs.settings')}
+              <span className="truncate">{t('admin.dashboard.tabs.settings')}</span>
             </TabsTrigger>
           </TabsList>
 
