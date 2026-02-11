@@ -1168,13 +1168,13 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
         </div>
 
         {/* Main Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4" unmount={false}>
-          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-6 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
-            <TabsTrigger value="analytics" onClick={() => setSelectedTab('analytics')}>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 ${theme === 'dark' ? 'bg-slate-800/50' : 'bg-slate-100'}`}>
+            <TabsTrigger value="analytics">
               <BarChart3 className="w-4 h-4 mr-2" />
               {t('admin.dashboard.tabs.analytics')}
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="relative" onClick={() => setSelectedTab('reviews')}>
+            <TabsTrigger value="reviews" className="relative">
               {t('admin.dashboard.tabs.reviews')}
               {analytics.pendingReviews > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -1182,7 +1182,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="faqs" className="relative" onClick={() => setSelectedTab('faqs')}>
+            <TabsTrigger value="faqs" className="relative">
               {t('admin.dashboard.tabs.faqs')}
               {analytics.pendingFAQs > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -1190,7 +1190,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="relative" onClick={() => setSelectedTab('contacts')}>
+            <TabsTrigger value="contacts" className="relative">
               {t('admin.dashboard.tabs.contacts')}
               {analytics.newContacts > 0 && (
                 <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -1198,11 +1198,11 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="users" onClick={() => setSelectedTab('users')}>{t('admin.dashboard.tabs.users')}</TabsTrigger>
-            <TabsTrigger value="audit" onClick={() => setSelectedTab('audit')}>
+            <TabsTrigger value="users">{t('admin.dashboard.tabs.users')}</TabsTrigger>
+            <TabsTrigger value="audit">
               Audit
             </TabsTrigger>
-            <TabsTrigger value="settings" onClick={() => setSelectedTab('settings')}>
+            <TabsTrigger value="settings">
               <SettingsIcon className="w-4 h-4 mr-2" />
               {t('admin.dashboard.tabs.settings')}
             </TabsTrigger>
