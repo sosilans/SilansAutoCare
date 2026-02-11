@@ -185,6 +185,18 @@ function mapContactRow(row: any): ContactSubmission {
   };
 }
 
+function mapAuditRow(row: any) {
+  return {
+    id: String(row.id),
+    action: String(row.action || ''),
+    targetType: row.target_type ? String(row.target_type) : undefined,
+    targetId: row.target_id ? String(row.target_id) : undefined,
+    actor: row.admin_user_id ? String(row.admin_user_id) : 'admin',
+    details: (row.diff && typeof row.diff === 'object') ? row.diff : {},
+    createdAt: Date.parse(row.created_at || new Date().toISOString()),
+  };
+}
+
 export function DataStoreProvider({ children }: { children: React.ReactNode }) {
   const [pendingReviews, setPendingReviews] = useState<ReviewSubmission[]>([]);
   const [approvedReviews, setApprovedReviews] = useState<ReviewSubmission[]>([]);
@@ -202,6 +214,26 @@ export function DataStoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { try { const raw = localStorage.getItem(LS_AUDIT); if (raw) setAuditLog(JSON.parse(raw)); } catch {} }, []);
   useEffect(() => { try { localStorage.setItem(LS_AUDIT, JSON.stringify(auditLog)); } catch {} }, [auditLog]);
+
+  useEffect(() => {
+    if (!adminAccessToken) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const headers = { Authorization: `Bearer ${adminAccessToken}` };
+        const res = await apiJson<{ ok: true; rows: any[] }>('/api/admin/audit?limit=500', { headers });
+        if (cancelled) return;
+        setAuditLog((res.rows || []).map(mapAuditRow));
+      } catch {
+        // fallback to local audit log
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [adminAccessToken]);
 
   async function logAudit(action: string, targetType?: string, targetId?: string, details?: Record<string, unknown>) {
     const entry = { id: crypto.randomUUID(), action, targetType, targetId, actor: adminAccessToken ? 'admin' : 'local', details: details || {}, createdAt: Date.now() };

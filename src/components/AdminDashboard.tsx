@@ -36,6 +36,7 @@ type AdminDashboardProps = {
 
 type HealthCheckStatus = 'idle' | 'ok' | 'error' | 'unauthorized';
 type HealthCheckItem = { key: string; label: string; status: HealthCheckStatus; message?: string };
+type AdminUserRow = { id: string; email: string; role: 'admin' | 'user'; is_active?: boolean; created_at?: string; updated_at?: string; last_login_at?: string };
 
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -89,6 +90,9 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   const [isLoading, setIsLoading] = useState(true);
   const [adminTokenInput, setAdminTokenInput] = useState('');
   const [selectedReviewIds, setSelectedReviewIds] = useState<Record<string, boolean>>({});
+  const [adminUsers, setAdminUsers] = useState<AdminUserRow[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
+  const [adminUsersError, setAdminUsersError] = useState<string | null>(null);
   const supabaseAvailable = useMemo(() => Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY), []);
   const [liveActive, setLiveActive] = useState(false);
   const [liveRealtime, setLiveRealtime] = useState(false);
@@ -388,6 +392,19 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     };
   }, [stats, users, pendingReviews, approvedReviews, pendingFAQs, approvedFAQs, contactSubmissions]);
 
+  const normalizedUsers = useMemo(() => {
+    const source = adminAccessToken ? adminUsers : users;
+    return (source || []).map((u: any) => ({
+      id: String(u.id || u.email || u.name || crypto.randomUUID()),
+      name: String(u.name || (u.email ? String(u.email).split('@')[0] : 'User')),
+      email: u.email ? String(u.email) : undefined,
+      role: (u.role || 'user') as 'admin' | 'user',
+      isActive: typeof u.is_active === 'boolean' ? u.is_active : true,
+    }));
+  }, [adminAccessToken, adminUsers, users]);
+
+  const usingServerUsers = Boolean(adminAccessToken);
+
   // Wait for auth to load
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 100);
@@ -397,6 +414,36 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
   useEffect(() => {
     if (adminAccessToken) setAdminAccessToken(adminAccessToken);
   }, [adminAccessToken, setAdminAccessToken]);
+
+  useEffect(() => {
+    if (!adminAccessToken) {
+      setAdminUsers([]);
+      setAdminUsersError(null);
+      setAdminUsersLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setAdminUsersLoading(true);
+    void (async () => {
+      try {
+        const headers = { Authorization: `Bearer ${adminAccessToken}` };
+        const res = await apiJson<{ ok: true; rows: AdminUserRow[] }>('/api/admin/users', { headers });
+        if (cancelled) return;
+        setAdminUsers(res.rows || []);
+        setAdminUsersError(null);
+      } catch (e: any) {
+        if (cancelled) return;
+        setAdminUsersError(e?.message || 'Failed to load users');
+      } finally {
+        if (!cancelled) setAdminUsersLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [adminAccessToken]);
 
   const saveAdminToken = () => {
     const value = adminTokenInput.trim();
@@ -576,17 +623,35 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
     if (!email) return showNotification('error', 'No user email');
     try {
       if (adminAccessToken) {
-        await apiJson('/api/admin/users', {
+        const res = await apiJson<{ ok: true; user: AdminUserRow }>('/api/admin/users', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
           body: JSON.stringify({ email, role: nextRole }),
         });
+        setAdminUsers((prev) => prev.map((u) => (u.id === res.user.id ? { ...u, ...res.user } : u)));
       }
       setUserRole(email, nextRole);
       showNotification('success', `Role updated: ${email} → ${nextRole}`);
       if (logAudit) logAudit('change_user_role', 'user', email, { role: nextRole });
     } catch (e: any) {
       showNotification('error', e?.message || 'Failed to update role');
+    }
+  };
+
+  const handleToggleUserActive = async (email: string | undefined, nextActive: boolean) => {
+    if (!email) return showNotification('error', 'No user email');
+    if (!adminAccessToken) return showNotification('error', 'Admin token required');
+    try {
+      const res = await apiJson<{ ok: true; user: AdminUserRow }>('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminAccessToken}` },
+        body: JSON.stringify({ email, is_active: nextActive }),
+      });
+      setAdminUsers((prev) => prev.map((u) => (u.id === res.user.id ? { ...u, ...res.user } : u)));
+      showNotification('success', nextActive ? 'User activated' : 'User deactivated');
+      if (logAudit) logAudit('user_update', 'users', res.user.id, { is_active: nextActive });
+    } catch (e: any) {
+      showNotification('error', e?.message || 'Failed to update user');
     }
   };
 
@@ -1953,7 +2018,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
               <CardHeader>
                 <div className="flex items-center justify-between w-full">
                   <div>
-                    <CardTitle>{t('admin.dashboard.users.title').replace('{count}', String(users.length))}</CardTitle>
+                    <CardTitle>{t('admin.dashboard.users.title').replace('{count}', String(normalizedUsers.length))}</CardTitle>
                     <CardDescription>{t('admin.dashboard.users.description')}</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1968,7 +2033,7 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                       <span>Admins only</span>
                     </label>
                     <Button onClick={() => {
-                      const payload = JSON.stringify(users, null, 2);
+                      const payload = JSON.stringify(normalizedUsers, null, 2);
                       const blob = new Blob([payload], { type: 'application/json' });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');
@@ -1982,9 +2047,15 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                 </div>
               </CardHeader>
               <CardContent>
-                {users && users.length > 0 ? (
+                {adminUsersLoading && usingServerUsers && (
+                  <div className="py-6 text-center text-muted-foreground">Loading users from server...</div>
+                )}
+                {adminUsersError && usingServerUsers && (
+                  <div className="py-3 text-sm text-red-500">{adminUsersError}</div>
+                )}
+                {normalizedUsers && normalizedUsers.length > 0 ? (
                   <div className="space-y-2">
-                    {users
+                    {normalizedUsers
                       .filter(u => !showOnlyAdmins || u.role === 'admin')
                       .filter(u => {
                         const f = userFilter.trim().toLowerCase();
@@ -2004,7 +2075,10 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                           <Badge variant={usr.role === 'admin' ? 'default' : 'secondary'}>
                             {usr.role === 'admin' ? t('admin.dashboard.roles.admin') : t('admin.dashboard.roles.user')}
                           </Badge>
-                          {usr.role !== 'admin' && usr.email !== user?.email && (
+                          {!usr.isActive && (
+                            <Badge variant="secondary">Inactive</Badge>
+                          )}
+                          {usr.role !== 'admin' && usr.email !== effectiveEmail && (
                             <>
                               <Button
                                 onClick={() => void handleChangeUserRole(usr.email, 'admin')}
@@ -2013,25 +2087,43 @@ export function AdminDashboard({ isAdminOverride, adminDisplayName, adminEmail, 
                               >
                                 Promote
                               </Button>
-                              <Button
-                                onClick={() => openConfirm({
-                                  title: 'Delete user',
-                                  message: `Delete user ${usr.name}?`,
-                                  confirmLabel: 'Delete',
-                                  onConfirm: async () => {
-                                    confirmClose();
-                                    removeUser(usr.email || '');
-                                    showNotification('success', 'User deleted');
-                                  },
-                                })}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </Button>
+                              {usingServerUsers ? (
+                                <Button
+                                  onClick={() => openConfirm({
+                                    title: usr.isActive ? 'Deactivate user' : 'Activate user',
+                                    message: `${usr.isActive ? 'Deactivate' : 'Activate'} user ${usr.name}?`,
+                                    confirmLabel: usr.isActive ? 'Deactivate' : 'Activate',
+                                    onConfirm: async () => {
+                                      confirmClose();
+                                      await handleToggleUserActive(usr.email, !usr.isActive);
+                                    },
+                                  })}
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => openConfirm({
+                                    title: 'Delete user',
+                                    message: `Delete user ${usr.name}?`,
+                                    confirmLabel: 'Delete',
+                                    onConfirm: async () => {
+                                      confirmClose();
+                                      removeUser(usr.email || '');
+                                      showNotification('success', 'User deleted');
+                                    },
+                                  })}
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              )}
                             </>
                           )}
-                          {usr.role === 'admin' && usr.email !== user?.email && (
+                          {usr.role === 'admin' && usr.email !== effectiveEmail && (
                             <Button
                               onClick={() => void handleChangeUserRole(usr.email, 'user')}
                               size="sm"

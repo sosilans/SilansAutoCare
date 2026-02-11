@@ -131,6 +131,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUsers(prev => [...prev, newUser]);
     setUser(newUser); // auto-login after successful registration
     closeAuthModal();
+    try {
+      await fetch('/api/public/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmedName, email: trimmedEmail }),
+      });
+    } catch {
+      // best-effort
+    }
     return { ok: true };
   }
 

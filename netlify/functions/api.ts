@@ -319,6 +319,42 @@ export const handler: Handler = async (event) => {
       return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, id: data.id, created_at: data.created_at }) };
     }
 
+    if (path.startsWith('/api/public/users')) {
+      if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Method not allowed' }) };
+      }
+      if (isRateLimited(ip, 20, 60_000)) {
+        return { statusCode: 429, headers: { 'Content-Type': 'application/json', ...corsHeaders(), 'Retry-After': '60' }, body: JSON.stringify({ error: 'Too many requests' }) };
+      }
+
+      const UserSchema = z.object({
+        name: z.string().min(1).max(120),
+        email: z.string().email().max(320),
+      });
+      const body = event.body ? JSON.parse(event.body) : {};
+      const parsed = UserSchema.safeParse(body);
+      if (!parsed.success) {
+        return { statusCode: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Invalid payload' }) };
+      }
+
+      const supabaseAdmin = getSupabaseAdmin();
+      const email = parsed.data.email.trim().toLowerCase();
+      const { data, error } = await supabaseAdmin
+        .from('users')
+        .upsert(
+          { email, role: 'user', is_active: true, updated_at: new Date().toISOString() },
+          { onConflict: 'email' }
+        )
+        .select('id,email,role,is_active,created_at,updated_at')
+        .single();
+
+      if (error || !data) {
+        return { statusCode: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ error: 'Failed to register user' }) };
+      }
+
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: JSON.stringify({ ok: true, user: data }) };
+    }
+
     if (path.startsWith('/api/public/reviews')) {
       const supabaseAdmin = getSupabaseAdmin();
 
